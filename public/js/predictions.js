@@ -410,7 +410,7 @@ function rankThirdPlaces(groupStandings) {
   return thirds;
 }
 
-// Bracket advancement logic
+// Bracket advancement logic — now renders a VISUAL BRACKET (llave)
 function advanceBracket(groupStandings, thirdsRanking) {
   const top8Thirds = thirdsRanking.slice(0, 8);
   
@@ -474,22 +474,17 @@ function advanceBracket(groupStandings, thirdsRanking) {
   
   const bracketTeams = {}; // Match winners mapping
   
-  // 1. Render Round of 32
-  let r32Html = '';
-  r32Matches.forEach(m => {
+  // 1. Process Round of 32 winners
+  const r32Data = r32Matches.map(m => {
     const localTeam = advanceTeams[m.lRef];
     const visitorTeam = advanceTeams[m.vRef];
-    
     const pred = draftPredictions.matches[m.id] || { gl: '', gv: '', pkl: '', pkv: '' };
     const winner = getWinnerOfMatch(localTeam, visitorTeam, pred.gl, pred.gv, pred.pkl, pred.pkv);
-    
     bracketTeams[m.label] = winner;
-    
-    r32Html += renderMatchCardHtml(m.id, m.label, localTeam, visitorTeam, pred, "dieciseisavos");
+    return { ...m, local: localTeam, visitor: visitorTeam, pred, winner };
   });
-  document.getElementById('round-r32-container').innerHTML = r32Html;
-  
-  // 2. Render Round of 16 (Octavos, M89 to M96)
+
+  // 2. Process Round of 16
   const r16Matches = [
     { id: "M89", label: "O1", lRef: "D1", vRef: "D2" },
     { id: "M90", label: "O2", lRef: "D3", vRef: "D4" },
@@ -500,144 +495,222 @@ function advanceBracket(groupStandings, thirdsRanking) {
     { id: "M95", label: "O7", lRef: "D13", vRef: "D14" },
     { id: "M96", label: "O8", lRef: "D15", vRef: "D16" }
   ];
-  
-  let r16Html = '';
-  r16Matches.forEach(m => {
-    const localTeam = bracketTeams[m.lRef] || `Ganador ${m.lRef}`;
-    const visitorTeam = bracketTeams[m.vRef] || `Ganador ${m.vRef}`;
-    
+
+  const r16Data = r16Matches.map(m => {
+    const localTeam = bracketTeams[m.lRef] || `Gan. ${m.lRef}`;
+    const visitorTeam = bracketTeams[m.vRef] || `Gan. ${m.vRef}`;
     const pred = draftPredictions.matches[m.id] || { gl: '', gv: '', pkl: '', pkv: '' };
     const winner = getWinnerOfMatch(localTeam, visitorTeam, pred.gl, pred.gv, pred.pkl, pred.pkv);
-    
     bracketTeams[m.label] = winner;
-    r16Html += renderMatchCardHtml(m.id, m.label, localTeam, visitorTeam, pred, "octavos");
+    return { ...m, local: localTeam, visitor: visitorTeam, pred, winner };
   });
-  document.getElementById('round-r16-container').innerHTML = r16Html;
 
-  // 3. Render Quarterfinals (Cuartos, M97 to M100)
+  // 3. Process Quarterfinals
   const r8Matches = [
     { id: "M97", label: "C1", lRef: "O1", vRef: "O2" },
     { id: "M98", label: "C2", lRef: "O3", vRef: "O4" },
     { id: "M99", label: "C3", lRef: "O5", vRef: "O6" },
     { id: "M100", label: "C4", lRef: "O7", vRef: "O8" }
   ];
-  
-  let r8Html = '';
-  r8Matches.forEach(m => {
-    const localTeam = bracketTeams[m.lRef] || `Ganador ${m.lRef}`;
-    const visitorTeam = bracketTeams[m.vRef] || `Ganador ${m.vRef}`;
-    
+
+  const r8Data = r8Matches.map(m => {
+    const localTeam = bracketTeams[m.lRef] || `Gan. ${m.lRef}`;
+    const visitorTeam = bracketTeams[m.vRef] || `Gan. ${m.vRef}`;
     const pred = draftPredictions.matches[m.id] || { gl: '', gv: '', pkl: '', pkv: '' };
     const winner = getWinnerOfMatch(localTeam, visitorTeam, pred.gl, pred.gv, pred.pkl, pred.pkv);
-    
     bracketTeams[m.label] = winner;
-    r8Html += renderMatchCardHtml(m.id, m.label, localTeam, visitorTeam, pred, "cuartos");
+    return { ...m, local: localTeam, visitor: visitorTeam, pred, winner };
   });
-  document.getElementById('round-r8-container').innerHTML = r8Html;
 
-  // 4. Render Semifinals & Third Place (M101 to M103)
+  // 4. Process Semifinals
+  const s1Local = bracketTeams["C1"] || "Gan. C1";
+  const s1Visitor = bracketTeams["C2"] || "Gan. C2";
+  const s2Local = bracketTeams["C3"] || "Gan. C3";
+  const s2Visitor = bracketTeams["C4"] || "Gan. C4";
+
   const s1Pred = draftPredictions.matches["M101"] || { gl: '', gv: '', pkl: '', pkv: '' };
   const s2Pred = draftPredictions.matches["M102"] || { gl: '', gv: '', pkl: '', pkv: '' };
-  
-  const s1Local = bracketTeams["C1"] || "Ganador C1";
-  const s1Visitor = bracketTeams["C2"] || "Ganador C2";
-  const s2Local = bracketTeams["C3"] || "Ganador C3";
-  const s2Visitor = bracketTeams["C4"] || "Ganador C4";
-  
+
   const s1Winner = getWinnerOfMatch(s1Local, s1Visitor, s1Pred.gl, s1Pred.gv, s1Pred.pkl, s1Pred.pkv);
   const s2Winner = getWinnerOfMatch(s2Local, s2Visitor, s2Pred.gl, s2Pred.gv, s2Pred.pkl, s2Pred.pkv);
-  
+
   const s1Loser = getLoserOfMatch(s1Local, s1Visitor, s1Winner);
   const s2Loser = getLoserOfMatch(s2Local, s2Visitor, s2Winner);
-  
-  // Render Semis
-  let r4Html = renderMatchCardHtml("M101", "S1", s1Local, s1Visitor, s1Pred, "semis");
-  r4Html += renderMatchCardHtml("M102", "S2", s2Local, s2Visitor, s2Pred, "semis");
-  
-  // Render Third Place (M103)
-  const t3Pred = draftPredictions.matches["M103"] || { gl: '', gv: '', pkl: '', pkv: '' };
-  r4Html += renderMatchCardHtml("M103", "3º Puesto", s1Loser, s2Loser, t3Pred, "semis");
-  document.getElementById('round-r4-container').innerHTML = r4Html;
 
-  // 5. Render Final (M104)
+  const sfData = [
+    { id: "M101", label: "S1", local: s1Local, visitor: s1Visitor, pred: s1Pred, winner: s1Winner },
+    { id: "M102", label: "S2", local: s2Local, visitor: s2Visitor, pred: s2Pred, winner: s2Winner }
+  ];
+
+  // 5. Process Final
+  const finalLocal = s1Winner || "Gan. S1";
+  const finalVisitor = s2Winner || "Gan. S2";
   const finalPred = draftPredictions.matches["M104"] || { gl: '', gv: '', pkl: '', pkv: '' };
-  let r2Html = renderMatchCardHtml("M104", "Final", s1Winner, s2Winner, finalPred, "final");
-  document.getElementById('round-r2-container').innerHTML = r2Html;
-}
+  const finalWinner = getWinnerOfMatch(finalLocal, finalVisitor, finalPred.gl, finalPred.gv, finalPred.pkl, finalPred.pkv);
 
-// Helper: Calculate Match Winner (handles penalties)
-function getWinnerOfMatch(local, visitor, gl, gv, pkl, pkv) {
-  if (gl === '' || gl === undefined || gl === null || gv === '' || gv === undefined || gv === null) {
-    return null;
-  }
-  const lGoals = parseInt(gl);
-  const vGoals = parseInt(gv);
-  
-  if (lGoals > vGoals) return local;
-  if (vGoals > lGoals) return visitor;
-  
-  // Tie: check penalties
-  if (pkl === '' || pkl === undefined || pkl === null || pkv === '' || pkv === undefined || pkv === null) {
-    return null;
-  }
-  const lPk = parseInt(pkl);
-  const vPk = parseInt(pkv);
-  
-  if (lPk > vPk) return local;
-  if (vPk > lPk) return visitor;
-  
-  return null;
-}
+  const finalData = [
+    { id: "M104", label: "Final", local: finalLocal, visitor: finalVisitor, pred: finalPred, winner: finalWinner, isFinal: true }
+  ];
 
-// Helper: Calculate Match Loser
-function getLoserOfMatch(local, visitor, winner) {
-  if (!winner) return null;
-  return winner === local ? visitor : local;
-}
+  // 6. Third place match (rendered separately)
+  const t3Local = s1Loser || "Perd. S1";
+  const t3Visitor = s2Loser || "Perd. S2";
+  const t3Pred = draftPredictions.matches["M103"] || { gl: '', gv: '', pkl: '', pkv: '' };
+  const t3Data = { id: "M103", label: "3er Puesto", local: t3Local, visitor: t3Visitor, pred: t3Pred, isThirdPlace: true };
 
-// Render Bracket Match Card HTML
-function renderMatchCardHtml(matchId, label, local, visitor, pred, stepClass) {
-  const flagL = getFlagImgHtml(local);
-  const flagV = getFlagImgHtml(visitor);
-  const disabledAttr = isLocked ? 'disabled' : '';
+  // ===================================================================
+  // BUILD THE VISUAL BRACKET HTML
+  // ===================================================================
+  const wrapper = document.getElementById('bracket-wrapper');
   
-  // Display penalties if tie
-  const isTie = (pred.gl !== '' && pred.gv !== '' && pred.gl !== undefined && pred.gv !== undefined && parseInt(pred.gl) === parseInt(pred.gv));
-  const pkStyle = isTie ? 'flex' : 'none';
+  let html = '<div class="bracket-container">';
   
-  return `
-    <div class="match-card">
-      <div class="match-header">
-        <span>Partido ${matchId} (${label})</span>
-        <span class="team-badge-circle">${TEAM_DATA[local]?.rank || '-'}</span>
-      </div>
-      <div class="match-body">
-        <div class="team-wrapper">
-          <span class="flag">${flagL}</span>
-          <span class="team-name" title="${local}">${local}</span>
-        </div>
-        <div class="score-inputs">
-          <input type="text" pattern="[0-9]*" class="score-input" value="${pred.gl ?? ''}" oninput="onScoreChange('${matchId}', 'gl', this.value)" ${disabledAttr}>
-          <span class="score-divider">-</span>
-          <input type="text" pattern="[0-9]*" class="score-input" value="${pred.gv ?? ''}" oninput="onScoreChange('${matchId}', 'gv', this.value)" ${disabledAttr}>
-        </div>
-        <div class="team-wrapper visitor">
-          <span class="team-name" title="${visitor}">${visitor}</span>
-          <span class="flag">${flagV}</span>
-        </div>
-      </div>
-      
-      <!-- Penalties dynamic row -->
-      <div class="penalties-section" style="display: ${pkStyle};">
-        <span class="penalties-label">Penaltis (PK):</span>
-        <div class="penalties-inputs">
-          <input type="text" pattern="[0-9]*" class="pk-input" value="${pred.pkl ?? ''}" oninput="onPKChange('${matchId}', 'pkl', this.value)" placeholder="P" ${disabledAttr}>
-          <span>-</span>
-          <input type="text" pattern="[0-9]*" class="pk-input" value="${pred.pkv ?? ''}" oninput="onPKChange('${matchId}', 'pkv', this.value)" placeholder="P" ${disabledAttr}>
-        </div>
+  // COLUMN: Round of 32
+  html += buildRoundColumn("Dieciseisavos", "r32-col", r32Data);
+  html += buildConnectorColumn(8); // 16 → 8 connectors
+  
+  // COLUMN: Round of 16
+  html += buildRoundColumn("Octavos", "r16-col", r16Data);
+  html += buildConnectorColumn(4); // 8 → 4 connectors
+  
+  // COLUMN: Quarterfinals
+  html += buildRoundColumn("Cuartos", "r8-col", r8Data);
+  html += buildConnectorColumn(2); // 4 → 2 connectors
+  
+  // COLUMN: Semifinals
+  html += buildRoundColumn("Semifinales", "r4-col", sfData);
+  html += buildConnectorColumn(1); // 2 → 1 connector
+  
+  // COLUMN: Final
+  html += buildRoundColumn("⭐ Final", "final-col", finalData);
+  
+  // COLUMN: Trophy
+  html += `
+    <div class="bracket-round-col trophy-col">
+      <div class="bracket-col-header">Campeón</div>
+      <div class="bracket-trophy">
+        <div class="bracket-trophy-icon">🏆</div>
+        <div class="bracket-champion-name">${finalWinner || '???'}</div>
+        <div class="bracket-trophy-label">Mundial 2026</div>
       </div>
     </div>
   `;
+  
+  html += '</div>'; // close .bracket-container
+  wrapper.innerHTML = html;
+
+  // Render third-place match separately below the bracket
+  const t3Container = document.getElementById('bracket-third-place-container');
+  t3Container.innerHTML = `
+    <div style="max-width: 320px;">
+      <div style="text-align: center; margin-bottom: 8px;">
+        <span style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: hsl(20, 60%, 55%);">🥉 Partido por el 3er Puesto</span>
+      </div>
+      ${renderBracketMatchHtml(t3Data)}
+    </div>
+  `;
+}
+
+// Build a round column with header + match slots
+function buildRoundColumn(title, colClass, matchesData) {
+  let html = `<div class="bracket-round-col ${colClass}">`;
+  html += `<div class="bracket-col-header">${title}</div>`;
+  
+  matchesData.forEach(m => {
+    html += `<div class="bracket-match-slot">${renderBracketMatchHtml(m)}</div>`;
+  });
+  
+  html += '</div>';
+  return html;
+}
+
+// Build connector column with N pairs of connecting lines
+function buildConnectorColumn(pairCount) {
+  let html = '<div class="bracket-connector-col">';
+  for (let i = 0; i < pairCount; i++) {
+    html += `
+      <div class="bracket-connector-pair">
+        <div class="bracket-vline"></div>
+        <div class="bracket-hline-out"></div>
+      </div>
+    `;
+  }
+  html += '</div>';
+  return html;
+}
+
+// Render a single bracket match card
+function renderBracketMatchHtml(m) {
+  const flagL = getFlagImgHtml(m.local);
+  const flagV = getFlagImgHtml(m.visitor);
+  const disabledAttr = isLocked ? 'disabled' : '';
+  const pred = m.pred;
+
+  const isPlaceholderL = !TEAM_DATA[m.local];
+  const isPlaceholderV = !TEAM_DATA[m.visitor];
+
+  // Determine if there's a tie (need penalties)
+  const isTie = (pred.gl !== '' && pred.gv !== '' && pred.gl !== undefined && pred.gv !== undefined && parseInt(pred.gl) === parseInt(pred.gv));
+
+  // Determine winner for highlighting
+  const winner = m.winner;
+  const localIsWinner = winner && winner === m.local;
+  const visitorIsWinner = winner && winner === m.visitor;
+
+  // Extra class for final / third place
+  let extraClass = '';
+  if (m.isFinal) extraClass = 'final-match';
+  if (m.isThirdPlace) extraClass = 'third-place-match';
+
+  let html = `<div class="bracket-match ${extraClass}">`;
+
+  // Label row
+  html += `
+    <div class="bracket-match-label">
+      <span>${m.id} · ${m.label}</span>
+    </div>
+  `;
+
+  // Local team row
+  html += `
+    <div class="bracket-team-row ${localIsWinner ? 'is-winner' : ''}">
+      <div class="bracket-team-info">
+        <span class="flag">${flagL}</span>
+        <span class="bracket-team-name ${isPlaceholderL ? 'placeholder' : ''}" title="${m.local}">${m.local}</span>
+      </div>
+      <div class="bracket-score-cell">
+        <input type="text" pattern="[0-9]*" class="bracket-score-input" value="${pred.gl ?? ''}" oninput="onScoreChange('${m.id}', 'gl', this.value)" ${disabledAttr}>
+      </div>
+    </div>
+  `;
+
+  // Visitor team row
+  html += `
+    <div class="bracket-team-row ${visitorIsWinner ? 'is-winner' : ''}">
+      <div class="bracket-team-info">
+        <span class="flag">${flagV}</span>
+        <span class="bracket-team-name ${isPlaceholderV ? 'placeholder' : ''}" title="${m.visitor}">${m.visitor}</span>
+      </div>
+      <div class="bracket-score-cell">
+        <input type="text" pattern="[0-9]*" class="bracket-score-input" value="${pred.gv ?? ''}" oninput="onScoreChange('${m.id}', 'gv', this.value)" ${disabledAttr}>
+      </div>
+    </div>
+  `;
+
+  // Penalties section (only when tie)
+  if (isTie) {
+    html += `
+      <div class="bracket-pk-section">
+        <span class="bracket-pk-label">PK:</span>
+        <input type="text" pattern="[0-9]*" class="bracket-pk-input" value="${pred.pkl ?? ''}" oninput="onPKChange('${m.id}', 'pkl', this.value)" placeholder="–" ${disabledAttr}>
+        <span class="bracket-pk-divider">-</span>
+        <input type="text" pattern="[0-9]*" class="bracket-pk-input" value="${pred.pkv ?? ''}" oninput="onPKChange('${m.id}', 'pkv', this.value)" placeholder="–" ${disabledAttr}>
+      </div>
+    `;
+  }
+
+  html += '</div>'; // close .bracket-match
+  return html;
 }
 
 // Render Special Awards selections (Free-text for Player Names)

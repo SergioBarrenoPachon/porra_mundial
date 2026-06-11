@@ -142,33 +142,14 @@
 
     <!-- TAB: KNOCKOUTS -->
     <div id="tab-knockouts" class="tab-content" style="display: none;">
-      <div class="predictions-layout">
-        <!-- Rounds grid populated dynamically by JS -->
-        <div class="bracket-round">
-          <div class="bracket-round-header">Dieciseisavos de Final (Round of 32)</div>
-          <div class="bracket-stage-grid" id="round-r32-container"></div>
-        </div>
-        
-        <div class="bracket-round">
-          <div class="bracket-round-header">Octavos de Final (Round of 16)</div>
-          <div class="bracket-stage-grid" id="round-r16-container"></div>
-        </div>
-
-        <div class="bracket-round">
-          <div class="bracket-round-header">Cuartos de Final</div>
-          <div class="bracket-stage-grid" id="round-r8-container"></div>
-        </div>
-
-        <div class="bracket-round">
-          <div class="bracket-round-header">Semifinales y Tercer Puesto</div>
-          <div class="bracket-stage-grid" id="round-r4-container"></div>
-        </div>
-
-        <div class="bracket-round">
-          <div class="bracket-round-header">Final</div>
-          <div class="bracket-stage-grid" id="round-r2-container"></div>
-        </div>
+      <p style="color: var(--color-text-muted); text-align: center; margin-bottom: 8px; font-size: 0.85rem;">
+        📐 Desplaza horizontalmente para ver toda la llave del torneo. Los equipos avanzan automáticamente según tus resultados.
+      </p>
+      <div class="bracket-wrapper" id="bracket-wrapper">
+        <!-- Entire bracket populated dynamically by JS -->
       </div>
+      <!-- Third place match rendered separately below -->
+      <div class="bracket-special-matches" id="bracket-third-place-container"></div>
     </div>
 
     <!-- TAB: AWARDS -->
