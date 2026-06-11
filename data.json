@@ -23,57 +23,57 @@
     {
       "id": "user_sofia",
       "username": "Sofia",
-      "passwordHash": "53a4dcb33f8f15e15c5013aae951d77a0f20a52f99020a1ceced6ad4339535bf",
-      "salt": "209f1d83fac32b3f29c4549838322427",
+      "passwordHash": "552806b874636c1531f10bda6695b365291d3eb271f850d964258f929ba6c3c4",
+      "salt": "6b34c3535ac4714c1dcb013a937973ad",
       "isAdmin": false
     },
     {
       "id": "user_pablo",
       "username": "Pablo",
-      "passwordHash": "e58e80540da3c9359bcf3326925dbe2c5f7486430a1f30841f2bc63549c588bd",
-      "salt": "3f56c9f0cd10d25a7f9e87a12f77e76f",
+      "passwordHash": "742024c033126013e36e81db81719d8552ab31912d871a5763c57537a23496c0",
+      "salt": "5b65979a51b395f85754a4c221328f39",
       "isAdmin": false
     },
     {
       "id": "user_olga",
       "username": "Olga",
-      "passwordHash": "9a077f4d989f9996b75a45a5e8c566109dd82dbac0a7ccb4b2e0664be912b21a",
-      "salt": "c65208640b16d6f65f9cf831e6941c59",
+      "passwordHash": "5a5d4ea913b471006b80df82961b84404d97cc910761d421268c414d2e6ac128",
+      "salt": "e306cd455c01fac09f3cc48ff175ff36",
       "isAdmin": false
     },
     {
       "id": "user_ada",
       "username": "Ada",
-      "passwordHash": "39b7cbfa98b258cd60b8bb3b1208f7ef19f15b76728106174b5935810208ae78",
-      "salt": "7959679dfb49834d2e9bb10d132df9a5",
+      "passwordHash": "432531f0c30d0ae6d8c52e38075b6ad279dbb8143a2b46115afb69d804f143c8",
+      "salt": "516e64168706e6023af4da8c67a46521",
       "isAdmin": false
     },
     {
       "id": "user_clau",
       "username": "Clau",
-      "passwordHash": "56d95f9513e3a681099354b0b35a217f4bd6ff26ede4638d397893ceef9f697e",
-      "salt": "6928718144bf0debd06ee14b3ee4d0dc",
+      "passwordHash": "2077d96e0d6ff9e47658c91e56a5f0efabb13c9a2d67ee6b22c030a871621184",
+      "salt": "973d4c18d2be6bff5741c41114ec3205",
       "isAdmin": false
     },
     {
       "id": "user_sergiob",
       "username": "Sergio B",
-      "passwordHash": "ea34e8f0b46279cdec61d1fb018be4aa12f36cb86f5a21f362cac00474bd974b",
-      "salt": "296481e356c3ac808fa2b61ba7042ba8",
+      "passwordHash": "a7c970c81bae5cc0d0d6cc50b8a666e2a8c91d91f9f239f5d235210ff79d0243",
+      "salt": "a068fed4ed60a711c665274974b7888d",
       "isAdmin": true
     },
     {
       "id": "user_alex",
       "username": "Alex",
-      "passwordHash": "64c42731c221495a75d44ed190635c0daaa581f439d4de1fba8eb9f449f51bfa",
-      "salt": "640eb5df3290d9472fafbdcd92de509a",
+      "passwordHash": "90e3106ad1e18ad37a1f78e4677f118eeae67fff6d99a649ca7e475611f1c9d1",
+      "salt": "f3a05279954c19808e9b29d5b86fe61a",
       "isAdmin": false
     },
     {
       "id": "user_sergiol",
       "username": "Sergio L",
-      "passwordHash": "a473cd4981875a9a63baac486a044ed1c1d5f53bd1bd230fdb35189769980fa6",
-      "salt": "693b57a971ae0a5fac46850c7d527423",
+      "passwordHash": "eb9cdfc3066751e1632d0ddff5638a8c2e017420a8986f32849aa9c11c4f0c9b",
+      "salt": "23ac9b3607c50869e898046f28ac9942",
       "isAdmin": false
     }
   ],
