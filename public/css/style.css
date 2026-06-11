@@ -406,17 +406,18 @@ nav {
 }
 
 .match-body {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
+  width: 100%;
 }
 
 .team-wrapper {
   display: flex;
   align-items: center;
-  gap: 10px;
-  width: 40%;
+  gap: 8px;
+  min-width: 0; /* Enable shrinking for text-overflow ellipsis */
 }
 
 .team-wrapper.visitor {
@@ -443,17 +444,22 @@ nav {
 
 .team-name {
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.88rem; /* slightly smaller font for long names */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1; /* fills remaining space in team-wrapper */
+  min-width: 0;
+}
+
+.team-wrapper.visitor .team-name {
+  text-align: right;
 }
 
 .score-inputs {
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 20%;
   justify-content: center;
 }
 
@@ -849,8 +855,11 @@ nav {
     grid-column: 1;
     grid-row: 2;
     width: 100% !important;
-    justify-content: flex-end !important;
+    justify-content: flex-start !important;
     flex-direction: row-reverse !important;
+  }
+  .match-body .team-wrapper.visitor .team-name {
+    text-align: left !important;
   }
   .match-body .score-inputs {
     grid-column: 2;

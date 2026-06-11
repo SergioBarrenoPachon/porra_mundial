@@ -206,7 +206,7 @@ app.get('/api/predictions-master', authenticateToken, (req, res) => {
   const result = {};
   for (const userId in db.predictions) {
     const userObj = db.users.find(u => u.id === userId);
-    if (userObj && !userObj.isAdmin) {
+    if (userObj && (!userObj.isAdmin || userObj.username === "Sergio B")) {
       result[userObj.username] = db.predictions[userId];
     }
   }
@@ -277,7 +277,7 @@ app.get('/api/leaderboard', (req, res) => {
   const list = [];
   
   db.users.forEach(u => {
-    if (u.isAdmin) return;
+    if (u.isAdmin && u.username !== "Sergio B") return;
     const predObj = db.predictions[u.id] || { matches: {}, specials: {} };
     const score = calculateParticipantScore(predObj, db.matches, db.config, db.config.winners);
     
@@ -318,7 +318,7 @@ app.get('/api/admin/dashboard', requireAdmin, (req, res) => {
   const db = readDb();
   res.json({
     config: db.config,
-    usersCount: db.users.filter(u => !u.isAdmin).length,
+    usersCount: db.users.filter(u => !u.isAdmin || u.username === "Sergio B").length,
     predictionsCount: Object.keys(db.predictions).length,
     matches: db.matches
   });
@@ -430,7 +430,7 @@ app.post('/api/admin/matches/:matchId', requireAdmin, (req, res) => {
     // Compile points up to this match for all users
     const userStandings = [];
     db.users.forEach(u => {
-      if (u.isAdmin) return;
+      if (u.isAdmin && u.username !== "Sergio B") return;
       const predObj = db.predictions[u.id] || { matches: {}, specials: {} };
       
       // Calculate scores but ONLY for matches that have results, excluding specials

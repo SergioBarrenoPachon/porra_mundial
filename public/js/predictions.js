@@ -53,11 +53,23 @@ async function verifySession() {
 async function loadDeadline() {
   const res = await fetch('/api/predictions/deadline');
   const data = await res.json();
-  isLocked = data.isPassed;
   
-  if (isLocked) {
-    document.getElementById('readonly-message-banner').style.display = 'block';
-    document.getElementById('save-bar').style.display = 'none';
+  // Administrators can always edit their predictions
+  isLocked = data.isPassed && !currentUser.isAdmin;
+  
+  if (data.isPassed) {
+    if (currentUser.isAdmin) {
+      document.getElementById('readonly-message-banner').innerHTML = `
+        <div style="background: rgba(46, 204, 113, 0.15); border: 1px solid var(--primary); padding: 12px; border-radius: 8px; text-align: center; color: #fff; font-weight: 600; font-size: 0.9rem;">
+          ⚽ Modo Administrador: La fecha límite ha pasado, pero tienes permiso para modificar tus pronósticos.
+        </div>
+      `;
+      document.getElementById('readonly-message-banner').style.display = 'block';
+      document.getElementById('save-bar').style.display = 'flex';
+    } else {
+      document.getElementById('readonly-message-banner').style.display = 'block';
+      document.getElementById('save-bar').style.display = 'none';
+    }
     document.getElementById('deadline-container').className = "countdown-box expired";
     document.getElementById('countdown-clock').innerText = "CERRADO";
   } else {
