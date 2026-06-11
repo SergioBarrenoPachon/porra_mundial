@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mis Pronósticos - Porra Mundial 2026</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    /* Styling overrides for prediction bracket layout */
+    .save-status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+    .save-status-indicator.unsaved { color: var(--accent-gold); }
+    .save-status-indicator.saved { color: var(--accent-green); }
+    
+    .team-badge-circle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+    
+    /* Highlight inputs in cream for high contrast */
+    .score-input {
+      background: hsl(220, 20%, 15%);
+      border: 1px solid var(--border-color);
+      color: #fff;
+    }
+    .score-input:focus {
+      background: #fff;
+      color: #000;
+      border-color: var(--primary);
+    }
+    
+    .bracket-round-header {
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-bottom: 15px;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-left: 3px solid var(--primary);
+      padding-left: 8px;
+    }
+    
+    /* Disable look overlay */
+    .readonly-banner {
+      background: hsla(350, 75%, 50%, 0.15);
+      border: 1px solid var(--accent-red);
+      color: #ff8a80;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      text-align: center;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="nav-container">
+      <div class="brand">
+        <span>🏆 Porra<span class="brand-accent">Mundial2026</span></span>
+      </div>
+      <nav>
+        <a href="/predictions.html" class="nav-link active">Mis Pronósticos</a>
+        <a href="/dashboard.html" class="nav-link">Leaderboard</a>
+        <a href="/admin.html" id="admin-nav-link" class="nav-link" style="display: none;">Panel de Control</a>
+        <div class="nav-user">
+          <span class="username-display" id="user-greeting">Invitado</span>
+          <button onclick="handleLogout()" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem; width: auto;">Cerrar Sesión</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <div class="hero-section">
+      <h1 class="hero-title">TUS PREDICCIONES DEL MUNDIAL</h1>
+      <p class="hero-subtitle">Introduce tus pronósticos para todos los partidos de grupos y fases eliminatorias.</p>
+      
+      <div class="countdown-box" id="deadline-container">
+        <span class="countdown-label">Tiempo Restante:</span>
+        <span class="countdown-timer" id="countdown-clock">--d --h --m --s</span>
+      </div>
+    </div>
+
+    <div id="readonly-message-banner" class="readonly-banner" style="display: none;">
+      🔒 PREDICCIONES CERRADAS: La fecha límite del 13/06/2026 a las 21:00 ha expirado. Todos los campos están en modo de solo lectura.
+    </div>
+
+    <div class="phase-tabs">
+      <div class="phase-tab active" onclick="switchTab('groups')">Fase de Grupos (72 Partidos)</div>
+      <div class="phase-tab" onclick="switchTab('knockouts')">Fase Eliminatoria (Bracket)</div>
+      <div class="phase-tab" onclick="switchTab('awards')">Premios Especiales</div>
+    </div>
+
+    <!-- TAB: GROUPS -->
+    <div id="tab-groups" class="tab-content">
+      <div class="group-grid" id="groups-container">
+        <!-- Group cards populated dynamically by JS -->
+      </div>
+    </div>
+
+    <!-- TAB: KNOCKOUTS -->
+    <div id="tab-knockouts" class="tab-content" style="display: none;">
+      <div class="predictions-layout">
+        <!-- Rounds grid populated dynamically by JS -->
+        <div class="bracket-round">
+          <div class="bracket-round-header">Dieciseisavos de Final (Round of 32)</div>
+          <div class="bracket-stage-grid" id="round-r32-container"></div>
+        </div>
+        
+        <div class="bracket-round">
+          <div class="bracket-round-header">Octavos de Final (Round of 16)</div>
+          <div class="bracket-stage-grid" id="round-r16-container"></div>
+        </div>
+
+        <div class="bracket-round">
+          <div class="bracket-round-header">Cuartos de Final</div>
+          <div class="bracket-stage-grid" id="round-r8-container"></div>
+        </div>
+
+        <div class="bracket-round">
+          <div class="bracket-round-header">Semifinales y Tercer Puesto</div>
+          <div class="bracket-stage-grid" id="round-r4-container"></div>
+        </div>
+
+        <div class="bracket-round">
+          <div class="bracket-round-header">Final</div>
+          <div class="bracket-stage-grid" id="round-r2-container"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: AWARDS -->
+    <div id="tab-awards" class="tab-content" style="display: none;">
+      <div class="card specials-card">
+        <h2 class="group-title">🏆 Premios Especiales del Torneo</h2>
+        <p style="margin-bottom: 20px; color: var(--color-text-muted);">Elige las selecciones que crees que ganarán los premios individuales del Mundial 2026. Aciertos suman puntos adicionales ponderados en la clasificación.</p>
+        <div class="specials-grid" id="specials-container">
+          <!-- Selection dropdowns populated dynamically by JS -->
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Bottom Floating Save Bar -->
+  <div class="float-bar" id="save-bar">
+    <div class="float-bar-content">
+      <div class="save-status-indicator unsaved" id="save-status">
+        <span style="font-size: 1.2rem;">⚠️</span>
+        <span>Tienes cambios sin guardar en tu borrador.</span>
+      </div>
+      <div style="width: auto;">
+        <button onclick="savePredictions()" class="btn btn-primary" id="save-btn" style="width: auto; padding: 12px 36px;">
+          Guardar Pronósticos
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="/js/predictions.js"></script>
+</body>
+</html>

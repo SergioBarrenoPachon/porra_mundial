@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard - Porra Mundial 2026</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Specific styling for leaderboard dashboard layout */
+    .evolution-card {
+      padding: 20px;
+    }
+    
+    .chart-container {
+      position: relative;
+      height: 380px;
+      width: 100%;
+      margin-top: 20px;
+    }
+    
+    .matrix-wrapper-outer {
+      margin-top: 40px;
+    }
+    
+    .matrix-title-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .search-input-box {
+      width: 250px;
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.9rem;
+    }
+    
+    .search-input-box:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="nav-container">
+      <div class="brand">
+        <span>🏆 Porra<span class="brand-accent">Mundial2026</span></span>
+      </div>
+      <nav>
+        <a href="/predictions.html" class="nav-link">Mis Pronósticos</a>
+        <a href="/dashboard.html" class="nav-link active">Leaderboard</a>
+        <a href="/admin.html" id="admin-nav-link" class="nav-link" style="display: none;">Panel de Control</a>
+        <div class="nav-user">
+          <span class="username-display" id="user-greeting">Invitado</span>
+          <button onclick="handleLogout()" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem; width: auto;">Cerrar Sesión</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <div class="hero-section">
+      <h1 class="hero-title">CLASIFICACIÓN EN TIEMPO REAL</h1>
+      <p class="hero-subtitle">Descubre quién va ganando la porra y cómo progresa la clasificación a lo largo de cada partido.</p>
+    </div>
+
+    <div class="dashboard-grid">
+      <!-- Left Card: Standings Leaderboard -->
+      <div class="card">
+        <h2 class="group-title">📊 Clasificación General</h2>
+        <div style="overflow-x: auto;">
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th style="width: 70px;">Pos</th>
+                <th style="text-align: left;">Participante</th>
+                <th>Partidos</th>
+                <th>Premios</th>
+                <th>PUNTOS TOTALES</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-body">
+              <tr>
+                <td colspan="5" style="color: var(--color-text-muted); padding: 30px;">Cargando clasificación...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Right Card: Ranking Evolution Chart -->
+      <div class="card evolution-card">
+        <h2 class="group-title">📈 Evolución de Posiciones</h2>
+        <p style="color: var(--color-text-muted); font-size: 0.85rem;">Histórico del puesto de cada participante partido a partido (los valores más altos representan mejores puestos).</p>
+        <div class="chart-container">
+          <canvas id="evolutionChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Full Width: Match-by-Match Matrix -->
+    <div class="card matrix-wrapper-outer">
+      <div class="matrix-title-bar">
+        <h2 class="group-title" style="margin-bottom: 0;">🔍 Matriz Comparativa de Pronósticos</h2>
+        <input type="text" id="search-matrix" class="search-input-box" placeholder="Buscar por selección o fase..." oninput="filterMatrixTable()">
+      </div>
+      <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-bottom: 20px;" id="matrix-lock-notice">
+        Muestra lo que cada participante predijo en cada partido y los puntos que obtuvo. Los pronósticos están ocultos hasta el cierre de la fecha límite (13/06/2026 21:00).
+      </p>
+      
+      <div class="matrix-container">
+        <table class="matrix-table">
+          <thead id="matrix-head">
+            <!-- Headers generated dynamically by JS -->
+          </thead>
+          <tbody id="matrix-body">
+            <tr>
+              <td colspan="4" style="color: var(--color-text-muted); padding: 30px;">Cargando matriz...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

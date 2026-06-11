@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administración - Porra Mundial 2026</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    /* Admin specific layout styles */
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 30px;
+    }
+    @media (max-width: 1024px) {
+      .admin-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .matches-admin-list {
+      max-height: 700px;
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(0,0,0,0.2);
+    }
+    
+    .match-admin-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      gap: 15px;
+    }
+    .match-admin-info {
+      width: 40%;
+      font-size: 0.9rem;
+    }
+    .match-admin-scores {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .admin-score-input {
+      width: 38px;
+      height: 32px;
+      background: hsl(220, 20%, 15%);
+      border: 1px solid var(--border-color);
+      color: #fff;
+      text-align: center;
+      font-weight: 800;
+      border-radius: 6px;
+    }
+    .admin-score-input:focus {
+      background: #fff;
+      color: #000;
+      outline: none;
+    }
+    .pk-inputs-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 10px;
+      padding-left: 10px;
+      border-left: 1px dashed var(--accent-gold);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="nav-container">
+      <div class="brand">
+        <span>🏆 Porra<span class="brand-accent">Mundial2026</span></span>
+      </div>
+      <nav>
+        <a href="/predictions.html" class="nav-link">Mis Pronósticos</a>
+        <a href="/dashboard.html" class="nav-link">Leaderboard</a>
+        <a href="/admin.html" id="admin-nav-link" class="nav-link active">Panel de Control</a>
+        <div class="nav-user">
+          <span class="username-display" id="user-greeting">Administrador</span>
+          <button onclick="handleLogout()" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem; width: auto;">Cerrar Sesión</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <div class="hero-section" style="margin-bottom: 30px; padding: 30px 20px;">
+      <h1 class="hero-title" style="font-size: 2.2rem;">PANEL DE ADMINISTRACIÓN</h1>
+      <p class="hero-subtitle">Introduce los resultados oficiales del Mundial, configura los puntos de la porra y define los ganadores de trofeos individuales.</p>
+    </div>
+
+    <div class="admin-grid">
+      <!-- Left: Official Match Results Entry -->
+      <div class="card">
+        <h2 class="group-title">⚽ Resultados Oficiales del Torneo</h2>
+        <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-bottom: 15px;">Completa el marcador de cada partido. Al guardar se recalculan los puntos de todos los participantes y se actualiza el histórico de ranking de forma automática.</p>
+        
+        <div class="matches-admin-list" id="admin-matches-container">
+          <!-- Populated dynamically by JS -->
+          <div style="color: var(--color-text-muted); padding: 30px; text-align: center;">Cargando partidos...</div>
+        </div>
+      </div>
+
+      <!-- Right: Configurations & Winners -->
+      <div style="display: flex; flex-direction: column; gap: 30px;">
+        
+        <!-- Config Points Card -->
+        <div class="card">
+          <h2 class="group-title">⚙️ Ajustes de Puntuación</h2>
+          <form id="points-config-form" onsubmit="savePointsConfig(event)">
+            <div class="form-group">
+              <label class="form-label" for="pts-outcome">Puntos Acierto Ganador (1X2)</label>
+              <input type="number" id="pts-outcome" class="form-control" required min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="pts-exact">Puntos Marcador Exacto</label>
+              <input type="number" id="pts-exact" class="form-control" required min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="pts-oro">Puntos Balón/Bota de Oro</label>
+              <input type="number" id="pts-oro" class="form-control" required min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="pts-plata">Puntos Balón/Bota de Plata</label>
+              <input type="number" id="pts-plata" class="form-control" required min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="pts-bronce">Puntos Balón/Bota de Bronce</label>
+              <input type="number" id="pts-bronce" class="form-control" required min="0">
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar Configuración</button>
+          </form>
+        </div>
+
+        <!-- Config Winners Card -->
+        <div class="card">
+          <h2 class="group-title">🏆 Ganadores Oficiales Trofeos</h2>
+          <form id="winners-config-form" onsubmit="saveWinnersConfig(event)">
+            <div class="form-group">
+              <label class="form-label" for="win-balon-oro">Balón de Oro</label>
+              <select id="win-balon-oro" class="form-control"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="win-balon-plata">Balón de Plata</label>
+              <select id="win-balon-plata" class="form-control"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="win-balon-bronce">Balón de Bronce</label>
+              <select id="win-balon-bronce" class="form-control"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="win-bota-oro">Bota de Oro</label>
+              <select id="win-bota-oro" class="form-control"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="win-bota-plata">Bota de Plata</label>
+              <select id="win-bota-plata" class="form-control"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="win-bota-bronce">Bota de Bronce</label>
+              <select id="win-bota-bronce" class="form-control"></select>
+            </div>
+            <button type="submit" class="btn btn-primary">Registrar Ganadores</button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>
