@@ -247,13 +247,19 @@ function calculateParticipantScore(predObj, matchesList, config, winners) {
     }
   });
   
+  // Helper for case-insensitive player name matching
+  const matchAward = (pred, winner) => {
+    if (!pred || !winner) return false;
+    return pred.trim().toLowerCase() === winner.trim().toLowerCase();
+  };
+
   // Trofeos Especiales points
-  let balonOroPts = (winners.balon_oro && predObj.specials.balon_oro === winners.balon_oro) ? config.points.balon_oro : 0;
-  let balonPlataPts = (winners.balon_plata && predObj.specials.balon_plata === winners.balon_plata) ? config.points.balon_plata : 0;
-  let balonBroncePts = (winners.balon_bronce && predObj.specials.balon_bronce === winners.balon_bronce) ? config.points.balon_bronce : 0;
-  let botaOroPts = (winners.bota_oro && predObj.specials.bota_oro === winners.bota_oro) ? config.points.bota_oro : 0;
-  let botaPlataPts = (winners.bota_plata && predObj.specials.bota_plata === winners.bota_plata) ? config.points.bota_plata : 0;
-  let botaBroncePts = (winners.bota_bronce && predObj.specials.bota_bronce === winners.bota_bronce) ? config.points.bota_bronce : 0;
+  let balonOroPts = matchAward(predObj.specials.balon_oro, winners.balon_oro) ? config.points.balon_oro : 0;
+  let balonPlataPts = matchAward(predObj.specials.balon_plata, winners.balon_plata) ? config.points.balon_plata : 0;
+  let balonBroncePts = matchAward(predObj.specials.balon_bronce, winners.balon_bronce) ? config.points.balon_bronce : 0;
+  let botaOroPts = matchAward(predObj.specials.bota_oro, winners.bota_oro) ? config.points.bota_oro : 0;
+  let botaPlataPts = matchAward(predObj.specials.bota_plata, winners.bota_plata) ? config.points.bota_plata : 0;
+  let botaBroncePts = matchAward(predObj.specials.bota_bronce, winners.bota_bronce) ? config.points.bota_bronce : 0;
   
   const totalSpecials = balonOroPts + balonPlataPts + balonBroncePts + botaOroPts + botaPlataPts + botaBroncePts;
   const total = matchPoints + totalSpecials;

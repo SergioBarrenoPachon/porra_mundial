@@ -29,7 +29,6 @@ let adminConfig = {};
 document.addEventListener("DOMContentLoaded", async () => {
   await verifySession();
   await loadAdminDashboard();
-  populateWinnersSelectLists();
 });
 
 async function verifySession() {
@@ -76,23 +75,6 @@ function populateConfigFields() {
   document.getElementById('win-bota-oro').value = adminConfig.winners.bota_oro || "";
   document.getElementById('win-bota-plata').value = adminConfig.winners.bota_plata || "";
   document.getElementById('win-bota-bronce').value = adminConfig.winners.bota_bronce || "";
-}
-
-// Populate select lists options
-function populateWinnersSelectLists() {
-  const selects = [
-    'win-balon-oro', 'win-balon-plata', 'win-balon-bronce',
-    'win-bota-oro', 'win-bota-plata', 'win-bota-bronce'
-  ];
-  
-  selects.forEach(id => {
-    const el = document.getElementById(id);
-    let html = '<option value="">-- Sin definir --</option>';
-    TEAMS_LIST.forEach(t => {
-      html += `<option value="${t}">${t}</option>`;
-    });
-    el.innerHTML = html;
-  });
 }
 
 // Render Admin Matches Rows
@@ -475,53 +457,39 @@ function togglePredPKInputsVisibility(matchId) {
   }
 }
 
-// Render participant's predicted awards
+// Render participant's predicted awards (Player Names)
 function renderUserAwardsForAdmin() {
   const container = document.getElementById('admin-user-specials-container');
   container.innerHTML = '';
   
   const awards = [
-    { id: "balon_oro", label: "Balón de Oro (Mejor Jugador)" },
-    { id: "balon_plata", label: "Balón de Plata" },
-    { id: "balon_bronce", label: "Balón de Bronce" },
-    { id: "bota_oro", label: "Bota de Oro (Máximo Goleador)" },
-    { id: "bota_plata", label: "Bota de Plata" },
-    { id: "bota_bronce", label: "Bota de Bronce" }
+    { id: "balon_oro", label: "Balón de Oro (Mejor Jugador)", color: "var(--accent-gold)", icon: "👑" },
+    { id: "balon_plata", label: "Balón de Plata", color: "hsl(0, 0%, 75%)", icon: "🥈" },
+    { id: "balon_bronce", label: "Balón de Bronce", color: "hsl(20, 60%, 55%)", icon: "🥉" },
+    { id: "bota_oro", label: "Bota de Oro (Máximo Goleador)", color: "var(--accent-gold)", icon: "⚽" },
+    { id: "bota_plata", label: "Bota de Plata", color: "hsl(0, 0%, 75%)", icon: "🥈" },
+    { id: "bota_bronce", label: "Bota de Bronce", color: "hsl(20, 60%, 55%)", icon: "🥉" }
   ];
   
   awards.forEach(a => {
     const val = selectedUserPredictions.specials[a.id] || "";
     
-    let optionsHtml = '<option value="">-- Elige una selección --</option>';
-    TEAMS_LIST.forEach(t => {
-      const selected = val === t ? 'selected' : '';
-      optionsHtml += `<option value="${t}" ${selected}>[${TEAM_DATA[t].flag.toUpperCase()}] ${t}</option>`;
-    });
-    
-    const flagPreviewHtml = val ? getFlagImgHtml(val) : '🏳️';
-    
     const div = document.createElement('div');
     div.className = 'special-select-group';
     div.innerHTML = `
-      <label class="form-label" for="admin-award-select-${a.id}">${a.label}</label>
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span id="admin-flag-preview-${a.id}" class="flag" style="font-size: 1.5rem; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px;">${flagPreviewHtml}</span>
-        <select id="admin-award-select-${a.id}" class="form-control" onchange="onAdminAwardChange('${a.id}', this.value)">
-          ${optionsHtml}
-        </select>
+      <div class="card" style="padding: 16px; background: rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 8px; width: 100%;">
+        <label class="form-label" for="admin-award-input-${a.id}" style="color: ${a.color}; font-weight: 800; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; margin-bottom: 0;">
+          <span style="font-size: 1.2rem;">${a.icon}</span> ${a.label}
+        </label>
+        <input type="text" id="admin-award-input-${a.id}" class="form-control" value="${val}" placeholder="Nombre del jugador..." oninput="onAdminAwardInputChange('${a.id}', this.value)" style="background: rgba(0,0,0,0.4); border-color: var(--border-color);">
       </div>
     `;
     container.appendChild(div);
   });
 }
 
-// Update award state locally
-function onAdminAwardChange(awardId, val) {
+function onAdminAwardInputChange(awardId, val) {
   selectedUserPredictions.specials[awardId] = val;
-  const preview = document.getElementById(`admin-flag-preview-${awardId}`);
-  if (preview) {
-    preview.innerHTML = val ? getFlagImgHtml(val) : '🏳️';
-  }
 }
 
 // Save participant predictions back to database via API
@@ -577,12 +545,12 @@ async function saveUserPredictionsAsAdmin() {
   }
   
   const specialsPayload = {
-    balon_oro: document.getElementById('admin-award-select-balon_oro').value,
-    balon_plata: document.getElementById('admin-award-select-balon_plata').value,
-    balon_bronce: document.getElementById('admin-award-select-balon_bronce').value,
-    bota_oro: document.getElementById('admin-award-select-bota_oro').value,
-    bota_plata: document.getElementById('admin-award-select-bota_plata').value,
-    bota_bronce: document.getElementById('admin-award-select-bota_bronce').value
+    balon_oro: document.getElementById('admin-award-input-balon_oro').value.trim(),
+    balon_plata: document.getElementById('admin-award-input-balon_plata').value.trim(),
+    balon_bronce: document.getElementById('admin-award-input-balon_bronce').value.trim(),
+    bota_oro: document.getElementById('admin-award-input-bota_oro').value.trim(),
+    bota_plata: document.getElementById('admin-award-input-bota_plata').value.trim(),
+    bota_bronce: document.getElementById('admin-award-input-bota_bronce').value.trim()
   };
   
   const btn = document.getElementById('save-user-pred-btn');

@@ -640,56 +640,41 @@ function renderMatchCardHtml(matchId, label, local, visitor, pred, stepClass) {
   `;
 }
 
-// Render Special Awards selections
+// Render Special Awards selections (Free-text for Player Names)
 function renderAwards() {
   const container = document.getElementById('specials-container');
   container.innerHTML = '';
   
   const awards = [
-    { id: "balon_oro", label: "Balón de Oro (Mejor Jugador)" },
-    { id: "balon_plata", label: "Balón de Plata" },
-    { id: "balon_bronce", label: "Balón de Bronce" },
-    { id: "bota_oro", label: "Bota de Oro (Máximo Goleador)" },
-    { id: "bota_plata", label: "Bota de Plata" },
-    { id: "bota_bronce", label: "Bota de Bronce" }
+    { id: "balon_oro", label: "Balón de Oro (Mejor Jugador)", color: "var(--accent-gold)", icon: "👑" },
+    { id: "balon_plata", label: "Balón de Plata", color: "hsl(0, 0%, 75%)", icon: "🥈" },
+    { id: "balon_bronce", label: "Balón de Bronce", color: "hsl(20, 60%, 55%)", icon: "🥉" },
+    { id: "bota_oro", label: "Bota de Oro (Máximo Goleador)", color: "var(--accent-gold)", icon: "⚽" },
+    { id: "bota_plata", label: "Bota de Plata", color: "hsl(0, 0%, 75%)", icon: "🥈" },
+    { id: "bota_bronce", label: "Bota de Bronce", color: "hsl(20, 60%, 55%)", icon: "🥉" }
   ];
   
-  // Find all teams list sorted alphabetically
-  const teams = Object.keys(TEAM_DATA).sort();
   const disabledAttr = isLocked ? 'disabled' : '';
   
   awards.forEach(a => {
     const val = draftPredictions.specials[a.id] || "";
     
-    let optionsHtml = '<option value="">-- Elige una selección --</option>';
-    teams.forEach(t => {
-      const selected = val === t ? 'selected' : '';
-      optionsHtml += `<option value="${t}" ${selected}>[${TEAM_DATA[t].flag.toUpperCase()}] ${t}</option>`;
-    });
-    
-    const flagPreviewHtml = val ? getFlagImgHtml(val) : '🏳️';
-    
     const div = document.createElement('div');
     div.className = 'special-select-group';
     div.innerHTML = `
-      <label class="form-label" for="award-select-${a.id}">${a.label}</label>
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span id="flag-preview-${a.id}" class="flag" style="font-size: 1.5rem; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px;">${flagPreviewHtml}</span>
-        <select id="award-select-${a.id}" class="form-control" onchange="onAwardChange('${a.id}', this.value)" ${disabledAttr}>
-          ${optionsHtml}
-        </select>
+      <div class="card" style="padding: 16px; background: rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 8px;">
+        <label class="form-label" for="award-input-${a.id}" style="color: ${a.color}; font-weight: 800; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; margin-bottom: 0;">
+          <span style="font-size: 1.2rem;">${a.icon}</span> ${a.label}
+        </label>
+        <input type="text" id="award-input-${a.id}" class="form-control" value="${val}" placeholder="Nombre del jugador..." oninput="onAwardInputChange('${a.id}', this.value)" ${disabledAttr} style="background: rgba(0,0,0,0.4); border-color: var(--border-color);">
       </div>
     `;
     container.appendChild(div);
   });
 }
 
-function onAwardChange(awardId, val) {
+function onAwardInputChange(awardId, val) {
   draftPredictions.specials[awardId] = val;
-  const preview = document.getElementById(`flag-preview-${awardId}`);
-  if (preview) {
-    preview.innerHTML = val ? getFlagImgHtml(val) : '🏳️';
-  }
   updateSaveBar();
 }
 

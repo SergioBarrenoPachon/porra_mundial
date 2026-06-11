@@ -109,35 +109,113 @@ async function loadMasterPredictions() {
   }
 }
 
-// Render Leaderboard
+// Render Leaderboard (Podium & List Layout)
 function renderLeaderboard() {
-  const tbody = document.getElementById('leaderboard-body');
+  const container = document.getElementById('leaderboard-card-content');
+  if (!container) return;
+  
   if (leaderboardData.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="color: var(--color-text-muted); padding: 30px;">No hay participantes registrados.</td></tr>`;
+    container.innerHTML = `<div style="color: var(--color-text-muted); padding: 30px; text-align: center;">No hay participantes registrados.</div>`;
     return;
   }
   
-  let html = '';
+  // Find top 3 players
+  const top1 = leaderboardData.find(p => p.rank === 1);
+  const top2 = leaderboardData.find(p => p.rank === 2);
+  const top3 = leaderboardData.find(p => p.rank === 3);
+  
+  // Max score to calculate relative width of progress bars
+  const maxScore = Math.max(1, leaderboardData[0]?.total || 0);
+  
+  let podiumHtml = '';
+  if (top1 || top2 || top3) {
+    podiumHtml += `<div class="podium-container">`;
+    
+    // 2nd Place
+    if (top2) {
+      const isMe = currentUser && currentUser.username === top2.username;
+      const highlightBorder = isMe ? 'style="border-color: var(--accent-gold);"' : '';
+      podiumHtml += `
+        <div class="podium-step second" ${highlightBorder}>
+          <div class="podium-badge">🥈</div>
+          <div class="podium-name" title="${top2.username}">${top2.username} ${isMe ? '(Tú)' : ''}</div>
+          <div class="podium-pts">${top2.total} pts</div>
+        </div>
+      `;
+    } else {
+      podiumHtml += `<div class="podium-step second" style="opacity: 0.3; border-style: dashed;"><div class="podium-badge">🥈</div></div>`;
+    }
+    
+    // 1st Place
+    if (top1) {
+      const isMe = currentUser && currentUser.username === top1.username;
+      const highlightBorder = isMe ? 'style="border-color: var(--primary);"' : '';
+      podiumHtml += `
+        <div class="podium-step first" ${highlightBorder}>
+          <div class="podium-badge" style="filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4));">👑</div>
+          <div class="podium-name" title="${top1.username}" style="color: var(--accent-gold); font-size: 0.95rem;">${top1.username} ${isMe ? '(Tú)' : ''}</div>
+          <div class="podium-pts">${top1.total} pts</div>
+        </div>
+      `;
+    } else {
+      podiumHtml += `<div class="podium-step first" style="opacity: 0.3; border-style: dashed;"><div class="podium-badge">🥇</div></div>`;
+    }
+    
+    // 3rd Place
+    if (top3) {
+      const isMe = currentUser && currentUser.username === top3.username;
+      const highlightBorder = isMe ? 'style="border-color: var(--accent-gold);"' : '';
+      podiumHtml += `
+        <div class="podium-step third" ${highlightBorder}>
+          <div class="podium-badge">🥉</div>
+          <div class="podium-name" title="${top3.username}">${top3.username} ${isMe ? '(Tú)' : ''}</div>
+          <div class="podium-pts">${top3.total} pts</div>
+        </div>
+      `;
+    } else {
+      podiumHtml += `<div class="podium-step third" style="opacity: 0.3; border-style: dashed;"><div class="podium-badge">🥉</div></div>`;
+    }
+    
+    podiumHtml += `</div>`;
+  }
+  
+  // List of all players
+  let listHtml = `<div class="leaderboard-list">`;
+  
   leaderboardData.forEach((p, idx) => {
-    let medal = p.rank;
-    if (p.rank === 1) medal = '<span class="medal-gold">🥇</span>';
-    else if (p.rank === 2) medal = '<span class="medal-silver">🥈</span>';
-    else if (p.rank === 3) medal = '<span class="medal-bronze">🥉</span>';
-    
     const isMe = currentUser && currentUser.username === p.username;
-    const highlightClass = isMe ? 'style="background: rgba(0, 181, 173, 0.08); border-left: 3px solid var(--primary);"' : '';
+    const initial = p.username.charAt(0);
+    const progressPercent = Math.min(100, Math.max(5, (p.total / maxScore) * 100));
     
-    html += `
-      <tr ${highlightClass}>
-        <td class="rank-cell">${medal}</td>
-        <td class="user-cell">${p.username} ${isMe ? '<small style="color: var(--primary); font-weight: 800;">(Tú)</small>' : ''}</td>
-        <td>${p.matchPoints}</td>
-        <td>${p.totalSpecials}</td>
-        <td class="total-cell">${p.total}</td>
-      </tr>
+    let avatarStyle = '';
+    if (p.rank === 1) avatarStyle = 'style="background: var(--accent-gold); color: #000; font-weight: 800;"';
+    else if (p.rank === 2) avatarStyle = 'style="background: hsl(0, 0%, 75%); color: #000;"';
+    else if (p.rank === 3) avatarStyle = 'style="background: hsl(20, 60%, 55%);"';
+    
+    listHtml += `
+      <div class="leaderboard-item ${isMe ? 'is-me' : ''}">
+        <div class="item-rank">#${p.rank}</div>
+        <div class="item-avatar" ${avatarStyle}>${initial}</div>
+        <div class="item-info">
+          <div class="item-name-wrapper">
+            <span class="item-username">${p.username}</span>
+            ${isMe ? '<span class="item-me-tag">Tú</span>' : ''}
+          </div>
+          <div class="item-points-bar-container">
+            <div class="item-points-bar" style="width: ${progressPercent}%;"></div>
+          </div>
+        </div>
+        <div class="item-score-pills">
+          <div class="score-pill">⚽ ${p.matchPoints} pts</div>
+          <div class="score-pill">🏆 ${p.totalSpecials} pts</div>
+          <div class="score-pill total">${p.total} pts</div>
+        </div>
+      </div>
     `;
   });
-  tbody.innerHTML = html;
+  
+  listHtml += `</div>`;
+  container.innerHTML = podiumHtml + listHtml;
 }
 
 // Render ranking evolution chart (Chart.js)
