@@ -109,9 +109,16 @@
       <p class="hero-subtitle">Introduce los resultados oficiales del Mundial, configura los puntos de la porra y define los ganadores de trofeos individuales.</p>
     </div>
 
-    <div class="admin-grid">
-      <!-- Left: Official Match Results Entry -->
-      <div class="card">
+    <!-- Admin Tabs Menu -->
+    <div class="phase-tabs" style="margin-bottom: 30px;">
+      <div class="phase-tab active" id="tab-btn-results" onclick="switchAdminTab('results')">⚽ Resultados Oficiales</div>
+      <div class="phase-tab" id="tab-btn-predictions" onclick="switchAdminTab('predictions')">📝 Pronósticos Participantes</div>
+      <div class="phase-tab" id="tab-btn-settings" onclick="switchAdminTab('settings')">⚙️ Ajustes y Seguridad</div>
+    </div>
+
+    <!-- TAB 1: RESULTS -->
+    <div id="admin-tab-results" class="admin-tab-content">
+      <div class="card" style="max-width: 900px; margin: 0 auto;">
         <h2 class="group-title">⚽ Resultados Oficiales del Torneo</h2>
         <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-bottom: 15px;">Completa el marcador de cada partido. Al guardar se recalculan los puntos de todos los participantes y se actualiza el histórico de ranking de forma automática.</p>
         
@@ -120,10 +127,46 @@
           <div style="color: var(--color-text-muted); padding: 30px; text-align: center;">Cargando partidos...</div>
         </div>
       </div>
+    </div>
 
-      <!-- Right: Configurations & Winners -->
-      <div style="display: flex; flex-direction: column; gap: 30px;">
+    <!-- TAB 2: PARTICIPANTS PREDICTIONS -->
+    <div id="admin-tab-predictions" class="admin-tab-content" style="display: none;">
+      <div class="card" style="max-width: 900px; margin: 0 auto;">
+        <h2 class="group-title">📝 Editar Pronósticos de Participantes</h2>
+        <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-bottom: 20px;">
+          Selecciona un participante para ver y modificar sus pronósticos. Como administrador, puedes realizar cambios incluso después del cierre de la fecha límite.
+        </p>
         
+        <div class="form-group" style="max-width: 400px; margin-bottom: 25px;">
+          <label class="form-label" for="admin-user-select">Seleccionar Participante:</label>
+          <select id="admin-user-select" class="form-control" onchange="loadUserPredictionsForAdmin(this.value)">
+            <option value="">-- Selecciona un usuario --</option>
+            <!-- Populated dynamically by JS -->
+          </select>
+        </div>
+
+        <div id="admin-user-predictions-view" style="display: none;">
+          <div class="matches-admin-list" id="admin-user-matches-container" style="max-height: 500px; margin-bottom: 20px;">
+            <!-- Populated dynamically by JS -->
+          </div>
+          
+          <div class="card" style="background: rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.05); margin-bottom: 20px; padding: 20px;">
+            <h3 class="group-title" style="font-size: 1.1rem; border-color: var(--accent-gold); margin-bottom: 15px;">🏆 Premios Especiales</h3>
+            <div class="specials-grid" id="admin-user-specials-container">
+              <!-- Populated dynamically by JS -->
+            </div>
+          </div>
+
+          <button onclick="saveUserPredictionsAsAdmin()" class="btn btn-primary" id="save-user-pred-btn" style="max-width: 300px;">
+            Guardar Pronósticos del Usuario
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: SETTINGS -->
+    <div id="admin-tab-settings" class="admin-tab-content" style="display: none;">
+      <div class="admin-grid">
         <!-- Config Points Card -->
         <div class="card">
           <h2 class="group-title">⚙️ Ajustes de Puntuación</h2>
@@ -152,54 +195,55 @@
           </form>
         </div>
 
-        <!-- Config Winners Card -->
-        <div class="card">
-          <h2 class="group-title">🏆 Ganadores Oficiales Trofeos</h2>
-          <form id="winners-config-form" onsubmit="saveWinnersConfig(event)">
-            <div class="form-group">
-              <label class="form-label" for="win-balon-oro">Balón de Oro</label>
-              <select id="win-balon-oro" class="form-control"></select>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="win-balon-plata">Balón de Plata</label>
-              <select id="win-balon-plata" class="form-control"></select>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="win-balon-bronce">Balón de Bronce</label>
-              <select id="win-balon-bronce" class="form-control"></select>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="win-bota-oro">Bota de Oro</label>
-              <select id="win-bota-oro" class="form-control"></select>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="win-bota-plata">Bota de Plata</label>
-              <select id="win-bota-plata" class="form-control"></select>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="win-bota-bronce">Bota de Bronce</label>
-              <select id="win-bota-bronce" class="form-control"></select>
-            </div>
-            <button type="submit" class="btn btn-primary">Registrar Ganadores</button>
-          </form>
-        </div>
+        <div style="display: flex; flex-direction: column; gap: 30px;">
+          <!-- Config Winners Card -->
+          <div class="card">
+            <h2 class="group-title">🏆 Ganadores Oficiales Trofeos</h2>
+            <form id="winners-config-form" onsubmit="saveWinnersConfig(event)">
+              <div class="form-group">
+                <label class="form-label" for="win-balon-oro">Balón de Oro</label>
+                <select id="win-balon-oro" class="form-control"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="win-balon-plata">Balón de Plata</label>
+                <select id="win-balon-plata" class="form-control"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="win-balon-bronce">Balón de Bronce</label>
+                <select id="win-balon-bronce" class="form-control"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="win-bota-oro">Bota de Oro</label>
+                <select id="win-bota-oro" class="form-control"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="win-bota-plata">Bota de Plata</label>
+                <select id="win-bota-plata" class="form-control"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="win-bota-bronce">Bota de Bronce</label>
+                <select id="win-bota-bronce" class="form-control"></select>
+              </div>
+              <button type="submit" class="btn btn-primary">Registrar Ganadores</button>
+            </form>
+          </div>
 
-        <!-- Change Admin Password Card -->
-        <div class="card">
-          <h2 class="group-title">🔒 Cambiar Contraseña Admin</h2>
-          <form id="admin-password-form" onsubmit="changeAdminPassword(event)">
-            <div class="form-group">
-              <label class="form-label" for="new-admin-password">Nueva Contraseña</label>
-              <input type="password" id="new-admin-password" class="form-control" required minlength="6" placeholder="Mínimo 6 caracteres">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="confirm-admin-password">Confirmar Contraseña</label>
-              <input type="password" id="confirm-admin-password" class="form-control" required minlength="6" placeholder="Repite la contraseña">
-            </div>
-            <button type="submit" class="btn btn-primary" id="change-pass-btn">Actualizar Contraseña</button>
-          </form>
+          <!-- Change Admin Password Card -->
+          <div class="card">
+            <h2 class="group-title">🔒 Cambiar Contraseña Admin</h2>
+            <form id="admin-password-form" onsubmit="changeAdminPassword(event)">
+              <div class="form-group">
+                <label class="form-label" for="new-admin-password">Nueva Contraseña</label>
+                <input type="password" id="new-admin-password" class="form-control" required minlength="6" placeholder="Mínimo 6 caracteres">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="confirm-admin-password">Confirmar Contraseña</label>
+                <input type="password" id="confirm-admin-password" class="form-control" required minlength="6" placeholder="Repite la contraseña">
+              </div>
+              <button type="submit" class="btn btn-primary" id="change-pass-btn">Actualizar Contraseña</button>
+            </form>
+          </div>
         </div>
-
       </div>
     </div>
   </main>

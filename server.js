@@ -75,39 +75,7 @@ function requireAdmin(req, res, next) {
 
 // Register a new participant
 app.post('/api/auth/register', (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password || username.trim() === "" || password.trim() === "") {
-    return res.status(400).json({ error: "Usuario y contraseña son requeridos." });
-  }
-  
-  const db = readDb();
-  const lowerUsername = username.toLowerCase().trim();
-  
-  const userExists = db.users.some(u => u.username.toLowerCase() === lowerUsername);
-  if (userExists) {
-    return res.status(400).json({ error: "El nombre de usuario ya está registrado." });
-  }
-  
-  const salt = crypto.randomBytes(16).toString('hex');
-  const passwordHash = hashPassword(password, salt);
-  const userId = "user_" + Date.now();
-  
-  const newUser = {
-    id: userId,
-    username: username.trim(),
-    passwordHash: passwordHash,
-    salt: salt,
-    isAdmin: false
-  };
-  
-  db.users.push(newUser);
-  // Initialize predictions template
-  db.predictions[userId] = { matches: {}, specials: { balon_oro: "", balon_plata: "", balon_bronce: "", bota_oro: "", bota_plata: "", bota_bronce: "" } };
-  writeDb(db);
-  
-  const token = jwt.sign({ id: userId, username: newUser.username, isAdmin: false }, JWT_SECRET, { expiresIn: '7d' });
-  res.cookie('token', token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
-  res.json({ message: "Usuario registrado con éxito.", user: { id: userId, username: newUser.username, isAdmin: false } });
+  return res.status(403).json({ error: "El registro de nuevos participantes está deshabilitado." });
 });
 
 // Login
@@ -195,11 +163,11 @@ app.get('/api/predictions/:userId', authenticateToken, (req, res) => {
 // Submit/Update user predictions
 app.post('/api/predictions/:userId', authenticateToken, (req, res) => {
   const { userId } = req.params;
-  if (req.user.id !== userId) {
+  if (req.user.id !== userId && !req.user.isAdmin) {
     return res.status(403).json({ error: "No tienes permiso para editar estas predicciones." });
   }
   
-  if (isDeadlinePassed()) {
+  if (isDeadlinePassed() && !req.user.isAdmin) {
     return res.status(403).json({ error: "La fecha límite para enviar o modificar predicciones ha expirado (Sábado 13/06/2026 21:00)." });
   }
   
