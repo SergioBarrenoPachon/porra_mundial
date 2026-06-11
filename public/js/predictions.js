@@ -243,7 +243,41 @@ function recalculateAll() {
   renderAllStandingsTables(groupStandings);
   
   const thirdsRanking = rankThirdPlaces(groupStandings);
+  renderThirdsTable(thirdsRanking);
   advanceBracket(groupStandings, thirdsRanking);
+}
+
+// Render the 12 third-place teams table dynamically
+function renderThirdsTable(thirds) {
+  const tbody = document.getElementById('thirds-table-body');
+  const card = document.getElementById('thirds-ranking-card');
+  if (!tbody || !card) return;
+  
+  let html = '';
+  thirds.forEach((t, idx) => {
+    const isAdvancing = idx < 8; // Top 8 thirds advance
+    const flagHtml = getFlagImgHtml(t.team);
+    const rowClass = isAdvancing ? 'standing-row-1' : 'standing-row-eliminated';
+    const statusText = isAdvancing ? '✅ Clasificado' : '❌ Eliminado';
+    
+    html += `
+      <tr class="${rowClass}">
+        <td style="font-weight: 700; text-align: center;">${idx + 1}</td>
+        <td style="font-weight: 600; text-align: center;">Grupo ${t.group}</td>
+        <td style="text-align: left; font-weight: 700;">
+          <span class="flag" style="margin-right: 6px;">${flagHtml}</span>${t.team}
+        </td>
+        <td style="font-weight: 700; text-align: center;">${t.pts}</td>
+        <td style="text-align: center;">${t.gf}</td>
+        <td style="font-weight: 600; text-align: center;">${t.dg > 0 ? '+' + t.dg : t.dg}</td>
+        <td style="color: var(--color-text-muted); text-align: center;">#${t.fifaRank}</td>
+        <td style="font-weight: 700; text-align: center;">${statusText}</td>
+      </tr>
+    `;
+  });
+  
+  tbody.innerHTML = html;
+  card.style.display = 'block';
 }
 
 // Calculate group standings for all groups A-L

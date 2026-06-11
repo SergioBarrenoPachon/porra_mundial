@@ -115,7 +115,16 @@
         Muestra lo que cada participante predijo en cada partido y los puntos que obtuvo. Los pronósticos están ocultos hasta el cierre de la fecha límite (13/06/2026 21:00).
       </p>
       
-      <div class="matrix-container">
+      <!-- Blocked notice template -->
+      <div id="matrix-blocked-container" style="display: none; text-align: center; padding: 40px 20px; border: 1px dashed var(--border-color); border-radius: 12px; background: rgba(0,0,0,0.15);">
+        <span style="font-size: 3rem; display: block; margin-bottom: 10px;">🔒</span>
+        <h3 style="margin-top: 10px; font-size: 1.3rem; font-weight: 800; color: #fff;">Matriz Comparativa Bloqueada</h3>
+        <p style="color: var(--color-text-muted); max-width: 500px; margin: 10px auto 0 auto; font-size: 0.9rem; line-height: 1.5;">
+          Los pronósticos de todos los participantes se desbloquearán automáticamente cuando se cierre el plazo de envío de apuestas (Sábado 13/06/2026 a las 21:00). ¡Hasta entonces, las estrategias de los participantes están protegidas!
+        </p>
+      </div>
+
+      <div class="matrix-container" id="matrix-table-wrapper">
         <table class="matrix-table">
           <thead id="matrix-head">
             <!-- Headers generated dynamically by JS -->

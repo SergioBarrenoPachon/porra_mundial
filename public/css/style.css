@@ -352,7 +352,7 @@ nav {
 
 .group-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
   gap: 24px;
 }
 
@@ -445,9 +445,9 @@ nav {
 .team-name {
   font-weight: 700;
   font-size: 0.88rem; /* slightly smaller font for long names */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal; /* Allow wrapping so country names are shown complete */
+  overflow: visible;
+  text-overflow: clip;
   flex: 1; /* fills remaining space in team-wrapper */
   min-width: 0;
 }
@@ -561,14 +561,14 @@ nav {
   font-weight: 700;
 }
 
-.standing-row-1 {
-  background: hsla(142, 70%, 45%, 0.1);
-  color: hsl(142, 70%, 80%);
+.standing-row-1, .standing-row-2 {
+  background: hsla(142, 70%, 45%, 0.12);
+  color: hsl(142, 70%, 82%);
 }
 
-.standing-row-2 {
-  background: hsla(210, 80%, 55%, 0.08);
-  color: hsl(210, 80%, 80%);
+.standing-row-eliminated {
+  background: hsla(355, 85%, 55%, 0.08);
+  color: hsl(355, 85%, 80%);
 }
 
 /* Bracket styling (Round of 32 down to Finals) */

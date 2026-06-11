@@ -76,20 +76,34 @@ async function loadLeaderboard() {
 
 async function loadMasterPredictions() {
   try {
+    const deadlineRes = await fetch('/api/predictions/deadline');
+    const deadlineData = await deadlineRes.json();
+    
+    // Block comparison matrix completely before the deadline (except for administrators)
+    const showBlocked = !deadlineData.isPassed && (!currentUser || !currentUser.isAdmin);
+    
+    if (showBlocked) {
+      document.getElementById('matrix-table-wrapper').style.display = 'none';
+      document.getElementById('search-matrix').style.display = 'none';
+      document.getElementById('matrix-blocked-container').style.display = 'block';
+      document.getElementById('matrix-lock-notice').style.display = 'none';
+      return;
+    }
+    
     const res = await fetch('/api/predictions-master');
     if (res.ok) {
       masterPredictions = await res.json();
       document.getElementById('matrix-lock-notice').innerText = "✅ Los pronósticos de todos los participantes ya están visibles.";
+      document.getElementById('matrix-table-wrapper').style.display = 'block';
+      document.getElementById('search-matrix').style.display = 'block';
+      document.getElementById('matrix-blocked-container').style.display = 'none';
+      renderMatrixTable();
     } else {
-      // Fallback: load only the current user's predictions for their own column
-      if (currentUser) {
-        const singleRes = await fetch(`/api/predictions/${currentUser.id}`);
-        const singlePred = await singleRes.json();
-        masterPredictions = {};
-        masterPredictions[currentUser.username] = singlePred;
-      }
+      document.getElementById('matrix-table-wrapper').style.display = 'none';
+      document.getElementById('search-matrix').style.display = 'none';
+      document.getElementById('matrix-blocked-container').style.display = 'block';
+      document.getElementById('matrix-lock-notice').style.display = 'none';
     }
-    renderMatrixTable();
   } catch (err) {
     console.error("Error loading master predictions:", err);
   }
