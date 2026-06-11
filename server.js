@@ -19,11 +19,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 const DB_FILE = path.join(__dirname, 'data.json');
 
 function readDb() {
+  if (!fs.existsSync(DB_FILE)) {
+    console.warn('Database file not found. Initializing empty database.');
+    return { config: {}, users: [], predictions: {}, matches: [], rankingHistory: [] };
+  }
   try {
     const data = fs.readFileSync(DB_FILE, 'utf8');
     return JSON.parse(data);
   } catch (err) {
-    console.error("Error reading database file:", err);
+    console.error('Error reading database file:', err);
     return { config: {}, users: [], predictions: {}, matches: [], rankingHistory: [] };
   }
 }

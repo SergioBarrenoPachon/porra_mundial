@@ -1,0 +1,2567 @@
+{
+  "config": {
+    "points": {
+      "outcome": 1,
+      "exact": 3,
+      "balon_oro": 10,
+      "balon_plata": 5,
+      "balon_bronce": 3,
+      "bota_oro": 10,
+      "bota_plata": 5,
+      "bota_bronce": 3
+    },
+    "winners": {
+      "balon_oro": "Kylian Mbappe",
+      "balon_plata": "",
+      "balon_bronce": "",
+      "bota_oro": "Erling Haaland",
+      "bota_plata": "",
+      "bota_bronce": ""
+    }
+  },
+  "users": [
+    {
+      "id": "user_sofia",
+      "username": "Sofia",
+      "passwordHash": "53a4dcb33f8f15e15c5013aae951d77a0f20a52f99020a1ceced6ad4339535bf",
+      "salt": "209f1d83fac32b3f29c4549838322427",
+      "isAdmin": false
+    },
+    {
+      "id": "user_pablo",
+      "username": "Pablo",
+      "passwordHash": "e58e80540da3c9359bcf3326925dbe2c5f7486430a1f30841f2bc63549c588bd",
+      "salt": "3f56c9f0cd10d25a7f9e87a12f77e76f",
+      "isAdmin": false
+    },
+    {
+      "id": "user_olga",
+      "username": "Olga",
+      "passwordHash": "9a077f4d989f9996b75a45a5e8c566109dd82dbac0a7ccb4b2e0664be912b21a",
+      "salt": "c65208640b16d6f65f9cf831e6941c59",
+      "isAdmin": false
+    },
+    {
+      "id": "user_ada",
+      "username": "Ada",
+      "passwordHash": "39b7cbfa98b258cd60b8bb3b1208f7ef19f15b76728106174b5935810208ae78",
+      "salt": "7959679dfb49834d2e9bb10d132df9a5",
+      "isAdmin": false
+    },
+    {
+      "id": "user_clau",
+      "username": "Clau",
+      "passwordHash": "56d95f9513e3a681099354b0b35a217f4bd6ff26ede4638d397893ceef9f697e",
+      "salt": "6928718144bf0debd06ee14b3ee4d0dc",
+      "isAdmin": false
+    },
+    {
+      "id": "user_sergiob",
+      "username": "Sergio B",
+      "passwordHash": "ea34e8f0b46279cdec61d1fb018be4aa12f36cb86f5a21f362cac00474bd974b",
+      "salt": "296481e356c3ac808fa2b61ba7042ba8",
+      "isAdmin": true
+    },
+    {
+      "id": "user_alex",
+      "username": "Alex",
+      "passwordHash": "64c42731c221495a75d44ed190635c0daaa581f439d4de1fba8eb9f449f51bfa",
+      "salt": "640eb5df3290d9472fafbdcd92de509a",
+      "isAdmin": false
+    },
+    {
+      "id": "user_sergiol",
+      "username": "Sergio L",
+      "passwordHash": "a473cd4981875a9a63baac486a044ed1c1d5f53bd1bd230fdb35189769980fa6",
+      "salt": "693b57a971ae0a5fac46850c7d527423",
+      "isAdmin": false
+    }
+  ],
+  "predictions": {
+    "user_sofia": {
+      "matches": {
+        "M001": {
+          "gl": 3,
+          "gv": 1,
+          "pkl": "",
+          "pkv": ""
+        },
+        "M002": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M003": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M004": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M005": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M006": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M007": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M008": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M009": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M010": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M011": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M012": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M013": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M014": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M015": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M016": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M017": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M018": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M019": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M020": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M021": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M022": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M023": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M024": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M025": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M026": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M027": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M028": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M029": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M030": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M031": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M032": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M033": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M034": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M035": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M036": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M037": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M038": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M039": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M040": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M041": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M042": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M043": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M044": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M045": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M046": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M047": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M048": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M049": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M050": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M051": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M052": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M053": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M054": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M055": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M056": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M057": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M058": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M059": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M060": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M061": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M062": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M063": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M064": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M065": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M066": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M067": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M068": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M069": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M070": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M071": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M072": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M73": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M74": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M75": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M76": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M77": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M78": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M79": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M80": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M81": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M82": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M83": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M84": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M85": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M86": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M87": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M88": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M89": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M90": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M91": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M92": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M93": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M94": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M95": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M96": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M97": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M98": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M99": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M100": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M101": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M102": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M103": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M104": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        }
+      },
+      "specials": {
+        "balon_oro": "Kylian MbappeLionel Messi",
+        "balon_plata": "Kylian Mbappe",
+        "balon_bronce": "Luka Modric",
+        "bota_oro": "Erling HaalandErling Haaland",
+        "bota_plata": "Harry Kane",
+        "bota_bronce": "Robert Lewandowski"
+      }
+    },
+    "user_pablo": {
+      "matches": {},
+      "specials": {
+        "balon_oro": "",
+        "balon_plata": "",
+        "balon_bronce": "",
+        "bota_oro": "",
+        "bota_plata": "",
+        "bota_bronce": ""
+      }
+    },
+    "user_olga": {
+      "matches": {},
+      "specials": {
+        "balon_oro": "",
+        "balon_plata": "",
+        "balon_bronce": "",
+        "bota_oro": "",
+        "bota_plata": "",
+        "bota_bronce": ""
+      }
+    },
+    "user_ada": {
+      "matches": {},
+      "specials": {
+        "balon_oro": "",
+        "balon_plata": "",
+        "balon_bronce": "",
+        "bota_oro": "",
+        "bota_plata": "",
+        "bota_bronce": ""
+      }
+    },
+    "user_clau": {
+      "matches": {},
+      "specials": {
+        "balon_oro": "",
+        "balon_plata": "",
+        "balon_bronce": "",
+        "bota_oro": "",
+        "bota_plata": "",
+        "bota_bronce": ""
+      }
+    },
+    "user_sergiob": {
+      "matches": {
+        "M001": {
+          "gl": 3,
+          "gv": 2,
+          "pkl": "",
+          "pkv": ""
+        },
+        "M002": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M003": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M004": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M005": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M006": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M007": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M008": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M009": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M010": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M011": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M012": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M013": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M014": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M015": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M016": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M017": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M018": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M019": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M020": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M021": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M022": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M023": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M024": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M025": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M026": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M027": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M028": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M029": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M030": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M031": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M032": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M033": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M034": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M035": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M036": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M037": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M038": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M039": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M040": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M041": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M042": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M043": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M044": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M045": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M046": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M047": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M048": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M049": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M050": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M051": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M052": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M053": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M054": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M055": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M056": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M057": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M058": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M059": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M060": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M061": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M062": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M063": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M064": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M065": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M066": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M067": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M068": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M069": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M070": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M071": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M072": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M73": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M74": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M75": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M76": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M77": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M78": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M79": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M80": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M81": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M82": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M83": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M84": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M85": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M86": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M87": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M88": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M89": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M90": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M91": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M92": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M93": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M94": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M95": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M96": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M97": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M98": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M99": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M100": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M101": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M102": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M103": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        },
+        "M104": {
+          "gl": "",
+          "gv": "",
+          "pkl": "",
+          "pkv": ""
+        }
+      },
+      "specials": {
+        "balon_oro": "",
+        "balon_plata": "",
+        "balon_bronce": "",
+        "bota_oro": "",
+        "bota_plata": "",
+        "bota_bronce": ""
+      }
+    },
+    "user_alex": {
+      "matches": {},
+      "specials": {
+        "balon_oro": "",
+        "balon_plata": "",
+        "balon_bronce": "",
+        "bota_oro": "",
+        "bota_plata": "",
+        "bota_bronce": ""
+      }
+    },
+    "user_sergiol": {
+      "matches": {},
+      "specials": {
+        "balon_oro": "",
+        "balon_plata": "",
+        "balon_bronce": "",
+        "bota_oro": "",
+        "bota_plata": "",
+        "bota_bronce": ""
+      }
+    }
+  },
+  "matches": [
+    {
+      "id": "M001",
+      "group": "A",
+      "phase": "Group Stage",
+      "local": "Mexico",
+      "visitor": "Sudafrica",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M002",
+      "group": "A",
+      "phase": "Group Stage",
+      "local": "Corea del Sur",
+      "visitor": "Rep. Checa",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M003",
+      "group": "A",
+      "phase": "Group Stage",
+      "local": "Mexico",
+      "visitor": "Corea del Sur",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M004",
+      "group": "A",
+      "phase": "Group Stage",
+      "local": "Sudafrica",
+      "visitor": "Rep. Checa",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M005",
+      "group": "A",
+      "phase": "Group Stage",
+      "local": "Rep. Checa",
+      "visitor": "Mexico",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M006",
+      "group": "A",
+      "phase": "Group Stage",
+      "local": "Sudafrica",
+      "visitor": "Corea del Sur",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M007",
+      "group": "B",
+      "phase": "Group Stage",
+      "local": "Canada",
+      "visitor": "Bosnia y Herzegovina",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M008",
+      "group": "B",
+      "phase": "Group Stage",
+      "local": "Catar",
+      "visitor": "Suiza",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M009",
+      "group": "B",
+      "phase": "Group Stage",
+      "local": "Canada",
+      "visitor": "Catar",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M010",
+      "group": "B",
+      "phase": "Group Stage",
+      "local": "Bosnia y Herzegovina",
+      "visitor": "Suiza",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M011",
+      "group": "B",
+      "phase": "Group Stage",
+      "local": "Suiza",
+      "visitor": "Canada",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M012",
+      "group": "B",
+      "phase": "Group Stage",
+      "local": "Bosnia y Herzegovina",
+      "visitor": "Catar",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M013",
+      "group": "C",
+      "phase": "Group Stage",
+      "local": "Brasil",
+      "visitor": "Marruecos",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M014",
+      "group": "C",
+      "phase": "Group Stage",
+      "local": "Haiti",
+      "visitor": "Escocia",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M015",
+      "group": "C",
+      "phase": "Group Stage",
+      "local": "Brasil",
+      "visitor": "Haiti",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M016",
+      "group": "C",
+      "phase": "Group Stage",
+      "local": "Marruecos",
+      "visitor": "Escocia",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M017",
+      "group": "C",
+      "phase": "Group Stage",
+      "local": "Escocia",
+      "visitor": "Brasil",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M018",
+      "group": "C",
+      "phase": "Group Stage",
+      "local": "Marruecos",
+      "visitor": "Haiti",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M019",
+      "group": "D",
+      "phase": "Group Stage",
+      "local": "Estados Unidos",
+      "visitor": "Paraguay",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M020",
+      "group": "D",
+      "phase": "Group Stage",
+      "local": "Australia",
+      "visitor": "Turquia",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M021",
+      "group": "D",
+      "phase": "Group Stage",
+      "local": "Estados Unidos",
+      "visitor": "Australia",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M022",
+      "group": "D",
+      "phase": "Group Stage",
+      "local": "Paraguay",
+      "visitor": "Turquia",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M023",
+      "group": "D",
+      "phase": "Group Stage",
+      "local": "Turquia",
+      "visitor": "Estados Unidos",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M024",
+      "group": "D",
+      "phase": "Group Stage",
+      "local": "Paraguay",
+      "visitor": "Australia",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M025",
+      "group": "E",
+      "phase": "Group Stage",
+      "local": "Alemania",
+      "visitor": "Curazao",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M026",
+      "group": "E",
+      "phase": "Group Stage",
+      "local": "Costa de Marfil",
+      "visitor": "Ecuador",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M027",
+      "group": "E",
+      "phase": "Group Stage",
+      "local": "Alemania",
+      "visitor": "Costa de Marfil",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M028",
+      "group": "E",
+      "phase": "Group Stage",
+      "local": "Curazao",
+      "visitor": "Ecuador",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M029",
+      "group": "E",
+      "phase": "Group Stage",
+      "local": "Ecuador",
+      "visitor": "Alemania",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M030",
+      "group": "E",
+      "phase": "Group Stage",
+      "local": "Curazao",
+      "visitor": "Costa de Marfil",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M031",
+      "group": "F",
+      "phase": "Group Stage",
+      "local": "Paises Bajos",
+      "visitor": "Japon",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M032",
+      "group": "F",
+      "phase": "Group Stage",
+      "local": "Suecia",
+      "visitor": "Tunez",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M033",
+      "group": "F",
+      "phase": "Group Stage",
+      "local": "Paises Bajos",
+      "visitor": "Suecia",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M034",
+      "group": "F",
+      "phase": "Group Stage",
+      "local": "Japon",
+      "visitor": "Tunez",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M035",
+      "group": "F",
+      "phase": "Group Stage",
+      "local": "Tunez",
+      "visitor": "Paises Bajos",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M036",
+      "group": "F",
+      "phase": "Group Stage",
+      "local": "Japon",
+      "visitor": "Suecia",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M037",
+      "group": "G",
+      "phase": "Group Stage",
+      "local": "Belgica",
+      "visitor": "Egipto",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M038",
+      "group": "G",
+      "phase": "Group Stage",
+      "local": "Iran",
+      "visitor": "Nueva Zelanda",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M039",
+      "group": "G",
+      "phase": "Group Stage",
+      "local": "Belgica",
+      "visitor": "Iran",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M040",
+      "group": "G",
+      "phase": "Group Stage",
+      "local": "Egipto",
+      "visitor": "Nueva Zelanda",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M041",
+      "group": "G",
+      "phase": "Group Stage",
+      "local": "Nueva Zelanda",
+      "visitor": "Belgica",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M042",
+      "group": "G",
+      "phase": "Group Stage",
+      "local": "Egipto",
+      "visitor": "Iran",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M043",
+      "group": "H",
+      "phase": "Group Stage",
+      "local": "Espana",
+      "visitor": "Cabo Verde",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M044",
+      "group": "H",
+      "phase": "Group Stage",
+      "local": "Arabia Saudi",
+      "visitor": "Uruguay",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M045",
+      "group": "H",
+      "phase": "Group Stage",
+      "local": "Espana",
+      "visitor": "Arabia Saudi",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M046",
+      "group": "H",
+      "phase": "Group Stage",
+      "local": "Cabo Verde",
+      "visitor": "Uruguay",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M047",
+      "group": "H",
+      "phase": "Group Stage",
+      "local": "Uruguay",
+      "visitor": "Espana",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M048",
+      "group": "H",
+      "phase": "Group Stage",
+      "local": "Cabo Verde",
+      "visitor": "Arabia Saudi",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M049",
+      "group": "I",
+      "phase": "Group Stage",
+      "local": "Francia",
+      "visitor": "Senegal",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M050",
+      "group": "I",
+      "phase": "Group Stage",
+      "local": "Noruega",
+      "visitor": "Irak",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M051",
+      "group": "I",
+      "phase": "Group Stage",
+      "local": "Francia",
+      "visitor": "Noruega",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M052",
+      "group": "I",
+      "phase": "Group Stage",
+      "local": "Senegal",
+      "visitor": "Irak",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M053",
+      "group": "I",
+      "phase": "Group Stage",
+      "local": "Irak",
+      "visitor": "Francia",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M054",
+      "group": "I",
+      "phase": "Group Stage",
+      "local": "Senegal",
+      "visitor": "Noruega",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M055",
+      "group": "J",
+      "phase": "Group Stage",
+      "local": "Argentina",
+      "visitor": "Argelia",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M056",
+      "group": "J",
+      "phase": "Group Stage",
+      "local": "Austria",
+      "visitor": "Jordania",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M057",
+      "group": "J",
+      "phase": "Group Stage",
+      "local": "Argentina",
+      "visitor": "Austria",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M058",
+      "group": "J",
+      "phase": "Group Stage",
+      "local": "Argelia",
+      "visitor": "Jordania",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M059",
+      "group": "J",
+      "phase": "Group Stage",
+      "local": "Jordania",
+      "visitor": "Argentina",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M060",
+      "group": "J",
+      "phase": "Group Stage",
+      "local": "Argelia",
+      "visitor": "Austria",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M061",
+      "group": "K",
+      "phase": "Group Stage",
+      "local": "Portugal",
+      "visitor": "RD Congo",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M062",
+      "group": "K",
+      "phase": "Group Stage",
+      "local": "Uzbekistan",
+      "visitor": "Colombia",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M063",
+      "group": "K",
+      "phase": "Group Stage",
+      "local": "Portugal",
+      "visitor": "Uzbekistan",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M064",
+      "group": "K",
+      "phase": "Group Stage",
+      "local": "RD Congo",
+      "visitor": "Colombia",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M065",
+      "group": "K",
+      "phase": "Group Stage",
+      "local": "Colombia",
+      "visitor": "Portugal",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M066",
+      "group": "K",
+      "phase": "Group Stage",
+      "local": "RD Congo",
+      "visitor": "Uzbekistan",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M067",
+      "group": "L",
+      "phase": "Group Stage",
+      "local": "Inglaterra",
+      "visitor": "Croacia",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M068",
+      "group": "L",
+      "phase": "Group Stage",
+      "local": "Ghana",
+      "visitor": "Panama",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M069",
+      "group": "L",
+      "phase": "Group Stage",
+      "local": "Inglaterra",
+      "visitor": "Ghana",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M070",
+      "group": "L",
+      "phase": "Group Stage",
+      "local": "Croacia",
+      "visitor": "Panama",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M071",
+      "group": "L",
+      "phase": "Group Stage",
+      "local": "Panama",
+      "visitor": "Inglaterra",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M072",
+      "group": "L",
+      "phase": "Group Stage",
+      "local": "Croacia",
+      "visitor": "Ghana",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M73",
+      "group": null,
+      "phase": "Dieciseisavos",
+      "local": "Local M73",
+      "visitor": "Visitante M73",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M74",
+      "group": null,
+      "phase": "Dieciseisavos",
+      "local": "Local M74",
+      "visitor": "Visitante M74",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M75",
+      "group": null,
+      "phase": "Dieciseisavos",
+      "local": "Local M75",
+      "visitor": "Visitante M75",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M76",
+      "group": null,
+      "phase": "Dieciseisavos",
+      "local": "Local M76",
+      "visitor": "Visitante M76",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M77",
+      "group": null,
+      "phase": "Dieciseisavos",
+      "local": "Local M77",
+      "visitor": "Visitante M77",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M78",
+      "group": null,
+      "phase": "Dieciseisavos",
+      "local": "Local M78",
+      "visitor": "Visitante M78",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M79",
+      "group": null,
+      "phase": "Dieciseisavos",
+      "local": "Local M79",
+      "visitor": "Visitante M79",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M80",
+      "group": null,
+      "phase": "Dieciseisavos",
+      "local": "Local M80",
+      "visitor": "Visitante M80",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M81",
+      "group": null,
+      "phase": "Dieciseisavos",
+      "local": "Local M81",
+      "visitor": "Visitante M81",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M82",
+      "group": null,
+      "phase": "Dieciseisavos",
+      "local": "Local M82",
+      "visitor": "Visitante M82",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M83",
+      "group": null,
+      "phase": "Dieciseisavos",
+      "local": "Local M83",
+      "visitor": "Visitante M83",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M84",
+      "group": null,
+      "phase": "Dieciseisavos",
+      "local": "Local M84",
+      "visitor": "Visitante M84",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M85",
+      "group": null,
+      "phase": "Dieciseisavos",
+      "local": "Local M85",
+      "visitor": "Visitante M85",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M86",
+      "group": null,
+      "phase": "Dieciseisavos",
+      "local": "Local M86",
+      "visitor": "Visitante M86",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M87",
+      "group": null,
+      "phase": "Dieciseisavos",
+      "local": "Local M87",
+      "visitor": "Visitante M87",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M88",
+      "group": null,
+      "phase": "Dieciseisavos",
+      "local": "Local M88",
+      "visitor": "Visitante M88",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M89",
+      "group": null,
+      "phase": "Octavos",
+      "local": "Local M89",
+      "visitor": "Visitante M89",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M90",
+      "group": null,
+      "phase": "Octavos",
+      "local": "Local M90",
+      "visitor": "Visitante M90",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M91",
+      "group": null,
+      "phase": "Octavos",
+      "local": "Local M91",
+      "visitor": "Visitante M91",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M92",
+      "group": null,
+      "phase": "Octavos",
+      "local": "Local M92",
+      "visitor": "Visitante M92",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M93",
+      "group": null,
+      "phase": "Octavos",
+      "local": "Local M93",
+      "visitor": "Visitante M93",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M94",
+      "group": null,
+      "phase": "Octavos",
+      "local": "Local M94",
+      "visitor": "Visitante M94",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M95",
+      "group": null,
+      "phase": "Octavos",
+      "local": "Local M95",
+      "visitor": "Visitante M95",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M96",
+      "group": null,
+      "phase": "Octavos",
+      "local": "Local M96",
+      "visitor": "Visitante M96",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M97",
+      "group": null,
+      "phase": "Cuartos",
+      "local": "Local M97",
+      "visitor": "Visitante M97",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M98",
+      "group": null,
+      "phase": "Cuartos",
+      "local": "Local M98",
+      "visitor": "Visitante M98",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M99",
+      "group": null,
+      "phase": "Cuartos",
+      "local": "Local M99",
+      "visitor": "Visitante M99",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M100",
+      "group": null,
+      "phase": "Cuartos",
+      "local": "Local M100",
+      "visitor": "Visitante M100",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M101",
+      "group": null,
+      "phase": "Semifinales",
+      "local": "Local M101",
+      "visitor": "Visitante M101",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M102",
+      "group": null,
+      "phase": "Semifinales",
+      "local": "Local M102",
+      "visitor": "Visitante M102",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M103",
+      "group": null,
+      "phase": "Finales",
+      "local": "Local M103",
+      "visitor": "Visitante M103",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    },
+    {
+      "id": "M104",
+      "group": null,
+      "phase": "Finales",
+      "local": "Local M104",
+      "visitor": "Visitante M104",
+      "gl": null,
+      "gv": null,
+      "pkl": null,
+      "pkv": null
+    }
+  ],
+  "rankingHistory": []
+}
