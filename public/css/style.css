@@ -811,12 +811,15 @@ nav {
   }
   .group-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
   .bracket-stage-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
   .specials-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
   .float-bar-content {
     flex-direction: column;
@@ -825,6 +828,85 @@ nav {
   }
   .float-bar-content button {
     width: 100% !important;
+  }
+
+  /* Responsive layout for match card body: stack teams vertically and scores column */
+  .match-body {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    row-gap: 8px;
+    column-gap: 12px;
+    align-items: center;
+  }
+  .match-body .team-wrapper:first-child {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100% !important;
+    justify-content: flex-start !important;
+  }
+  .match-body .team-wrapper.visitor {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100% !important;
+    justify-content: flex-end !important;
+    flex-direction: row-reverse !important;
+  }
+  .match-body .score-inputs {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    flex-direction: column !important;
+    width: auto !important;
+    gap: 4px !important;
+    justify-content: center;
+  }
+  .match-body .score-divider {
+    display: none !important;
+  }
+
+  /* Adjust score input size on mobile */
+  .score-input {
+    width: 36px !important;
+    height: 32px !important;
+  }
+
+  /* Compact padding for main containers on mobile */
+  .main-container {
+    width: 95%;
+    margin-top: 20px;
+  }
+  .card {
+    padding: 16px !important;
+    border-radius: 12px !important;
+  }
+
+  /* Responsive table rendering for dashboard */
+  .matrix-table {
+    font-size: 0.75rem;
+  }
+  .matrix-table th, .matrix-table td {
+    padding: 6px 8px;
+  }
+  
+  /* Match admin list responsiveness */
+  .match-admin-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .match-admin-info {
+    width: 100% !important;
+  }
+  .match-admin-scores {
+    width: 100% !important;
+    justify-content: space-between;
+  }
+  
+  /* Prevent team names from overflowing and allow text wrap */
+  .team-name {
+    font-size: 0.85rem !important;
+    white-space: normal !important;
+    word-break: break-word;
   }
 }
 
