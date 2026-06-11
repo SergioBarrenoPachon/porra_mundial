@@ -1,23 +1,23 @@
 /* Custom variables for a premium, harmonious design system */
 :root {
-  --bg-main: hsl(220, 35%, 8%);
-  --bg-gradient: linear-gradient(135deg, hsl(220, 35%, 8%) 0%, hsl(220, 25%, 16%) 100%);
-  --bg-card: hsla(220, 24%, 12%, 0.85);
-  --bg-card-hover: hsla(220, 24%, 16%, 0.95);
-  --border-color: hsla(220, 20%, 25%, 0.4);
-  --border-color-glow: hsla(175, 80%, 45%, 0.6);
+  --bg-main: hsl(230, 40%, 7%);
+  --bg-gradient: linear-gradient(135deg, hsl(230, 40%, 7%) 0%, hsl(245, 30%, 14%) 100%);
+  --bg-card: hsla(230, 35%, 12%, 0.75);
+  --bg-card-hover: hsla(230, 35%, 16%, 0.9);
+  --border-color: hsla(230, 25%, 25%, 0.4);
+  --border-color-glow: hsla(145, 80%, 45%, 0.5);
   
-  --color-text-main: hsl(210, 20%, 95%);
+  --color-text-main: hsl(210, 20%, 96%);
   --color-text-muted: hsl(215, 15%, 75%);
   
-  --primary: hsl(175, 80%, 45%);
-  --primary-glow: hsla(175, 80%, 45%, 0.25);
+  --primary: hsl(145, 80%, 45%);
+  --primary-glow: hsla(145, 80%, 45%, 0.25);
   --secondary: hsl(210, 80%, 55%);
-  --accent-gold: hsl(45, 90%, 50%);
-  --accent-gold-glow: hsla(45, 90%, 50%, 0.2);
-  --accent-green: hsl(142, 70%, 45%);
-  --accent-green-glow: hsla(142, 70%, 45%, 0.2);
-  --accent-red: hsl(350, 75%, 50%);
+  --accent-gold: hsl(46, 95%, 52%);
+  --accent-gold-glow: hsla(46, 95%, 52%, 0.2);
+  --accent-green: hsl(145, 80%, 40%);
+  --accent-green-glow: hsla(145, 80%, 40%, 0.2);
+  --accent-red: hsl(355, 85%, 55%);
   
   --font-main: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
   --transition-fast: 0.2s ease;
@@ -424,8 +424,21 @@ nav {
 }
 
 .flag {
-  font-size: 1.5rem;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flag-img {
+  width: 24px;
+  height: 16px;
+  object-fit: cover;
+  border-radius: 2px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: inline-block;
+  flex-shrink: 0;
 }
 
 .team-name {
@@ -759,4 +772,63 @@ nav {
 .float-bar-text {
   font-weight: 600;
   color: var(--color-text-muted);
+}
+
+/* Responsive adjustments for mobile devices */
+@media (max-width: 768px) {
+  .nav-container {
+    flex-direction: column;
+    gap: 12px;
+    padding: 10px 0;
+  }
+  nav {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+  .nav-user {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+    padding-top: 8px;
+    width: 100%;
+    justify-content: center;
+  }
+  .hero-title {
+    font-size: 1.8rem !important;
+  }
+  .hero-subtitle {
+    font-size: 1rem !important;
+  }
+  .phase-tabs {
+    flex-direction: column;
+    width: 100%;
+  }
+  .phase-tab {
+    text-align: center;
+    width: 100%;
+  }
+  .group-grid {
+    grid-template-columns: 1fr;
+  }
+  .bracket-stage-grid {
+    grid-template-columns: 1fr;
+  }
+  .specials-grid {
+    grid-template-columns: 1fr;
+  }
+  .float-bar-content {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  .float-bar-content button {
+    width: 100% !important;
+  }
+}
+
+/* FOUC Protection for Admin Page */
+html:not(.auth-verified) body.admin-page {
+  display: none !important;
 }

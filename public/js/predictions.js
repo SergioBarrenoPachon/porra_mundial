@@ -1,18 +1,24 @@
-// Team Rankings and Flag Emojis for all 48 teams
+// Team Rankings and Flag CDN codes for all 48 teams
 const TEAM_DATA = {
-  "Mexico": { rank: 17, flag: "🇲🇽" }, "Sudafrica": { rank: 59, flag: "🇿🇦" }, "Corea del Sur": { rank: 24, flag: "🇰🇷" }, "Rep. Checa": { rank: 36, flag: "🇨🇿" },
-  "Canada": { rank: 40, flag: "🇨🇦" }, "Bosnia y Herzegovina": { rank: 74, flag: "🇧🇦" }, "Catar": { rank: 34, flag: "🇶🇦" }, "Suiza": { rank: 15, flag: "🇨🇭" },
-  "Brasil": { rank: 5, flag: "🇧🇷" }, "Marruecos": { rank: 13, flag: "🇲🇦" }, "Haiti": { rank: 86, flag: "🇭🇹" }, "Escocia": { rank: 39, flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
-  "Estados Unidos": { rank: 16, flag: "🇺🇸" }, "Paraguay": { rank: 56, flag: "🇵🇾" }, "Australia": { rank: 25, flag: "🇦🇺" }, "Turquia": { rank: 35, flag: "🇹🇷" },
-  "Alemania": { rank: 11, flag: "🇩🇪" }, "Curazao": { rank: 90, flag: "🇨🇼" }, "Costa de Marfil": { rank: 38, flag: "🇨🇮" }, "Ecuador": { rank: 30, flag: "🇪🇨" },
-  "Paises Bajos": { rank: 7, flag: "🇳🇱" }, "Japon": { rank: 18, flag: "🇯🇵" }, "Suecia": { rank: 23, flag: "🇸🇪" }, "Tunez": { rank: 41, flag: "🇹🇳" },
-  "Belgica": { rank: 6, flag: "🇧🇪" }, "Egipto": { rank: 37, flag: "🇪🇬" }, "Iran": { rank: 20, flag: "🇮🇷" }, "Nueva Zelanda": { rank: 103, flag: "🇳🇿" },
-  "Espana": { rank: 3, flag: "🇪🇸" }, "Cabo Verde": { rank: 65, flag: "🇨🇻" }, "Arabia Saudi": { rank: 53, flag: "🇸🇦" }, "Uruguay": { rank: 14, flag: "🇺🇾" },
-  "Francia": { rank: 2, flag: "🇫🇷" }, "Senegal": { rank: 19, flag: "🇸🇳" }, "Noruega": { rank: 45, flag: "🇳🇴" }, "Irak": { rank: 55, flag: "🇮🇶" },
-  "Argentina": { rank: 1, flag: "🇦🇷" }, "Argelia": { rank: 44, flag: "🇩🇿" }, "Austria": { rank: 22, flag: "🇦🇹" }, "Jordania": { rank: 71, flag: "🇯🇴" },
-  "Portugal": { rank: 8, flag: "🇵🇹" }, "RD Congo": { rank: 62, flag: "🇨🇩" }, "Uzbekistan": { rank: 66, flag: "🇺🇿" }, "Colombia": { rank: 12, flag: "🇨🇴" },
-  "Inglaterra": { rank: 4, flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" }, "Croacia": { rank: 10, flag: "🇭🇷" }, "Ghana": { rank: 64, flag: "🇬🇭" }, "Panama": { rank: 43, flag: "🇵🇦" }
+  "Mexico": { rank: 17, flag: "mx" }, "Sudafrica": { rank: 59, flag: "za" }, "Corea del Sur": { rank: 24, flag: "kr" }, "Rep. Checa": { rank: 36, flag: "cz" },
+  "Canada": { rank: 40, flag: "ca" }, "Bosnia y Herzegovina": { rank: 74, flag: "ba" }, "Catar": { rank: 34, flag: "qa" }, "Suiza": { rank: 15, flag: "ch" },
+  "Brasil": { rank: 5, flag: "br" }, "Marruecos": { rank: 13, flag: "ma" }, "Haiti": { rank: 86, flag: "ht" }, "Escocia": { rank: 39, flag: "gb-sct" },
+  "Estados Unidos": { rank: 16, flag: "us" }, "Paraguay": { rank: 56, flag: "py" }, "Australia": { rank: 25, flag: "au" }, "Turquia": { rank: 35, flag: "tr" },
+  "Alemania": { rank: 11, flag: "de" }, "Curazao": { rank: 90, flag: "cw" }, "Costa de Marfil": { rank: 38, flag: "ci" }, "Ecuador": { rank: 30, flag: "ec" },
+  "Paises Bajos": { rank: 7, flag: "nl" }, "Japon": { rank: 18, flag: "jp" }, "Suecia": { rank: 23, flag: "se" }, "Tunez": { rank: 41, flag: "tn" },
+  "Belgica": { rank: 6, flag: "be" }, "Egipto": { rank: 37, flag: "eg" }, "Iran": { rank: 20, flag: "ir" }, "Nueva Zelanda": { rank: 103, flag: "nz" },
+  "Espana": { rank: 3, flag: "es" }, "Cabo Verde": { rank: 65, flag: "cv" }, "Arabia Saudi": { rank: 53, flag: "sa" }, "Uruguay": { rank: 14, flag: "uy" },
+  "Francia": { rank: 2, flag: "fr" }, "Senegal": { rank: 19, flag: "sn" }, "Noruega": { rank: 45, flag: "no" }, "Irak": { rank: 55, flag: "iq" },
+  "Argentina": { rank: 1, flag: "ar" }, "Argelia": { rank: 44, flag: "dz" }, "Austria": { rank: 22, flag: "at" }, "Jordania": { rank: 71, flag: "jo" },
+  "Portugal": { rank: 8, flag: "pt" }, "RD Congo": { rank: 62, flag: "cd" }, "Uzbekistan": { rank: 66, flag: "uz" }, "Colombia": { rank: 12, flag: "co" },
+  "Inglaterra": { rank: 4, flag: "gb-eng" }, "Croacia": { rank: 10, flag: "hr" }, "Ghana": { rank: 64, flag: "gh" }, "Panama": { rank: 43, flag: "pa" }
 };
+
+function getFlagImgHtml(teamName) {
+  const data = TEAM_DATA[teamName];
+  if (!data || !data.flag) return '🏳️';
+  return `<img src="https://flagcdn.com/w40/${data.flag.toLowerCase()}.png" class="flag-img" alt="${teamName}">`;
+}
 
 let currentUser = null;
 let allMatches = [];
@@ -137,8 +143,8 @@ function renderGroups() {
     let matchesHtml = '';
     groupMatches.forEach(m => {
       const pred = draftPredictions.matches[m.id] || { gl: '', gv: '' };
-      const flagL = TEAM_DATA[m.local]?.flag || '🏳️';
-      const flagV = TEAM_DATA[m.visitor]?.flag || '🏳️';
+      const flagL = getFlagImgHtml(m.local);
+      const flagV = getFlagImgHtml(m.visitor);
       const disabledAttr = isLocked ? 'disabled' : '';
       
       matchesHtml += `
@@ -312,12 +318,12 @@ function renderAllStandingsTables(groupStandings) {
     
     let rowsHtml = '';
     groupStandings[g].forEach((t, idx) => {
-      const flag = TEAM_DATA[t.team]?.flag || '🏳️';
+      const flagHtml = getFlagImgHtml(t.team);
       const className = idx === 0 ? 'standing-row-1' : (idx === 1 ? 'standing-row-2' : '');
       rowsHtml += `
         <tr class="${className}">
           <td style="font-weight: 700;">${idx + 1}</td>
-          <td class="team-cell"><span class="flag" style="font-size: 1.1rem; margin-right: 6px;">${flag}</span>${t.team}</td>
+          <td class="team-cell"><span class="flag" style="margin-right: 6px;">${flagHtml}</span>${t.team}</td>
           <td style="font-weight: 700;">${t.pts}</td>
           <td>${t.gf}</td>
           <td style="font-weight: 600;">${t.dg > 0 ? '+' + t.dg : t.dg}</td>
@@ -545,8 +551,8 @@ function getLoserOfMatch(local, visitor, winner) {
 
 // Render Bracket Match Card HTML
 function renderMatchCardHtml(matchId, label, local, visitor, pred, stepClass) {
-  const flagL = TEAM_DATA[local]?.flag || '🏳️';
-  const flagV = TEAM_DATA[visitor]?.flag || '🏳️';
+  const flagL = getFlagImgHtml(local);
+  const flagV = getFlagImgHtml(visitor);
   const disabledAttr = isLocked ? 'disabled' : '';
   
   // Display penalties if tie
@@ -612,16 +618,21 @@ function renderAwards() {
     let optionsHtml = '<option value="">-- Elige una selección --</option>';
     teams.forEach(t => {
       const selected = val === t ? 'selected' : '';
-      optionsHtml += `<option value="${t}" ${selected}>${TEAM_DATA[t].flag} ${t}</option>`;
+      optionsHtml += `<option value="${t}" ${selected}>[${TEAM_DATA[t].flag.toUpperCase()}] ${t}</option>`;
     });
+    
+    const flagPreviewHtml = val ? getFlagImgHtml(val) : '🏳️';
     
     const div = document.createElement('div');
     div.className = 'special-select-group';
     div.innerHTML = `
       <label class="form-label" for="award-select-${a.id}">${a.label}</label>
-      <select id="award-select-${a.id}" class="form-control" onchange="onAwardChange('${a.id}', this.value)" ${disabledAttr}>
-        ${optionsHtml}
-      </select>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span id="flag-preview-${a.id}" class="flag" style="font-size: 1.5rem; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px;">${flagPreviewHtml}</span>
+        <select id="award-select-${a.id}" class="form-control" onchange="onAwardChange('${a.id}', this.value)" ${disabledAttr}>
+          ${optionsHtml}
+        </select>
+      </div>
     `;
     container.appendChild(div);
   });
@@ -629,6 +640,10 @@ function renderAwards() {
 
 function onAwardChange(awardId, val) {
   draftPredictions.specials[awardId] = val;
+  const preview = document.getElementById(`flag-preview-${awardId}`);
+  if (preview) {
+    preview.innerHTML = val ? getFlagImgHtml(val) : '🏳️';
+  }
   updateSaveBar();
 }
 

@@ -400,6 +400,27 @@ app.post('/api/admin/config-winners', requireAdmin, (req, res) => {
   res.json({ message: "Ganadores oficiales actualizados.", config: db.config });
 });
 
+// Change Admin Password
+app.post('/api/admin/change-password', requireAdmin, (req, res) => {
+  const { password } = req.body;
+  if (!password || password.trim() === "" || password.length < 6) {
+    return res.status(400).json({ error: "Contraseña inválida. Debe tener al menos 6 caracteres." });
+  }
+  
+  const db = readDb();
+  const adminUser = db.users.find(u => u.isAdmin);
+  if (!adminUser) {
+    return res.status(404).json({ error: "Usuario administrador no encontrado." });
+  }
+  
+  const salt = crypto.randomBytes(16).toString('hex');
+  adminUser.salt = salt;
+  adminUser.passwordHash = hashPassword(password, salt);
+  
+  writeDb(db);
+  res.json({ message: "Contraseña de administrador actualizada con éxito." });
+});
+
 // Update Match Results (and auto-calculate ranking evolution)
 app.post('/api/admin/matches/:matchId', requireAdmin, (req, res) => {
   const { matchId } = req.params;

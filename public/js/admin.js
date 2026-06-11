@@ -1,14 +1,26 @@
-// Dictionary of teams for award winners select lists
-const TEAMS_LIST = [
-  "Alemania", "Arabia Saudi", "Argelia", "Argentina", "Australia", "Austria",
-  "Belgica", "Bosnia y Herzegovina", "Brasil", "Cabo Verde", "Canada", "Catar",
-  "Colombia", "Corea del Sur", "Costa de Marfil", "Croacia", "Curazao",
-  "Ecuador", "Egipto", "Escocia", "Espana", "Estados Unidos", "Francia",
-  "Ghana", "Haiti", "Inglaterra", "Iran", "Irak", "Japon", "Jordania",
-  "Marruecos", "Mexico", "Noruega", "Nueva Zelanda", "Paises Bajos", "Panama",
-  "Paraguay", "Portugal", "RD Congo", "Rep. Checa", "Senegal", "Sudafrica",
-  "Suecia", "Suiza", "Tunez", "Turquia", "Uruguay", "Uzbekistan"
-];
+// Team Rankings and Flag CDN codes for all 48 teams
+const TEAM_DATA = {
+  "Mexico": { rank: 17, flag: "mx" }, "Sudafrica": { rank: 59, flag: "za" }, "Corea del Sur": { rank: 24, flag: "kr" }, "Rep. Checa": { rank: 36, flag: "cz" },
+  "Canada": { rank: 40, flag: "ca" }, "Bosnia y Herzegovina": { rank: 74, flag: "ba" }, "Catar": { rank: 34, flag: "qa" }, "Suiza": { rank: 15, flag: "ch" },
+  "Brasil": { rank: 5, flag: "br" }, "Marruecos": { rank: 13, flag: "ma" }, "Haiti": { rank: 86, flag: "ht" }, "Escocia": { rank: 39, flag: "gb-sct" },
+  "Estados Unidos": { rank: 16, flag: "us" }, "Paraguay": { rank: 56, flag: "py" }, "Australia": { rank: 25, flag: "au" }, "Turquia": { rank: 35, flag: "tr" },
+  "Alemania": { rank: 11, flag: "de" }, "Curazao": { rank: 90, flag: "cw" }, "Costa de Marfil": { rank: 38, flag: "ci" }, "Ecuador": { rank: 30, flag: "ec" },
+  "Paises Bajos": { rank: 7, flag: "nl" }, "Japon": { rank: 18, flag: "jp" }, "Suecia": { rank: 23, flag: "se" }, "Tunez": { rank: 41, flag: "tn" },
+  "Belgica": { rank: 6, flag: "be" }, "Egipto": { rank: 37, flag: "eg" }, "Iran": { rank: 20, flag: "ir" }, "Nueva Zelanda": { rank: 103, flag: "nz" },
+  "Espana": { rank: 3, flag: "es" }, "Cabo Verde": { rank: 65, flag: "cv" }, "Arabia Saudi": { rank: 53, flag: "sa" }, "Uruguay": { rank: 14, flag: "uy" },
+  "Francia": { rank: 2, flag: "fr" }, "Senegal": { rank: 19, flag: "sn" }, "Noruega": { rank: 45, flag: "no" }, "Irak": { rank: 55, flag: "iq" },
+  "Argentina": { rank: 1, flag: "ar" }, "Argelia": { rank: 44, flag: "dz" }, "Austria": { rank: 22, flag: "at" }, "Jordania": { rank: 71, flag: "jo" },
+  "Portugal": { rank: 8, flag: "pt" }, "RD Congo": { rank: 62, flag: "cd" }, "Uzbekistan": { rank: 66, flag: "uz" }, "Colombia": { rank: 12, flag: "co" },
+  "Inglaterra": { rank: 4, flag: "gb-eng" }, "Croacia": { rank: 10, flag: "hr" }, "Ghana": { rank: 64, flag: "gh" }, "Panama": { rank: 43, flag: "pa" }
+};
+
+function getFlagImgHtml(teamName) {
+  const data = TEAM_DATA[teamName];
+  if (!data || !data.flag) return '🏳️';
+  return `<img src="https://flagcdn.com/w40/${data.flag.toLowerCase()}.png" class="flag-img" alt="${teamName}" style="width: 20px; height: 13px; margin-right: 4px; vertical-align: middle;">`;
+}
+
+const TEAMS_LIST = Object.keys(TEAM_DATA).sort();
 
 let currentUser = null;
 let adminMatches = [];
@@ -103,7 +115,7 @@ function renderMatchesList() {
     html += `
       <div class="match-admin-row" id="match-row-${m.id}">
         <div class="match-admin-info">
-          <strong style="color: #fff;">${m.local} vs ${m.visitor}</strong><br>
+          <strong style="color: #fff; display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap;">${getFlagImgHtml(m.local)} ${m.local} <span style="font-weight: normal; color: var(--color-text-muted);">vs</span> ${getFlagImgHtml(m.visitor)} ${m.visitor}</strong><br>
           <small style="color: var(--color-text-muted);">Partido ${m.id} (${m.phase === 'Group Stage' ? 'Grupo ' + m.group : m.phase})</small>
         </div>
         
@@ -258,6 +270,43 @@ async function saveWinnersConfig(e) {
 async function handleLogout() {
   await fetch('/api/auth/logout', { method: 'POST' });
   window.location.href = '/index.html';
+}
+
+async function changeAdminPassword(e) {
+  e.preventDefault();
+  const password = document.getElementById('new-admin-password').value;
+  const confirmPassword = document.getElementById('confirm-admin-password').value;
+  
+  if (password !== confirmPassword) {
+    showToast("Las contraseñas no coinciden.", true);
+    return;
+  }
+  
+  const btn = document.getElementById('change-pass-btn');
+  btn.innerText = "Actualizando...";
+  btn.disabled = true;
+  
+  try {
+    const res = await fetch('/api/admin/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+    const data = await res.json();
+    
+    if (res.ok) {
+      showToast(data.message, false);
+      document.getElementById('admin-password-form').reset();
+    } else {
+      showToast(data.error || "Error al actualizar contraseña.", true);
+    }
+  } catch (err) {
+    console.error(err);
+    showToast("Error de conexión con el servidor.", true);
+  } finally {
+    btn.innerText = "Actualizar Contraseña";
+    btn.disabled = false;
+  }
 }
 
 function showToast(message, isError = false) {
