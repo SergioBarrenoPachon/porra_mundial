@@ -580,10 +580,64 @@ async function saveUserPredictionsAsAdmin() {
   }
 }
 
+// ==============================================================================
+// RESET DATA FUNCTION
+// ==============================================================================
+
+async function confirmResetData() {
+  const firstConfirm = confirm(
+    '⚠️ ¿Estás seguro de que quieres borrar TODOS los datos?\n\n' +
+    'Esto eliminará:\n' +
+    '• Todas las predicciones de todos los participantes\n' +
+    '• Todos los resultados de partidos\n' +
+    '• El historial de ranking\n' +
+    '• Los ganadores oficiales de trofeos\n\n' +
+    'Las cuentas de usuario y contraseñas se mantienen.'
+  );
+  
+  if (!firstConfirm) return;
+  
+  const typed = prompt(
+    'Para confirmar, escribe BORRAR en mayúsculas:'
+  );
+  
+  if (typed !== 'BORRAR') {
+    showToast('Operación cancelada. No se ha borrado nada.', true);
+    return;
+  }
+  
+  const btn = document.getElementById('reset-data-btn');
+  btn.innerText = 'Borrando...';
+  btn.disabled = true;
+  
+  try {
+    const res = await fetch('/api/admin/reset-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const data = await res.json();
+    
+    if (res.ok) {
+      showToast(data.message, false);
+      // Reload the admin dashboard to reflect empty state
+      setTimeout(() => loadAdminDashboard(), 1000);
+    } else {
+      showToast(data.error || 'Error al resetear datos.', true);
+    }
+  } catch (err) {
+    console.error('Error resetting data:', err);
+    showToast('Error de conexión con el servidor.', true);
+  } finally {
+    btn.innerText = '🗑️ Borrar Todos los Datos';
+    btn.disabled = false;
+  }
+}
+
 // Bind to window global scope for inline event handlers in admin.html
 window.switchAdminTab = switchAdminTab;
 window.loadUserPredictionsForAdmin = loadUserPredictionsForAdmin;
 window.onAdminAwardChange = onAdminAwardChange;
 window.saveUserPredictionsAsAdmin = saveUserPredictionsAsAdmin;
 window.togglePredPKInputsVisibility = togglePredPKInputsVisibility;
+window.confirmResetData = confirmResetData;
 

@@ -43,7 +43,9 @@
       <form id="auth-form" onsubmit="handleAuth(event)">
         <div class="form-group">
           <label for="username" class="form-label">Nombre de Usuario</label>
-          <input type="text" id="username" class="form-control" placeholder="Ej: Sergio, Juan..." required autocomplete="username">
+          <select id="username" class="form-control" required>
+            <option value="" disabled selected>-- Selecciona tu usuario --</option>
+          </select>
         </div>
         
         <div class="form-group">
@@ -55,19 +57,12 @@
           Ingresar
         </button>
       </form>
-
-      <div class="auth-toggle" style="display: none;">
-        <span id="toggle-text">¿No tienes cuenta?</span> 
-        <a href="#" id="toggle-link" onclick="toggleMode(event)" style="font-weight: 700;">Regístrate aquí</a>
-      </div>
     </div>
   </div>
 
   <div class="toast-container" id="toast-container"></div>
 
   <script>
-    let isLoginMode = true;
-
     // Check if user is already logged in, redirect to predictions
     async function checkSession() {
       try {
@@ -81,35 +76,25 @@
       }
     }
 
-    checkSession();
-
-    function toggleMode(e) {
-      e.preventDefault();
-      isLoginMode = !isLoginMode;
-      
-      const title = document.getElementById('auth-title');
-      const desc = document.getElementById('auth-desc');
-      const btn = document.getElementById('submit-btn');
-      const toggleLink = document.getElementById('toggle-link');
-      const toggleText = document.getElementById('toggle-text');
-      const errMsg = document.getElementById('error-message');
-      
-      errMsg.style.display = 'none';
-
-      if (isLoginMode) {
-        title.innerText = "Iniciar Sesión";
-        desc.innerText = "Accede para ver o modificar tus predicciones.";
-        btn.innerText = "Ingresar";
-        toggleText.innerText = "¿No tienes cuenta?";
-        toggleLink.innerText = "Regístrate aquí";
-      } else {
-        title.innerText = "Crear Cuenta";
-        desc.innerText = "Regístrate para participar en la porra del Mundial.";
-        btn.innerText = "Registrarse y Entrar";
-        toggleText.innerText = "¿Ya tienes cuenta?";
-        toggleLink.innerText = "Inicia sesión aquí";
+    // Populate the username dropdown from the server
+    async function loadUsersList() {
+      try {
+        const res = await fetch('/api/users-list');
+        const users = await res.json();
+        const select = document.getElementById('username');
+        users.forEach(u => {
+          const opt = document.createElement('option');
+          opt.value = u.username;
+          opt.textContent = u.username;
+          select.appendChild(opt);
+        });
+      } catch (err) {
+        console.error("Error loading users list", err);
       }
     }
+
+    checkSession();
+    loadUsersList();
 
     async function handleAuth(e) {
       e.preventDefault();
@@ -119,10 +104,14 @@
       
       errMsg.style.display = 'none';
 
-      const url = isLoginMode ? '/api/auth/login' : '/api/auth/register';
+      if (!username) {
+        errMsg.innerText = "Por favor selecciona tu usuario.";
+        errMsg.style.display = 'block';
+        return;
+      }
       
       try {
-        const res = await fetch(url, {
+        const res = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password })

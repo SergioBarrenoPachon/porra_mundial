@@ -82,6 +82,13 @@ app.post('/api/auth/register', (req, res) => {
   return res.status(403).json({ error: "El registro de nuevos participantes está deshabilitado." });
 });
 
+// Public endpoint: list usernames for login dropdown
+app.get('/api/users-list', (req, res) => {
+  const db = readDb();
+  const users = db.users.map(u => ({ username: u.username }));
+  res.json(users);
+});
+
 // Login
 app.post('/api/auth/login', (req, res) => {
   const { username, password } = req.body;
@@ -509,6 +516,51 @@ app.post('/api/admin/matches/:matchId', requireAdmin, (req, res) => {
   
   writeDb(db);
   res.json({ message: "Resultado del partido guardado con éxito.", match: db.matches[matchIndex] });
+});
+
+// Reset all data (predictions, match results, ranking history) – admin only
+app.post('/api/admin/reset-data', requireAdmin, (req, res) => {
+  const db = readDb();
+  
+  // Clear all predictions for every user
+  for (const userId in db.predictions) {
+    db.predictions[userId] = {
+      matches: {},
+      specials: {
+        balon_oro: "",
+        balon_plata: "",
+        balon_bronce: "",
+        bota_oro: "",
+        bota_plata: "",
+        bota_bronce: ""
+      }
+    };
+  }
+  
+  // Clear all match results
+  db.matches.forEach(m => {
+    m.gl = null;
+    m.gv = null;
+    m.pkl = null;
+    m.pkv = null;
+  });
+  
+  // Clear ranking history
+  db.rankingHistory = [];
+  
+  // Clear official winners
+  db.config.winners = {
+    balon_oro: "",
+    balon_plata: "",
+    balon_bronce: "",
+    bota_oro: "",
+    bota_plata: "",
+    bota_bronce: ""
+  };
+  
+  writeDb(db);
+  console.log('⚠️  ADMIN RESET: All predictions, match results, and ranking history have been cleared.');
+  res.json({ message: "Todos los datos han sido reseteados correctamente. Las cuentas de usuario se mantienen." });
 });
 
 // Serve frontend routing fallback

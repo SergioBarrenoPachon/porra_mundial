@@ -243,6 +243,19 @@
               <button type="submit" class="btn btn-primary" id="change-pass-btn">Actualizar Contraseña</button>
             </form>
           </div>
+
+          <!-- Reset All Data Card -->
+          <div class="card" style="border-color: rgba(244, 67, 54, 0.4);">
+            <h2 class="group-title" style="border-color: rgba(244, 67, 54, 0.5); color: #ff8a80;">⚠️ Zona Peligrosa</h2>
+            <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-bottom: 20px;">
+              Esta acción borrará <strong style="color: #ff8a80;">todas las predicciones</strong> de todos los participantes, 
+              <strong style="color: #ff8a80;">todos los resultados de partidos</strong>, el <strong style="color: #ff8a80;">historial de ranking</strong> 
+              y los <strong style="color: #ff8a80;">ganadores oficiales de trofeos</strong>. Las cuentas de usuario y contraseñas se mantienen.
+            </p>
+            <button onclick="confirmResetData()" class="btn" id="reset-data-btn" style="background: rgba(244, 67, 54, 0.15); border: 1px solid rgba(244, 67, 54, 0.5); color: #ff8a80; font-weight: 700; max-width: 300px;">
+              🗑️ Borrar Todos los Datos
+            </button>
+          </div>
         </div>
       </div>
     </div>
