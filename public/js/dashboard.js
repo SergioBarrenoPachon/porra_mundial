@@ -227,6 +227,44 @@ function renderLeaderboard() {
 }
 
 // Render ranking evolution chart (Chart.js)
+const TEAM_ACRONYMS = {
+  "Argentina": "ARG", "Francia": "FRA", "Espana": "ESP", "Inglaterra": "ENG",
+  "Brasil": "BRA", "Belgica": "BEL", "Paises Bajos": "NED", "Portugal": "POR",
+  "Alemania": "GER", "Croacia": "CRO", "Marruecos": "MAR", "Colombia": "COL",
+  "Uruguay": "URU", "Suiza": "SUI", "Estados Unidos": "USA", "Mexico": "MEX",
+  "Japon": "JPN", "Senegal": "SEN", "Corea del Sur": "KOR", "Iran": "IRN",
+  "Austria": "AUT", "Suecia": "SWE", "Australia": "AUS", "Rep. Checa": "CZE",
+  "Egipto": "EGY", "Costa de Marfil": "CIV", "Escocia": "SCO", "Canada": "CAN",
+  "Tunez": "TUN", "Panama": "PAN", "Argelia": "ALG", "Noruega": "NOR",
+  "Saudi Arabia": "KSA", "Arabia Saudi": "KSA", "Ecuador": "ECU", "Turquia": "TUR",
+  "Uzbekistan": "UZB", "RD Congo": "COD", "Cabo Verde": "CPV", "Paraguay": "PAR",
+  "Irak": "IRQ", "Jordania": "JOR", "Uzbekistán": "UZB", "Bosnia y Herzegovina": "BIH",
+  "Catar": "QAT", "Qatar": "QAT", "Ghana": "GHA", "Haiti": "HAI",
+  "Nueva Zelanda": "NZL", "Sudafrica": "RSA", "Curazao": "CUW"
+};
+
+function getFlagEmoji(countryCode) {
+  if (!countryCode) return '';
+  const code = countryCode.toLowerCase();
+  if (code === 'gb-sct') return '🏴󠁧󠁢󠁳󠁣󠁴󠁿';
+  if (code === 'gb-eng') return '🏴󠁧󠁢󠁥󠁮󠁧󠁿';
+  if (code.includes('-')) {
+    return getFlagEmoji(code.split('-')[0]);
+  }
+  const codePoints = code
+    .toUpperCase()
+    .split('')
+    .map(char => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+}
+
+function getTeamAcronym(teamName) {
+  if (!teamName) return '';
+  if (TEAM_ACRONYMS[teamName]) return TEAM_ACRONYMS[teamName];
+  const clean = teamName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return clean.substring(0, 3).toUpperCase();
+}
+
 function renderChart() {
   const ctx = document.getElementById('evolutionChart').getContext('2d');
   
@@ -238,8 +276,18 @@ function renderChart() {
     return;
   }
   
-  // X-Axis labels: Match IDs that have rankings
-  const labels = rankingHistory.map(h => h.matchId);
+  // X-Axis labels: Banderas + Siglas de los equipos en vez de ID de partido
+  const labels = rankingHistory.map(h => {
+    const m = allMatches.find(x => x.id === h.matchId);
+    if (m) {
+      const locFlag = TEAM_DATA[m.local]?.flag ? getFlagEmoji(TEAM_DATA[m.local].flag) : '';
+      const visFlag = TEAM_DATA[m.visitor]?.flag ? getFlagEmoji(TEAM_DATA[m.visitor].flag) : '';
+      const locAcr = getTeamAcronym(m.local);
+      const visAcr = getTeamAcronym(m.visitor);
+      return `${locFlag}${locAcr} - ${visFlag}${visAcr}`;
+    }
+    return h.matchId;
+  });
   
   // Collect all unique participant usernames
   const participants = [];
@@ -301,11 +349,15 @@ function renderChart() {
         y: {
           reverse: true, // Rank 1 is at the top!
           min: 1,
-          suggestedMax: Math.max(2, participants.length),
+          max: Math.max(1, participants.length), // Estrictamente limitado por el número de participantes
           ticks: {
             color: '#718096',
             stepSize: 1,
-            precision: 0
+            precision: 0,
+            callback: function(value) {
+              if (Number.isInteger(value)) return '#' + value;
+              return '';
+            }
           },
           grid: { color: 'rgba(255, 255, 255, 0.05)' }
         }
