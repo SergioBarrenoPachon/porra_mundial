@@ -877,10 +877,12 @@ function rebuildRankingHistory(db) {
     db.users.forEach(u => {
       if (u.isAdmin && u.username !== "Sergio B") return;
       const predObj = db.predictions[u.id] || { matches: {}, specials: {} };
-      const score = calculateParticipantScore(predObj, matchesUpToTarget, db.config, {});
+      const score = calculateParticipantScore(predObj, matchesUpToTarget, db.config, db.config.winners);
       userStandings.push({
         username: u.username,
-        points: score.matchPoints
+        points: score.total,
+        matchPoints: score.matchPoints,
+        totalSpecials: score.totalSpecials
       });
     });
     
