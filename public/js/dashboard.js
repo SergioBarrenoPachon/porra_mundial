@@ -268,6 +268,11 @@ function getFlagEmoji(countryCode) {
   return String.fromCodePoint(...codePoints);
 }
 
+function getTeamFlagEmoji(teamName) {
+  const data = TEAM_DATA[teamName];
+  return data && data.flag ? getFlagEmoji(data.flag) : '';
+}
+
 function getTeamAcronym(teamName) {
   if (!teamName) return '';
   if (TEAM_ACRONYMS[teamName]) return TEAM_ACRONYMS[teamName];
@@ -318,13 +323,15 @@ function renderChart() {
     return null;
   });
 
-  // X-Axis labels: clean team acronyms with extra spaces to make room for flags
+  // X-Axis labels: include team acronyms and flags for each match
   const labels = rankingHistory.map(h => {
     const m = allMatches.find(x => x.id === h.matchId);
     if (m) {
       const locAcr = getTeamAcronym(m.local);
       const visAcr = getTeamAcronym(m.visitor);
-      return `   ${locAcr} - ${visAcr}   `;
+      const locFlag = getTeamFlagEmoji(m.local);
+      const visFlag = getTeamFlagEmoji(m.visitor);
+      return `${locFlag} ${locAcr} – ${visAcr} ${visFlag}`;
     }
     return h.matchId;
   });
@@ -348,16 +355,21 @@ function renderChart() {
     });
     
     const color = LINE_COLORS[idx % LINE_COLORS.length];
+    const alphaColor = `${color}88`;
     
     return {
       label: username,
       data: dataPoints,
       borderColor: color,
-      backgroundColor: color,
+      backgroundColor: alphaColor,
       fill: false,
-      tension: 0.15,
+      tension: 0.35,
       borderWidth: username === (currentUser?.username) ? 4 : 2,
-      pointRadius: username === (currentUser?.username) ? 5 : 3,
+      pointRadius: username === (currentUser?.username) ? 6 : 4,
+      pointHoverRadius: username === (currentUser?.username) ? 8 : 6,
+      pointBackgroundColor: color,
+      pointBorderColor: '#fff',
+      pointBorderWidth: 1,
       spanGaps: true
     };
   });
@@ -408,7 +420,11 @@ function renderChart() {
           position: 'top',
           labels: {
             color: '#cbd5e0',
-            font: { family: 'Segoe UI', size: 10 }
+            font: { family: 'Segoe UI', size: 11 },
+            usePointStyle: true,
+            pointStyle: 'circle',
+            padding: 16,
+            boxWidth: 10
           }
         },
         tooltip: {
@@ -435,7 +451,10 @@ function renderChart() {
         x: {
           ticks: { 
             color: '#718096',
-            padding: 18 // space for drawing the flag images
+            padding: 18,
+            maxRotation: 0,
+            minRotation: 0,
+            autoSkip: false
           },
           grid: { color: 'rgba(255, 255, 255, 0.05)' }
         },
