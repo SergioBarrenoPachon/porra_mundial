@@ -112,6 +112,10 @@ function switchTab(tabName) {
   } else if (tabName === 'awards') {
     document.querySelector('.phase-tab:nth-child(3)').classList.add('active');
     document.getElementById('tab-awards').style.display = 'block';
+  } else if (tabName === 'timeline') {
+    document.querySelector('.phase-tab:nth-child(4)').classList.add('active');
+    document.getElementById('tab-timeline').style.display = 'block';
+    renderTimeline();
   }
 }
 
@@ -160,10 +164,13 @@ function renderGroups() {
       const flagV = getFlagImgHtml(m.visitor);
       const disabledAttr = isLocked ? 'disabled' : '';
       
+      const realResultHtml = (m.gl !== null && m.gv !== null) ? `<span style="color: var(--accent-gold); font-weight: 800; font-size: 0.75rem;">Real: ${m.gl} - ${m.gv}</span>` : '';
+      
       matchesHtml += `
         <div class="match-card">
           <div class="match-header">
             <span>Partido ${m.id}</span>
+            ${realResultHtml}
             <span>Grupo ${g}</span>
           </div>
           <div class="match-body">
@@ -246,6 +253,10 @@ function recalculateAll() {
   const thirdsRanking = rankThirdPlaces(groupStandings);
   renderThirdsTable(thirdsRanking);
   advanceBracket(groupStandings, thirdsRanking);
+  
+  if (currentTab === 'timeline') {
+    renderTimeline();
+  }
 }
 
 // Render the 12 third-place teams table dynamically
@@ -662,12 +673,17 @@ function renderBracketMatchHtml(m) {
   if (m.isFinal) extraClass = 'final-match';
   if (m.isThirdPlace) extraClass = 'third-place-match';
 
+  // Check if this knockout match has a real result
+  const realMatch = allMatches.find(x => x.id === m.id);
+  const hasReal = realMatch && realMatch.gl !== null && realMatch.gv !== null;
+  const realResultHtml = hasReal ? `<span style="color: var(--accent-gold); font-weight: 900; margin-left: 6px;">Real: ${realMatch.gl}-${realMatch.gv}${realMatch.pkl !== null ? ` (${realMatch.pkl}-${realMatch.pkv} PK)` : ''}</span>` : '';
+
   let html = `<div class="bracket-match ${extraClass}">`;
 
   // Label row
   html += `
     <div class="bracket-match-label">
-      <span>${m.id} · ${m.label}</span>
+      <span>${m.id} · ${m.label}${realResultHtml}</span>
     </div>
   `;
 
@@ -892,3 +908,137 @@ function toggleThirdsTable() {
     icon.style.background = 'rgba(245, 158, 11, 0.15)';
   }
 }
+
+// Chronological sort function for matches
+function compareMatchesChronologically(mA, mB) {
+  const isGroupA = mA.phase === 'Group Stage';
+  const isGroupB = mB.phase === 'Group Stage';
+  
+  if (isGroupA && !isGroupB) return -1;
+  if (!isGroupA && isGroupB) return 1;
+  
+  if (isGroupA && isGroupB) {
+    const numA = parseInt(mA.id.replace('M', ''));
+    const numB = parseInt(mB.id.replace('M', ''));
+    
+    const grpA = Math.floor((numA - 1) / 6);
+    const grpB = Math.floor((numB - 1) / 6);
+    
+    const idxA = (numA - 1) % 6;
+    const idxB = (numB - 1) % 6;
+    
+    const jorA = idxA < 2 ? 1 : (idxA < 4 ? 2 : 3);
+    const jorB = idxB < 2 ? 1 : (idxB < 4 ? 2 : 3);
+    
+    if (jorA !== jorB) return jorA - jorB;
+    if (grpA !== grpB) return grpA - grpB;
+    return idxA - idxB;
+  } else {
+    const numA = parseInt(mA.id.replace('M', ''));
+    const numB = parseInt(mB.id.replace('M', ''));
+    return numA - numB;
+  }
+}
+
+// Render the chronological timeline matches
+function renderTimeline() {
+  const container = document.getElementById('timeline-matches-container');
+  if (!container) return;
+  
+  const sortedMatches = [...allMatches].sort(compareMatchesChronologically);
+  
+  let html = '';
+  sortedMatches.forEach(m => {
+    const pred = draftPredictions.matches[m.id] || { gl: '', gv: '', pkl: '', pkv: '' };
+    
+    const hasRealResult = m.gl !== null && m.gv !== null;
+    const realScoreStr = hasRealResult ? `${m.gl} - ${m.gv}${m.pkl !== null && m.pkl !== '' && m.pkl !== undefined ? ` (${m.pkl}-${m.pkv} PK)` : ''}` : 'Pendiente';
+    
+    const hasPrediction = pred.gl !== '' && pred.gv !== '' && pred.gl !== undefined && pred.gv !== undefined;
+    const predScoreStr = hasPrediction ? `${pred.gl} - ${pred.gv}${pred.pkl !== null && pred.pkl !== '' && pred.pkl !== undefined ? ` (${pred.pkl}-${pred.pkv} PK)` : ''}` : 'Sin pronóstico';
+    
+    const isKnockout = m.phase !== "Group Stage";
+    const phaseLabel = isKnockout ? m.phase : `Grupo ${m.group}`;
+    
+    // Check points if result exists
+    let pointsEarnedText = '';
+    if (hasRealResult && hasPrediction) {
+      let points = 0;
+      const realGl = parseInt(m.gl);
+      const realGv = parseInt(m.gv);
+      const predGl = parseInt(pred.gl);
+      const predGv = parseInt(pred.gv);
+      
+      if (!isKnockout) {
+        const isExact = (realGl === predGl) && (realGv === predGv);
+        const isOutcome = Math.sign(realGl - realGv) === Math.sign(predGl - predGv);
+        if (isExact) points = 3;
+        else if (isOutcome) points = 1;
+      } else {
+        const realWinner = getWinnerOfMatch(m.local, m.visitor, m.gl, m.gv, m.pkl, m.pkv);
+        const predWinner = getWinnerOfMatch(m.local, m.visitor, pred.gl, pred.gv, pred.pkl, pred.pkv);
+        if (realWinner && predWinner && realWinner === predWinner) {
+          const isExact = (realGl === predGl) && (realGv === predGv);
+          points = isExact ? 3 : 1;
+        }
+      }
+      pointsEarnedText = `<span class="matrix-points-badge points-${points === 3 ? 'exact' : (points === 1 ? 'outcome' : 'zero')}">+${points}</span>`;
+    }
+    
+    html += `
+      <div class="timeline-match-card ${hasRealResult ? 'played' : 'pending'}" data-match-id="${m.id}" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: rgba(7, 5, 15, 0.4); border: 1px solid var(--border-color); border-radius: 14px; gap: 15px; transition: var(--transition-fast);">
+        <div style="flex: 1; min-width: 0;">
+          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); margin-bottom: 4px;">
+            <span>Partido ${m.id} · ${phaseLabel}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; font-weight: 800; color: #fff;">
+            <span>${getFlagImgHtml(m.local)} ${m.local}</span>
+            <span style="font-weight: 400; color: var(--color-text-muted);">vs</span>
+            <span>${getFlagImgHtml(m.visitor)} ${m.visitor}</span>
+          </div>
+        </div>
+        
+        <div style="text-align: center; min-width: 120px;">
+          <div style="font-size: 0.7rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Resultado Real</div>
+          <div style="font-size: 1.1rem; font-weight: 900; color: ${hasRealResult ? 'var(--accent-gold)' : 'var(--color-text-muted)'}">${realScoreStr}</div>
+        </div>
+        
+        <div style="text-align: right; min-width: 140px; border-left: 1px dashed rgba(255, 255, 255, 0.1); padding-left: 15px;">
+          <div style="font-size: 0.7rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Tu Pronóstico</div>
+          <div style="font-size: 0.85rem; font-weight: 700; color: ${hasPrediction ? 'var(--secondary)' : 'var(--color-text-muted)'}; display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
+            <span>${predScoreStr}</span>
+            ${pointsEarnedText}
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+// Filter timeline list function
+function filterTimelineList() {
+  const query = document.getElementById('search-timeline').value.toLowerCase().trim();
+  const status = document.getElementById('filter-timeline-status').value;
+  const cards = document.querySelectorAll('.timeline-match-card');
+  
+  cards.forEach(card => {
+    const text = card.innerText.toLowerCase();
+    const isPlayed = card.classList.contains('played');
+    
+    const matchesQuery = text.includes(query);
+    const matchesStatus = (status === 'all') || 
+                          (status === 'played' && isPlayed) || 
+                          (status === 'pending' && !isPlayed);
+                          
+    if (matchesQuery && matchesStatus) {
+      card.style.display = 'flex';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
+// Bind timeline filter to window
+window.filterTimelineList = filterTimelineList;

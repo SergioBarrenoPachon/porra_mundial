@@ -915,19 +915,26 @@ nav {
   padding: 6px;
   border-radius: 14px;
   border: 1px solid var(--border-color);
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-round-selector-container::-webkit-scrollbar {
+  display: none;
 }
 
 .round-select-btn {
   background: transparent;
   border: none;
   color: var(--color-text-muted);
-  padding: 10px 6px;
+  padding: 10px 12px;
   border-radius: 10px;
   font-weight: 800;
   font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.2s;
-  flex: 1;
+  flex: 1 0 auto;
   text-align: center;
 }
 
@@ -1285,18 +1292,21 @@ nav {
 }
 
 .podium-step.first {
-  height: 140px;
+  min-height: 140px;
+  height: auto;
   border-color: rgba(245, 158, 11, 0.35);
   background: linear-gradient(180deg, rgba(18, 14, 38, 0.6) 0%, rgba(245, 158, 11, 0.05) 100%);
   box-shadow: 0 4px 20px rgba(245, 158, 11, 0.1);
 }
 
 .podium-step.second {
-  height: 115px;
+  min-height: 115px;
+  height: auto;
 }
 
 .podium-step.third {
-  height: 100px;
+  min-height: 100px;
+  height: auto;
 }
 
 .podium-badge {
@@ -1479,5 +1489,26 @@ nav {
   }
   .item-points-bar-container {
     margin-top: 4px;
+  }
+  
+  /* Compact Mobile Floating Save Bar */
+  .float-bar {
+    padding: 6px 0 !important;
+  }
+  .float-bar-content {
+    flex-direction: row !important;
+    gap: 8px !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  .save-status-indicator {
+    font-size: 0.72rem !important;
+    gap: 4px !important;
+  }
+  #save-btn {
+    padding: 6px 14px !important;
+    font-size: 0.75rem !important;
+    width: auto !important;
+    border-radius: 8px !important;
   }
 }

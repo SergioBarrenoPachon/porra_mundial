@@ -275,6 +275,24 @@ function getTeamAcronym(teamName) {
   return clean.substring(0, 3).toUpperCase();
 }
 
+const flagCache = {};
+function getPreloadedFlagImage(teamName) {
+  const data = TEAM_DATA[teamName];
+  if (!data || !data.flag) return null;
+  const url = `https://flagcdn.com/w40/${data.flag.toLowerCase()}.png`;
+  if (!flagCache[url]) {
+    const img = new Image();
+    img.src = url;
+    img.onload = () => {
+      if (evolutionChart) {
+        evolutionChart.draw();
+      }
+    };
+    flagCache[url] = img;
+  }
+  return flagCache[url];
+}
+
 function renderChart() {
   const ctx = document.getElementById('evolutionChart').getContext('2d');
   
@@ -288,15 +306,25 @@ function renderChart() {
   
   const displayType = document.getElementById('chart-display-type')?.value || 'rank';
   
-  // X-Axis labels: Banderas + Siglas de los equipos en vez de ID de partido
+  // Flag images for rendering on axis
+  const flagImages = rankingHistory.map(h => {
+    const m = allMatches.find(x => x.id === h.matchId);
+    if (m) {
+      return {
+        local: getPreloadedFlagImage(m.local),
+        visitor: getPreloadedFlagImage(m.visitor)
+      };
+    }
+    return null;
+  });
+
+  // X-Axis labels: clean team acronyms with extra spaces to make room for flags
   const labels = rankingHistory.map(h => {
     const m = allMatches.find(x => x.id === h.matchId);
     if (m) {
-      const locFlag = TEAM_DATA[m.local]?.flag ? getFlagEmoji(TEAM_DATA[m.local].flag) : '';
-      const visFlag = TEAM_DATA[m.visitor]?.flag ? getFlagEmoji(TEAM_DATA[m.visitor].flag) : '';
       const locAcr = getTeamAcronym(m.local);
       const visAcr = getTeamAcronym(m.visitor);
-      return `${locFlag}${locAcr} - ${visFlag}${visAcr}`;
+      return `   ${locAcr} - ${visAcr}   `;
     }
     return h.matchId;
   });
@@ -332,6 +360,32 @@ function renderChart() {
   
   if (evolutionChart) evolutionChart.destroy();
   
+  const flagPlugin = {
+    id: 'flagPlugin',
+    afterDraw: (chart) => {
+      const { ctx, scales: { x } } = chart;
+      if (!x) return;
+      
+      rankingHistory.forEach((h, index) => {
+        const flags = flagImages[index];
+        if (!flags) return;
+        
+        const xPos = x.getPixelForTick(index);
+        const yPos = x.bottom + 4; // draw below the axis line but above the text
+        
+        const width = 16;
+        const height = 11;
+        
+        if (flags.local && flags.local.complete) {
+          ctx.drawImage(flags.local, xPos - 36, yPos, width, height);
+        }
+        if (flags.visitor && flags.visitor.complete) {
+          ctx.drawImage(flags.visitor, xPos + 20, yPos, width, height);
+        }
+      });
+    }
+  };
+
   evolutionChart = new Chart(ctx, {
     type: 'line',
     data: {
@@ -356,16 +410,27 @@ function renderChart() {
         tooltip: {
           callbacks: {
             label: function(context) {
+              const username = context.dataset.label;
+              const idx = context.dataIndex;
+              const historyItem = rankingHistory[idx];
+              if (historyItem) {
+                const rank = historyItem.ranks[username] || '-';
+                const pts = historyItem.points ? (historyItem.points[username] !== undefined ? historyItem.points[username] : '-') : '-';
+                return `${username}: Puesto #${rank} (${pts} pts)`;
+              }
               return displayType === 'rank' 
-                ? `${context.dataset.label}: Puesto #${context.raw}` 
-                : `${context.dataset.label}: ${context.raw} pts`;
+                ? `${username}: Puesto #${context.raw}` 
+                : `${username}: ${context.raw} pts`;
             }
           }
         }
       },
       scales: {
         x: {
-          ticks: { color: '#718096' },
+          ticks: { 
+            color: '#718096',
+            padding: 18 // space for drawing the flag images
+          },
           grid: { color: 'rgba(255, 255, 255, 0.05)' }
         },
         y: {
@@ -386,7 +451,8 @@ function renderChart() {
           grid: { color: 'rgba(255, 255, 255, 0.05)' }
         }
       }
-    }
+    },
+    plugins: [flagPlugin]
   });
 }
 

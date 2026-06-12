@@ -753,6 +753,94 @@ app.post('/api/admin/change-password', requireAdmin, async (req, res) => {
   }
 });
 
+// Chronological sort function for matches
+function compareMatchesChronologically(mA, mB) {
+  const isGroupA = mA.phase === 'Group Stage';
+  const isGroupB = mB.phase === 'Group Stage';
+  
+  if (isGroupA && !isGroupB) return -1;
+  if (!isGroupA && isGroupB) return 1;
+  
+  if (isGroupA && isGroupB) {
+    const numA = parseInt(mA.id.replace('M', ''));
+    const numB = parseInt(mB.id.replace('M', ''));
+    
+    const grpA = Math.floor((numA - 1) / 6);
+    const grpB = Math.floor((numB - 1) / 6);
+    
+    const idxA = (numA - 1) % 6;
+    const idxB = (numB - 1) % 6;
+    
+    const jorA = idxA < 2 ? 1 : (idxA < 4 ? 2 : 3);
+    const jorB = idxB < 2 ? 1 : (idxB < 4 ? 2 : 3);
+    
+    if (jorA !== jorB) return jorA - jorB;
+    if (grpA !== grpB) return grpA - grpB;
+    return idxA - idxB;
+  } else {
+    const numA = parseInt(mA.id.replace('M', ''));
+    const numB = parseInt(mB.id.replace('M', ''));
+    return numA - numB;
+  }
+}
+
+// Rebuilds entire rankingHistory based on chronological order of played matches
+function rebuildRankingHistory(db) {
+  const sortedMatches = [...db.matches].sort(compareMatchesChronologically);
+  const completed = sortedMatches.filter(m => m.gl !== null && m.gv !== null);
+  
+  const history = [];
+  
+  for (let i = 0; i < completed.length; i++) {
+    const targetMatch = completed[i];
+    
+    // Create matches snapshot up to this targetMatch chronologically
+    const matchesUpToTarget = db.matches.map(m => {
+      const isAfter = compareMatchesChronologically(m, targetMatch) > 0;
+      if (isAfter) {
+        return { ...m, gl: null, gv: null, pkl: null, pkv: null };
+      }
+      return m;
+    });
+    
+    const userStandings = [];
+    db.users.forEach(u => {
+      if (u.isAdmin && u.username !== "Sergio B") return;
+      const predObj = db.predictions[u.id] || { matches: {}, specials: {} };
+      const score = calculateParticipantScore(predObj, matchesUpToTarget, db.config, {});
+      userStandings.push({
+        username: u.username,
+        points: score.matchPoints
+      });
+    });
+    
+    userStandings.sort((a, b) => b.points - a.points || a.username.localeCompare(b.username));
+    
+    let currentRank = 0;
+    let currentPoints = -1;
+    const ranks = {};
+    const pointsMap = {};
+    
+    userStandings.forEach((p, idx) => {
+      if (p.points !== currentPoints) {
+        currentRank = idx + 1;
+        currentPoints = p.points;
+      }
+      ranks[p.username] = currentRank;
+      pointsMap[p.username] = p.points;
+    });
+    
+    history.push({
+      matchId: targetMatch.id,
+      timestamp: Date.now(),
+      ranks: ranks,
+      points: pointsMap
+    });
+  }
+  
+  db.rankingHistory = history;
+}
+
 // Update Match Results (and auto-calculate ranking evolution)
 app.post('/api/admin/matches/:matchId', requireAdmin, async (req, res) => {
   try {
@@ -784,60 +872,8 @@ app.post('/api/admin/matches/:matchId', requireAdmin, async (req, res) => {
     db.matches[matchIndex].pkl = finalPkl;
     db.matches[matchIndex].pkv = finalPkv;
     
-    // --------------------------------------------------------------------------
-    // RANKING SNAPSHOT FOR EVOLUTION CHART
-    // --------------------------------------------------------------------------
-    // Calculate rankings UP TO the current state of matches (only counting matches with results)
-    if (finalGl !== null && finalGv !== null) {
-      // Check if snapshot for this match already exists, if so, delete it
-      db.rankingHistory = db.rankingHistory.filter(h => h.matchId !== matchId);
-      
-      // Compile points up to this match for all users using the unified helper
-      const userStandings = [];
-      db.users.forEach(u => {
-        if (u.isAdmin && u.username !== "Sergio B") return;
-        const predObj = db.predictions[u.id] || { matches: {}, specials: {} };
-        const score = calculateParticipantScore(predObj, db.matches, db.config, {});
-        userStandings.push({
-          username: u.username,
-          points: score.matchPoints
-        });
-      });
-      
-      // Sort and assign ranks
-      userStandings.sort((a, b) => b.points - a.points || a.username.localeCompare(b.username));
-      
-      let currentRank = 0;
-      let currentPoints = -1;
-      const ranks = {};
-      const pointsMap = {};
-      userStandings.forEach((p, idx) => {
-        if (p.points !== currentPoints) {
-          currentRank = idx + 1;
-          currentPoints = p.points;
-        }
-        ranks[p.username] = currentRank;
-        pointsMap[p.username] = p.points;
-      });
-      
-      // Add snapshot record
-      db.rankingHistory.push({
-        matchId: matchId,
-        timestamp: Date.now(),
-        ranks: ranks,
-        points: pointsMap
-      });
-      
-      // Sort history by match ID order
-      db.rankingHistory.sort((a, b) => {
-        const idxA = db.matches.findIndex(m => m.id === a.matchId);
-        const idxB = db.matches.findIndex(m => m.id === b.matchId);
-        return idxA - idxB;
-      });
-    } else {
-      // If goals were cleared, delete snapshot for this match
-      db.rankingHistory = db.rankingHistory.filter(h => h.matchId !== matchId);
-    }
+    // Recalculate and rebuild full ranking history
+    rebuildRankingHistory(db);
     
     await writeDb(db);
     const resolvedMatches = resolveActualKnockoutMatches(db.matches);

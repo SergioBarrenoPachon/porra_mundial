@@ -103,6 +103,7 @@
       <div class="phase-tab active" onclick="switchTab('groups')">Fase de Grupos (72 Partidos)</div>
       <div class="phase-tab" onclick="switchTab('knockouts')">Fase Eliminatoria (Bracket)</div>
       <div class="phase-tab" onclick="switchTab('awards')">Premios Especiales</div>
+      <div class="phase-tab" onclick="switchTab('timeline')">🗓️ Calendario y Resultados</div>
     </div>
 
     <!-- TAB: GROUPS -->
@@ -178,6 +179,27 @@
       </div>
     </div>
 
+    <!-- TAB: TIMELINE -->
+    <div id="tab-timeline" class="tab-content" style="display: none;">
+      <div class="card" style="max-width: 900px; margin: 0 auto; padding: 20px;">
+        <h2 class="group-title">🗓️ Calendario y Resultados del Torneo</h2>
+        <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-bottom: 20px;">
+          Listado completo de todos los partidos ordenados cronológicamente. Puedes ver el resultado real y tu predicción (en pequeño).
+        </p>
+        <div class="timeline-search-bar" style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+          <input type="text" id="search-timeline" class="form-control" placeholder="Buscar por selección o fase..." oninput="filterTimelineList()" style="max-width: 300px; background: rgba(0,0,0,0.4); border-color: var(--border-color);">
+          <select id="filter-timeline-status" class="form-control" onchange="filterTimelineList()" style="max-width: 200px; background: rgba(0,0,0,0.4); border-color: var(--border-color); height: 42px;">
+            <option value="all">Todos los partidos</option>
+            <option value="played">Jugados</option>
+            <option value="pending">Pendientes</option>
+          </select>
+        </div>
+        <div class="timeline-matches-list" id="timeline-matches-container" style="display: flex; flex-direction: column; gap: 12px; max-height: 800px; overflow-y: auto; padding-right: 5px;">
+          <!-- Populated dynamically by JS -->
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- Bottom Floating Save Bar -->
@@ -188,7 +210,7 @@
         <span>Tienes cambios sin guardar en tu borrador.</span>
       </div>
       <div style="width: auto;">
-        <button onclick="savePredictions()" class="btn btn-primary" id="save-btn" style="width: auto; padding: 12px 36px;">
+        <button onclick="savePredictions()" class="btn btn-primary" id="save-btn" style="width: auto; padding: 8px 24px;">
           Guardar Pronósticos
         </button>
       </div>

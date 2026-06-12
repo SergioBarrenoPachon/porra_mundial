@@ -77,13 +77,46 @@ function populateConfigFields() {
   document.getElementById('win-bota-bronce').value = adminConfig.winners.bota_bronce || "";
 }
 
+// Chronological sort function for matches
+function compareMatchesChronologically(mA, mB) {
+  const isGroupA = mA.phase === 'Group Stage';
+  const isGroupB = mB.phase === 'Group Stage';
+  
+  if (isGroupA && !isGroupB) return -1;
+  if (!isGroupA && isGroupB) return 1;
+  
+  if (isGroupA && isGroupB) {
+    const numA = parseInt(mA.id.replace('M', ''));
+    const numB = parseInt(mB.id.replace('M', ''));
+    
+    const grpA = Math.floor((numA - 1) / 6);
+    const grpB = Math.floor((numB - 1) / 6);
+    
+    const idxA = (numA - 1) % 6;
+    const idxB = (numB - 1) % 6;
+    
+    const jorA = idxA < 2 ? 1 : (idxA < 4 ? 2 : 3);
+    const jorB = idxB < 2 ? 1 : (idxB < 4 ? 2 : 3);
+    
+    if (jorA !== jorB) return jorA - jorB;
+    if (grpA !== grpB) return grpA - grpB;
+    return idxA - idxB;
+  } else {
+    const numA = parseInt(mA.id.replace('M', ''));
+    const numB = parseInt(mB.id.replace('M', ''));
+    return numA - numB;
+  }
+}
+
 // Render Admin Matches Rows
 function renderMatchesList() {
   const container = document.getElementById('admin-matches-container');
   container.innerHTML = '';
   
+  const sortedMatches = [...adminMatches].sort(compareMatchesChronologically);
+  
   let html = '';
-  adminMatches.forEach(m => {
+  sortedMatches.forEach(m => {
     const glValue = m.gl !== null ? m.gl : '';
     const gvValue = m.gv !== null ? m.gv : '';
     const pklValue = m.pkl !== null ? m.pkl : '';
@@ -396,8 +429,10 @@ function renderUserMatchesList() {
   const container = document.getElementById('admin-user-matches-container');
   container.innerHTML = '';
   
+  const sortedMatches = [...adminMatches].sort(compareMatchesChronologically);
+  
   let html = '';
-  adminMatches.forEach(m => {
+  sortedMatches.forEach(m => {
     const pred = selectedUserPredictions.matches[m.id] || { gl: '', gv: '', pkl: '', pkv: '' };
     
     const glValue = pred.gl !== undefined && pred.gl !== null ? pred.gl : '';
