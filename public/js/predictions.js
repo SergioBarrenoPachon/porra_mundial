@@ -909,7 +909,29 @@ function toggleThirdsTable() {
   }
 }
 
-// Chronological sort function for matches
+// Explicit chronological order map based on the real FIFA 2026 calendar.
+const MATCH_CHRONO_ORDER = {
+  // === JORNADA 1 ===
+  "M001": 1, "M002": 2, "M007": 3, "M019": 4, "M008": 5,
+  "M013": 6, "M014": 7, "M020": 8, "M025": 9, "M031": 10,
+  "M026": 11, "M032": 12, "M043": 13, "M037": 14, "M044": 15,
+  "M038": 16, "M049": 17, "M050": 18, "M055": 19, "M056": 20,
+  "M061": 21, "M067": 22, "M068": 23, "M062": 24,
+  // === JORNADA 2 ===
+  "M004": 25, "M010": 26, "M009": 27, "M003": 28, "M021": 29,
+  "M016": 30, "M015": 31, "M022": 32, "M033": 33, "M027": 34,
+  "M028": 35, "M034": 36, "M045": 37, "M039": 38, "M046": 39,
+  "M040": 40, "M053": 41, "M054": 42, "M058": 43, "M057": 44,
+  "M063": 45, "M064": 46, "M069": 47, "M070": 48,
+  // === JORNADA 3 ===
+  "M012": 49, "M017": 50, "M018": 51, "M005": 52, "M006": 53,
+  "M029": 54, "M030": 55, "M035": 56, "M036": 57, "M011": 58,
+  "M023": 59, "M024": 60, "M042": 61, "M041": 62, "M048": 63,
+  "M047": 64, "M052": 65, "M051": 66, "M060": 67, "M059": 68,
+  "M066": 69, "M065": 70, "M072": 71, "M071": 72,
+};
+
+// Chronological sort function for matches using the real FIFA 2026 calendar order
 function compareMatchesChronologically(mA, mB) {
   const isGroupA = mA.phase === 'Group Stage';
   const isGroupB = mB.phase === 'Group Stage';
@@ -918,21 +940,9 @@ function compareMatchesChronologically(mA, mB) {
   if (!isGroupA && isGroupB) return 1;
   
   if (isGroupA && isGroupB) {
-    const numA = parseInt(mA.id.replace('M', ''));
-    const numB = parseInt(mB.id.replace('M', ''));
-    
-    const grpA = Math.floor((numA - 1) / 6);
-    const grpB = Math.floor((numB - 1) / 6);
-    
-    const idxA = (numA - 1) % 6;
-    const idxB = (numB - 1) % 6;
-    
-    const jorA = idxA < 2 ? 1 : (idxA < 4 ? 2 : 3);
-    const jorB = idxB < 2 ? 1 : (idxB < 4 ? 2 : 3);
-    
-    if (jorA !== jorB) return jorA - jorB;
-    if (grpA !== grpB) return grpA - grpB;
-    return idxA - idxB;
+    const orderA = MATCH_CHRONO_ORDER[mA.id] !== undefined ? MATCH_CHRONO_ORDER[mA.id] : 999;
+    const orderB = MATCH_CHRONO_ORDER[mB.id] !== undefined ? MATCH_CHRONO_ORDER[mB.id] : 999;
+    return orderA - orderB;
   } else {
     const numA = parseInt(mA.id.replace('M', ''));
     const numB = parseInt(mB.id.replace('M', ''));
@@ -946,74 +956,105 @@ function renderTimeline() {
   if (!container) return;
   
   const sortedMatches = [...allMatches].sort(compareMatchesChronologically);
-  
+
+  // Group headers: track which jornada/phase we're in to show section dividers
+  let lastSection = null;
   let html = '';
-  sortedMatches.forEach(m => {
+
+  sortedMatches.forEach((m, idx) => {
     const pred = draftPredictions.matches[m.id] || { gl: '', gv: '', pkl: '', pkv: '' };
-    
+
     const hasRealResult = m.gl !== null && m.gv !== null;
-    const realScoreStr = hasRealResult ? `${m.gl} - ${m.gv}${m.pkl !== null && m.pkl !== '' && m.pkl !== undefined ? ` (${m.pkl}-${m.pkv} PK)` : ''}` : 'Pendiente';
-    
+    const realScoreStr = hasRealResult
+      ? `${m.gl} - ${m.gv}${m.pkl !== null && m.pkl !== '' && m.pkl !== undefined ? ` (PK ${m.pkl}-${m.pkv})` : ''}`
+      : '–';
+
     const hasPrediction = pred.gl !== '' && pred.gv !== '' && pred.gl !== undefined && pred.gv !== undefined;
-    const predScoreStr = hasPrediction ? `${pred.gl} - ${pred.gv}${pred.pkl !== null && pred.pkl !== '' && pred.pkl !== undefined ? ` (${pred.pkl}-${pred.pkv} PK)` : ''}` : 'Sin pronóstico';
-    
-    const isKnockout = m.phase !== "Group Stage";
+    const predScoreStr = hasPrediction
+      ? `${pred.gl} - ${pred.gv}${pred.pkl !== null && pred.pkl !== '' && pred.pkl !== undefined ? ` (PK ${pred.pkl}-${pred.pkv})` : ''}`
+      : 'Sin pronóstico';
+
+    const isKnockout = m.phase !== 'Group Stage';
     const phaseLabel = isKnockout ? m.phase : `Grupo ${m.group}`;
-    
-    // Check points if result exists
-    let pointsEarnedText = '';
+
+    // Determine jornada header label for group stage
+    let sectionLabel = null;
+    if (!isKnockout) {
+      const order = MATCH_CHRONO_ORDER[m.id] || 999;
+      const jornada = order <= 24 ? 'Fase de Grupos · Jornada 1' :
+                      order <= 48 ? 'Fase de Grupos · Jornada 2' :
+                                    'Fase de Grupos · Jornada 3';
+      if (jornada !== lastSection) { sectionLabel = jornada; lastSection = jornada; }
+    } else {
+      if (m.phase !== lastSection) { sectionLabel = m.phase; lastSection = m.phase; }
+    }
+
+    // Points badge
+    let pointsBadge = '';
     if (hasRealResult && hasPrediction) {
       let points = 0;
-      const realGl = parseInt(m.gl);
-      const realGv = parseInt(m.gv);
-      const predGl = parseInt(pred.gl);
-      const predGv = parseInt(pred.gv);
-      
+      const rGl = parseInt(m.gl), rGv = parseInt(m.gv);
+      const pGl = parseInt(pred.gl), pGv = parseInt(pred.gv);
       if (!isKnockout) {
-        const isExact = (realGl === predGl) && (realGv === predGv);
-        const isOutcome = Math.sign(realGl - realGv) === Math.sign(predGl - predGv);
-        if (isExact) points = 3;
-        else if (isOutcome) points = 1;
+        const exact = (rGl === pGl) && (rGv === pGv);
+        const outcome = Math.sign(rGl - rGv) === Math.sign(pGl - pGv);
+        if (exact) points = 3; else if (outcome) points = 1;
       } else {
-        const realWinner = getWinnerOfMatch(m.local, m.visitor, m.gl, m.gv, m.pkl, m.pkv);
-        const predWinner = getWinnerOfMatch(m.local, m.visitor, pred.gl, pred.gv, pred.pkl, pred.pkv);
-        if (realWinner && predWinner && realWinner === predWinner) {
-          const isExact = (realGl === predGl) && (realGv === predGv);
-          points = isExact ? 3 : 1;
-        }
+        const rW = getWinnerOfMatch(m.local, m.visitor, m.gl, m.gv, m.pkl, m.pkv);
+        const pW = getWinnerOfMatch(m.local, m.visitor, pred.gl, pred.gv, pred.pkl, pred.pkv);
+        if (rW && pW && rW === pW) { points = (rGl === pGl && rGv === pGv) ? 3 : 1; }
       }
-      pointsEarnedText = `<span class="matrix-points-badge points-${points === 3 ? 'exact' : (points === 1 ? 'outcome' : 'zero')}">+${points}</span>`;
+      const cls = points === 3 ? 'exact' : (points === 1 ? 'outcome' : 'zero');
+      pointsBadge = `<span class="matrix-points-badge points-${cls}">+${points}</span>`;
     }
-    
+
+    // Section divider
+    if (sectionLabel) {
+      html += `
+        <div style="display: flex; align-items: center; gap: 10px; margin: ${idx === 0 ? '0' : '6px'} 0 4px;">
+          <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--primary); white-space: nowrap;">${sectionLabel}</span>
+          <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.06);"></div>
+        </div>`;
+    }
+
+    // Card — uses tl-card CSS class from predictions.html <style>
+    // On desktop: 3 columns (info | result | prediction)
+    // On mobile: collapses to info row + scores row (via CSS)
     html += `
-      <div class="timeline-match-card ${hasRealResult ? 'played' : 'pending'}" data-match-id="${m.id}" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: rgba(7, 5, 15, 0.4); border: 1px solid var(--border-color); border-radius: 14px; gap: 15px; transition: var(--transition-fast);">
-        <div style="flex: 1; min-width: 0;">
-          <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); margin-bottom: 4px;">
-            <span>Partido ${m.id} · ${phaseLabel}</span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 8px; font-weight: 800; color: #fff;">
-            <span>${getFlagImgHtml(m.local)} ${m.local}</span>
-            <span style="font-weight: 400; color: var(--color-text-muted);">vs</span>
-            <span>${getFlagImgHtml(m.visitor)} ${m.visitor}</span>
-          </div>
-        </div>
-        
-        <div style="text-align: center; min-width: 120px;">
-          <div style="font-size: 0.7rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Resultado Real</div>
-          <div style="font-size: 1.1rem; font-weight: 900; color: ${hasRealResult ? 'var(--accent-gold)' : 'var(--color-text-muted)'}">${realScoreStr}</div>
-        </div>
-        
-        <div style="text-align: right; min-width: 140px; border-left: 1px dashed rgba(255, 255, 255, 0.1); padding-left: 15px;">
-          <div style="font-size: 0.7rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Tu Pronóstico</div>
-          <div style="font-size: 0.85rem; font-weight: 700; color: ${hasPrediction ? 'var(--secondary)' : 'var(--color-text-muted)'}; display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
-            <span>${predScoreStr}</span>
-            ${pointsEarnedText}
+      <div class="tl-card ${hasRealResult ? 'played' : 'pending'}" data-match-id="${m.id}">
+        <!-- LEFT: match info -->
+        <div class="tl-info">
+          <div class="tl-meta">${m.id} &middot; ${phaseLabel}</div>
+          <div class="tl-teams">
+            <img src="https://flagcdn.com/w40/${(getFlagCode(m.local) || 'xx')}.png"
+                 style="width:18px;height:12px;object-fit:cover;border-radius:2px;flex-shrink:0;" alt="${m.local}" onerror="this.style.display='none'">
+            <span class="tl-team-name">${m.local}</span>
+            <span class="tl-vs">vs</span>
+            <img src="https://flagcdn.com/w40/${(getFlagCode(m.visitor) || 'xx')}.png"
+                 style="width:18px;height:12px;object-fit:cover;border-radius:2px;flex-shrink:0;" alt="${m.visitor}" onerror="this.style.display='none'">
+            <span class="tl-team-name">${m.visitor}</span>
           </div>
         </div>
-      </div>
-    `;
+
+        <!-- RIGHT wrapper: on mobile becomes .tl-scores-row -->
+        <div class="tl-scores-row">
+          <!-- CENTER: real result -->
+          <div class="tl-result">
+            <div class="tl-section-label">Resultado</div>
+            <div class="tl-score-real ${hasRealResult ? 'has-result' : 'pending'}">${realScoreStr}</div>
+          </div>
+
+          <!-- RIGHT: user prediction -->
+          <div class="tl-prediction">
+            <div class="tl-section-label">Tu pronóstico</div>
+            <div class="tl-score-pred ${hasPrediction ? 'has-pred' : 'no-pred'}">
+              <span>${predScoreStr}</span>${pointsBadge}
+            </div>
+          </div>
+        </div>
+      </div>`;
   });
-  
+
   container.innerHTML = html;
 }
 
@@ -1021,22 +1062,18 @@ function renderTimeline() {
 function filterTimelineList() {
   const query = document.getElementById('search-timeline').value.toLowerCase().trim();
   const status = document.getElementById('filter-timeline-status').value;
-  const cards = document.querySelectorAll('.timeline-match-card');
+  const cards = document.querySelectorAll('.tl-card');
   
   cards.forEach(card => {
     const text = card.innerText.toLowerCase();
     const isPlayed = card.classList.contains('played');
     
-    const matchesQuery = text.includes(query);
-    const matchesStatus = (status === 'all') || 
-                          (status === 'played' && isPlayed) || 
+    const matchesQuery = !query || text.includes(query);
+    const matchesStatus = (status === 'all') ||
+                          (status === 'played' && isPlayed) ||
                           (status === 'pending' && !isPlayed);
                           
-    if (matchesQuery && matchesStatus) {
-      card.style.display = 'flex';
-    } else {
-      card.style.display = 'none';
-    }
+    card.style.display = (matchesQuery && matchesStatus) ? '' : 'none';
   });
 }
 

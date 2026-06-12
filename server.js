@@ -753,7 +753,88 @@ app.post('/api/admin/change-password', requireAdmin, async (req, res) => {
   }
 });
 
-// Chronological sort function for matches
+// Explicit chronological order map based on the real FIFA 2026 calendar.
+// Group stage matches are ordered by actual play date/time as per the official schedule.
+// Knockout stage matches follow their numeric match ID (M73-M104).
+const MATCH_CHRONO_ORDER = {
+  // === JORNADA 1 ===
+  "M001": 1,  // 11 Jun - México vs. Sudáfrica (A)
+  "M002": 2,  // 12 Jun - Corea del Sur vs. Rep. Checa (A)
+  "M007": 3,  // 12 Jun - Canadá vs. Bosnia y Herzegovina (B)
+  "M019": 4,  // 13 Jun - Estados Unidos vs. Paraguay (D)
+  "M008": 5,  // 13 Jun - Catar vs. Suiza (B)
+  "M013": 6,  // 14 Jun - Brasil vs. Marruecos (C)
+  "M014": 7,  // 14 Jun - Haití vs. Escocia (C)
+  "M020": 8,  // 14 Jun - Australia vs. Turquía (D)
+  "M025": 9,  // 14 Jun - Alemania vs. Curazao (E)
+  "M031": 10, // 14 Jun - Países Bajos vs. Japón (F)
+  "M026": 11, // 15 Jun - Costa de Marfil vs. Ecuador (E)
+  "M032": 12, // 15 Jun - Suecia vs. Túnez (F)
+  "M043": 13, // 15 Jun - España vs. Cabo Verde (H)
+  "M037": 14, // 15 Jun - Bélgica vs. Egipto (G)
+  "M044": 15, // 16 Jun - Arabia Saudí vs. Uruguay (H)
+  "M038": 16, // 16 Jun - Irán vs. Nueva Zelanda (G)
+  "M049": 17, // 16 Jun - Francia vs. Senegal (I)
+  "M050": 18, // 17 Jun - Noruega vs. Irak (I)
+  "M055": 19, // 17 Jun - Argentina vs. Argelia (J)
+  "M056": 20, // 17 Jun - Austria vs. Jordania (J)
+  "M061": 21, // 17 Jun - Portugal vs. Rep. Dem. Congo (K)
+  "M067": 22, // 17 Jun - Inglaterra vs. Croacia (L)
+  "M068": 23, // 18 Jun - Ghana vs. Panamá (L)
+  "M062": 24, // 18 Jun - Uzbekistán vs. Colombia (K)
+  // === JORNADA 2 ===
+  "M004": 25, // 18 Jun - Rep. Checa vs. Sudáfrica (A)
+  "M010": 26, // 18 Jun - Bosnia y Herzegovina vs. Suiza (B)
+  "M009": 27, // 19 Jun - Canadá vs. Catar (B)
+  "M003": 28, // 19 Jun - México vs. Corea del Sur (A)
+  "M021": 29, // 19 Jun - Estados Unidos vs. Australia (D)
+  "M016": 30, // 20 Jun - Escocia vs. Marruecos (C)
+  "M015": 31, // 20 Jun - Brasil vs. Haití (C)
+  "M022": 32, // 20 Jun - Paraguay vs. Turquía (D)
+  "M033": 33, // 20 Jun - Países Bajos vs. Suecia (F)
+  "M027": 34, // 20 Jun - Alemania vs. Costa de Marfil (E)
+  "M028": 35, // 21 Jun - Curazao vs. Ecuador (E)
+  "M034": 36, // 21 Jun - Japón vs. Túnez (F)
+  "M045": 37, // 21 Jun - España vs. Arabia Saudí (H)
+  "M039": 38, // 21 Jun - Bélgica vs. Irán (G)
+  "M046": 39, // 22 Jun - Cabo Verde vs. Uruguay (H)
+  "M040": 40, // 22 Jun - Egipto vs. Nueva Zelanda (G)
+  "M053": 41, // 22 Jun - Francia vs. Irak (I)
+  "M054": 42, // 23 Jun - Noruega vs. Senegal (I)
+  "M058": 43, // 23 Jun - Argelia vs. Jordania (J)
+  "M057": 44, // 23 Jun - Argentina vs. Austria (J)
+  "M063": 45, // 23 Jun - Portugal vs. Uzbekistán (K)
+  "M064": 46, // 23 Jun - RD Congo vs. Colombia (K)
+  "M069": 47, // 23 Jun - Inglaterra vs. Ghana (L)
+  "M070": 48, // 24 Jun - Croacia vs. Panamá (L)
+  // === JORNADA 3 ===
+  "M012": 49, // 24 Jun - Bosnia y Herzegovina vs. Catar (B)
+  "M017": 50, // 24 Jun - Escocia vs. Brasil (C)
+  "M018": 51, // 25 Jun - Marruecos vs. Haití (C)
+  "M005": 52, // 25 Jun - Rep. Checa vs. México (A)
+  "M006": 53, // 25 Jun - Sudáfrica vs. Corea del Sur (A)
+  "M029": 54, // 25 Jun - Ecuador vs. Alemania (E)
+  "M030": 55, // 25 Jun - Curazao vs. Costa de Marfil (E)
+  "M035": 56, // 25 Jun - Túnez vs. Países Bajos (F)
+  "M036": 57, // 25 Jun - Japón vs. Suecia (F)
+  "M011": 58, // 25 Jun - Suiza vs. Canadá (B)
+  "M023": 59, // 26 Jun - Turquía vs. Estados Unidos (D)
+  "M024": 60, // 26 Jun - Paraguay vs. Australia (D)
+  "M042": 61, // 26 Jun - Egipto vs. Irán (G)
+  "M041": 62, // 26 Jun - Nueva Zelanda vs. Bélgica (G)
+  "M048": 63, // 26 Jun - Cabo Verde vs. Arabia Saudí (H)
+  "M047": 64, // 26 Jun - Uruguay vs. España (H)
+  "M052": 65, // 27 Jun - Senegal vs. Irak (I)
+  "M051": 66, // 27 Jun - Noruega vs. Francia (I)
+  "M060": 67, // 27 Jun - Argelia vs. Austria (J)
+  "M059": 68, // 27 Jun - Jordania vs. Argentina (J)
+  "M066": 69, // 27 Jun - RD Congo vs. Uzbekistán (K)
+  "M065": 70, // 27 Jun - Colombia vs. Portugal (K)
+  "M072": 71, // 28 Jun - Croacia vs. Ghana (L)
+  "M071": 72, // 28 Jun - Panamá vs. Inglaterra (L)
+};
+
+// Chronological sort function for matches using the real FIFA 2026 calendar order
 function compareMatchesChronologically(mA, mB) {
   const isGroupA = mA.phase === 'Group Stage';
   const isGroupB = mB.phase === 'Group Stage';
@@ -762,22 +843,11 @@ function compareMatchesChronologically(mA, mB) {
   if (!isGroupA && isGroupB) return 1;
   
   if (isGroupA && isGroupB) {
-    const numA = parseInt(mA.id.replace('M', ''));
-    const numB = parseInt(mB.id.replace('M', ''));
-    
-    const grpA = Math.floor((numA - 1) / 6);
-    const grpB = Math.floor((numB - 1) / 6);
-    
-    const idxA = (numA - 1) % 6;
-    const idxB = (numB - 1) % 6;
-    
-    const jorA = idxA < 2 ? 1 : (idxA < 4 ? 2 : 3);
-    const jorB = idxB < 2 ? 1 : (idxB < 4 ? 2 : 3);
-    
-    if (jorA !== jorB) return jorA - jorB;
-    if (grpA !== grpB) return grpA - grpB;
-    return idxA - idxB;
+    const orderA = MATCH_CHRONO_ORDER[mA.id] !== undefined ? MATCH_CHRONO_ORDER[mA.id] : 999;
+    const orderB = MATCH_CHRONO_ORDER[mB.id] !== undefined ? MATCH_CHRONO_ORDER[mB.id] : 999;
+    return orderA - orderB;
   } else {
+    // Knockout: sort by numeric match ID
     const numA = parseInt(mA.id.replace('M', ''));
     const numB = parseInt(mB.id.replace('M', ''));
     return numA - numB;

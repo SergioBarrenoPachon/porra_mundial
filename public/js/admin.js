@@ -77,7 +77,29 @@ function populateConfigFields() {
   document.getElementById('win-bota-bronce').value = adminConfig.winners.bota_bronce || "";
 }
 
-// Chronological sort function for matches
+// Explicit chronological order map based on the real FIFA 2026 calendar.
+const MATCH_CHRONO_ORDER = {
+  // === JORNADA 1 ===
+  "M001": 1, "M002": 2, "M007": 3, "M019": 4, "M008": 5,
+  "M013": 6, "M014": 7, "M020": 8, "M025": 9, "M031": 10,
+  "M026": 11, "M032": 12, "M043": 13, "M037": 14, "M044": 15,
+  "M038": 16, "M049": 17, "M050": 18, "M055": 19, "M056": 20,
+  "M061": 21, "M067": 22, "M068": 23, "M062": 24,
+  // === JORNADA 2 ===
+  "M004": 25, "M010": 26, "M009": 27, "M003": 28, "M021": 29,
+  "M016": 30, "M015": 31, "M022": 32, "M033": 33, "M027": 34,
+  "M028": 35, "M034": 36, "M045": 37, "M039": 38, "M046": 39,
+  "M040": 40, "M053": 41, "M054": 42, "M058": 43, "M057": 44,
+  "M063": 45, "M064": 46, "M069": 47, "M070": 48,
+  // === JORNADA 3 ===
+  "M012": 49, "M017": 50, "M018": 51, "M005": 52, "M006": 53,
+  "M029": 54, "M030": 55, "M035": 56, "M036": 57, "M011": 58,
+  "M023": 59, "M024": 60, "M042": 61, "M041": 62, "M048": 63,
+  "M047": 64, "M052": 65, "M051": 66, "M060": 67, "M059": 68,
+  "M066": 69, "M065": 70, "M072": 71, "M071": 72,
+};
+
+// Chronological sort function for matches using the real FIFA 2026 calendar order
 function compareMatchesChronologically(mA, mB) {
   const isGroupA = mA.phase === 'Group Stage';
   const isGroupB = mB.phase === 'Group Stage';
@@ -86,21 +108,9 @@ function compareMatchesChronologically(mA, mB) {
   if (!isGroupA && isGroupB) return 1;
   
   if (isGroupA && isGroupB) {
-    const numA = parseInt(mA.id.replace('M', ''));
-    const numB = parseInt(mB.id.replace('M', ''));
-    
-    const grpA = Math.floor((numA - 1) / 6);
-    const grpB = Math.floor((numB - 1) / 6);
-    
-    const idxA = (numA - 1) % 6;
-    const idxB = (numB - 1) % 6;
-    
-    const jorA = idxA < 2 ? 1 : (idxA < 4 ? 2 : 3);
-    const jorB = idxB < 2 ? 1 : (idxB < 4 ? 2 : 3);
-    
-    if (jorA !== jorB) return jorA - jorB;
-    if (grpA !== grpB) return grpA - grpB;
-    return idxA - idxB;
+    const orderA = MATCH_CHRONO_ORDER[mA.id] !== undefined ? MATCH_CHRONO_ORDER[mA.id] : 999;
+    const orderB = MATCH_CHRONO_ORDER[mB.id] !== undefined ? MATCH_CHRONO_ORDER[mB.id] : 999;
+    return orderA - orderB;
   } else {
     const numA = parseInt(mA.id.replace('M', ''));
     const numB = parseInt(mB.id.replace('M', ''));

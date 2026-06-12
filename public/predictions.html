@@ -63,6 +63,155 @@
       text-align: center;
       font-weight: 700;
     }
+
+    /* ====================================================
+       TIMELINE CALENDAR CARD STYLES
+       ==================================================== */
+
+    /* Card: flexbox row on desktop, column on mobile */
+    .tl-card {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 0;
+      padding: 12px 16px;
+      background: rgba(7, 5, 15, 0.5);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      transition: border-color 0.2s;
+    }
+    .tl-card:hover { border-color: rgba(255,255,255,0.15); }
+    .tl-card.played  { border-left: 3px solid var(--accent-gold); }
+    .tl-card.pending { border-left: 3px solid rgba(255,255,255,0.06); }
+
+    /* Left: match info (takes all remaining space) */
+    .tl-info {
+      flex: 1;
+      min-width: 0;
+      padding-right: 14px;
+    }
+    .tl-meta {
+      font-size: 0.7rem;
+      color: var(--color-text-muted);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tl-teams {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: nowrap;
+      overflow: hidden;
+    }
+    .tl-team-name {
+      font-weight: 800;
+      color: #fff;
+      font-size: 0.88rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tl-vs {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      flex-shrink: 0;
+    }
+
+    /* Right: scores wrapper — always a flex row (result | prediction) */
+    .tl-scores-row {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 0;
+      flex-shrink: 0;
+    }
+
+    /* Result block */
+    .tl-result {
+      text-align: center;
+      padding: 0 14px;
+      border-left: 1px solid rgba(255,255,255,0.07);
+      min-width: 82px;
+    }
+
+    /* Prediction block */
+    .tl-prediction {
+      text-align: right;
+      padding: 0 0 0 14px;
+      border-left: 1px dashed rgba(255,255,255,0.07);
+      min-width: 100px;
+    }
+
+    /* Shared label above score */
+    .tl-section-label {
+      font-size: 0.6rem;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 2px;
+      white-space: nowrap;
+    }
+
+    /* Score values */
+    .tl-score-real {
+      font-size: 1rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .tl-score-real.has-result { color: var(--accent-gold); }
+    .tl-score-real.pending    { color: rgba(255,255,255,0.2); font-size: 0.78rem; font-weight: 400; }
+
+    .tl-score-pred {
+      font-size: 0.82rem;
+      font-weight: 700;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+    }
+    .tl-score-pred.has-pred { color: var(--secondary); }
+    .tl-score-pred.no-pred  { color: rgba(255,255,255,0.2); font-weight: 400; font-size: 0.72rem; }
+
+    /* MOBILE (≤ 580px): stack info above scores, scores remain side-by-side */
+    @media (max-width: 580px) {
+      .tl-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 11px 13px;
+      }
+      .tl-info {
+        padding-right: 0;
+      }
+      .tl-team-name {
+        font-size: 0.82rem;
+        max-width: 100px;
+      }
+      .tl-scores-row {
+        width: 100%;
+      }
+      .tl-result {
+        flex: 1;
+        border-left: none;
+        border-right: 1px dashed rgba(255,255,255,0.08);
+        text-align: center;
+        padding: 0 10px 0 0;
+        min-width: 0;
+      }
+      .tl-prediction {
+        flex: 1;
+        border-left: none;
+        padding: 0 0 0 10px;
+        min-width: 0;
+      }
+      .tl-score-pred {
+        justify-content: flex-end;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -181,20 +330,20 @@
 
     <!-- TAB: TIMELINE -->
     <div id="tab-timeline" class="tab-content" style="display: none;">
-      <div class="card" style="max-width: 900px; margin: 0 auto; padding: 20px;">
+      <div class="card" style="max-width: 960px; margin: 0 auto; padding: 20px;">
         <h2 class="group-title">🗓️ Calendario y Resultados del Torneo</h2>
         <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-bottom: 20px;">
-          Listado completo de todos los partidos ordenados cronológicamente. Puedes ver el resultado real y tu predicción (en pequeño).
+          Listado completo de los partidos en orden cronológico real. La franja dorada indica partidos ya jugados.
         </p>
-        <div class="timeline-search-bar" style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
-          <input type="text" id="search-timeline" class="form-control" placeholder="Buscar por selección o fase..." oninput="filterTimelineList()" style="max-width: 300px; background: rgba(0,0,0,0.4); border-color: var(--border-color);">
-          <select id="filter-timeline-status" class="form-control" onchange="filterTimelineList()" style="max-width: 200px; background: rgba(0,0,0,0.4); border-color: var(--border-color); height: 42px;">
+        <div style="margin-bottom: 16px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+          <input type="text" id="search-timeline" class="form-control" placeholder="🔍 Buscar por equipo o fase..." oninput="filterTimelineList()" style="flex: 1; min-width: 180px; max-width: 320px; background: rgba(0,0,0,0.4); border-color: var(--border-color);">
+          <select id="filter-timeline-status" class="form-control" onchange="filterTimelineList()" style="width: auto; min-width: 160px; background: rgba(0,0,0,0.4); border-color: var(--border-color); height: 42px;">
             <option value="all">Todos los partidos</option>
-            <option value="played">Jugados</option>
-            <option value="pending">Pendientes</option>
+            <option value="played">✅ Jugados</option>
+            <option value="pending">⏳ Pendientes</option>
           </select>
         </div>
-        <div class="timeline-matches-list" id="timeline-matches-container" style="display: flex; flex-direction: column; gap: 12px; max-height: 800px; overflow-y: auto; padding-right: 5px;">
+        <div id="timeline-matches-container" style="display: flex; flex-direction: column; gap: 8px;">
           <!-- Populated dynamically by JS -->
         </div>
       </div>
