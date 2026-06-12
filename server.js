@@ -3,8 +3,8 @@ const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const fs = require('fs');
 const path = require('path');
+const dbConnector = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,31 +15,13 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Database helper functions (atomic writes)
-const DB_FILE = path.join(__dirname, 'data.json');
-
-function readDb() {
-  if (!fs.existsSync(DB_FILE)) {
-    console.warn('Database file not found. Initializing empty database.');
-    return { config: {}, users: [], predictions: {}, matches: [], rankingHistory: [] };
-  }
-  try {
-    const data = fs.readFileSync(DB_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (err) {
-    console.error('Error reading database file:', err);
-    return { config: {}, users: [], predictions: {}, matches: [], rankingHistory: [] };
-  }
+// Database helper functions (async database wrappers)
+async function readDb() {
+  return await dbConnector.readDb();
 }
 
-function writeDb(data) {
-  try {
-    const tempFile = DB_FILE + '.tmp';
-    fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), 'utf8');
-    fs.renameSync(tempFile, DB_FILE);
-  } catch (err) {
-    console.error("Error writing database file:", err);
-  }
+async function writeDb(data) {
+  await dbConnector.writeDb(data);
 }
 
 // Password hashing helper
@@ -83,35 +65,45 @@ app.post('/api/auth/register', (req, res) => {
 });
 
 // Public endpoint: list usernames for login dropdown
-app.get('/api/users-list', (req, res) => {
-  const db = readDb();
-  const users = db.users.map(u => ({ username: u.username }));
-  res.json(users);
+app.get('/api/users-list', async (req, res) => {
+  try {
+    const db = await readDb();
+    const users = db.users.map(u => ({ username: u.username }));
+    res.json(users);
+  } catch (err) {
+    console.error("Error en /api/users-list:", err);
+    res.status(500).json({ error: "Error al recuperar los usuarios." });
+  }
 });
 
 // Login
-app.post('/api/auth/login', (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) {
-    return res.status(400).json({ error: "Usuario y contraseña son requeridos." });
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: "Usuario y contraseña son requeridos." });
+    }
+    
+    const db = await readDb();
+    const lowerUsername = username.toLowerCase().trim();
+    const user = db.users.find(u => u.username.toLowerCase() === lowerUsername);
+    
+    if (!user) {
+      return res.status(400).json({ error: "Usuario o contraseña incorrectos." });
+    }
+    
+    const hash = hashPassword(password, user.salt);
+    if (hash !== user.passwordHash) {
+      return res.status(400).json({ error: "Usuario o contraseña incorrectos." });
+    }
+    
+    const token = jwt.sign({ id: user.id, username: user.username, isAdmin: !!user.isAdmin }, JWT_SECRET, { expiresIn: '7d' });
+    res.cookie('token', token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
+    res.json({ message: "Sesión iniciada con éxito.", user: { id: user.id, username: user.username, isAdmin: !!user.isAdmin } });
+  } catch (err) {
+    console.error("Error en /api/auth/login:", err);
+    res.status(500).json({ error: "Error en la autenticación." });
   }
-  
-  const db = readDb();
-  const lowerUsername = username.toLowerCase().trim();
-  const user = db.users.find(u => u.username.toLowerCase() === lowerUsername);
-  
-  if (!user) {
-    return res.status(400).json({ error: "Usuario o contraseña incorrectos." });
-  }
-  
-  const hash = hashPassword(password, user.salt);
-  if (hash !== user.passwordHash) {
-    return res.status(400).json({ error: "Usuario o contraseña incorrectos." });
-  }
-  
-  const token = jwt.sign({ id: user.id, username: user.username, isAdmin: !!user.isAdmin }, JWT_SECRET, { expiresIn: '7d' });
-  res.cookie('token', token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
-  res.json({ message: "Sesión iniciada con éxito.", user: { id: user.id, username: user.username, isAdmin: !!user.isAdmin } });
 });
 
 // Logout
@@ -154,74 +146,94 @@ app.get('/api/predictions/deadline', (req, res) => {
 });
 
 // Get matches schema
-app.get('/api/matches', (req, res) => {
-  const db = readDb();
-  res.json(db.matches);
+app.get('/api/matches', async (req, res) => {
+  try {
+    const db = await readDb();
+    res.json(db.matches);
+  } catch (err) {
+    console.error("Error en /api/matches:", err);
+    res.status(500).json({ error: "Error al recuperar los partidos." });
+  }
 });
 
 // Get user predictions (only allowed for authenticated owner, or admin)
-app.get('/api/predictions/:userId', authenticateToken, (req, res) => {
-  const { userId } = req.params;
-  if (req.user.id !== userId && !req.user.isAdmin) {
-    return res.status(403).json({ error: "No tienes permiso para ver estas predicciones." });
+app.get('/api/predictions/:userId', authenticateToken, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (req.user.id !== userId && !req.user.isAdmin) {
+      return res.status(403).json({ error: "No tienes permiso para ver estas predicciones." });
+    }
+    
+    const db = await readDb();
+    const userPred = db.predictions[userId] || { matches: {}, specials: {} };
+    res.json(userPred);
+  } catch (err) {
+    console.error("Error en GET /api/predictions/:userId:", err);
+    res.status(500).json({ error: "Error al recuperar las predicciones." });
   }
-  
-  const db = readDb();
-  const userPred = db.predictions[userId] || { matches: {}, specials: {} };
-  res.json(userPred);
 });
 
 // Submit/Update user predictions
-app.post('/api/predictions/:userId', authenticateToken, (req, res) => {
-  const { userId } = req.params;
-  if (req.user.id !== userId && !req.user.isAdmin) {
-    return res.status(403).json({ error: "No tienes permiso para editar estas predicciones." });
-  }
-  
-  if (isDeadlinePassed() && !req.user.isAdmin) {
-    return res.status(403).json({ error: "La fecha límite para enviar o modificar predicciones ha expirado (Sábado 13/06/2026 21:00)." });
-  }
-  
-  const { matches, specials } = req.body;
-  if (!matches || !specials) {
-    return res.status(400).json({ error: "Datos de predicción incorrectos." });
-  }
-  
-  const db = readDb();
-  
-  // Update predictions for the user
-  db.predictions[userId] = {
-    matches: matches, // { matchId: { gl, gv, pkl, pkv } }
-    specials: {
-      balon_oro: specials.balon_oro || "",
-      balon_plata: specials.balon_plata || "",
-      balon_bronce: specials.balon_bronce || "",
-      bota_oro: specials.bota_oro || "",
-      bota_plata: specials.bota_plata || "",
-      bota_bronce: specials.bota_bronce || ""
+app.post('/api/predictions/:userId', authenticateToken, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (req.user.id !== userId && !req.user.isAdmin) {
+      return res.status(403).json({ error: "No tienes permiso para editar estas predicciones." });
     }
-  };
-  
-  writeDb(db);
-  res.json({ message: "Predicciones guardadas correctamente." });
+    
+    if (isDeadlinePassed() && !req.user.isAdmin) {
+      return res.status(403).json({ error: "La fecha límite para enviar o modificar predicciones ha expirado (Sábado 13/06/2026 21:00)." });
+    }
+    
+    const { matches, specials } = req.body;
+    if (!matches || !specials) {
+      return res.status(400).json({ error: "Datos de predicción incorrectos." });
+    }
+    
+    const db = await readDb();
+    
+    // Update predictions for the user
+    db.predictions[userId] = {
+      matches: matches, // { matchId: { gl, gv, pkl, pkv } }
+      specials: {
+        balon_oro: specials.balon_oro || "",
+        balon_plata: specials.balon_plata || "",
+        balon_bronce: specials.balon_bronce || "",
+        bota_oro: specials.bota_oro || "",
+        bota_plata: specials.bota_plata || "",
+        bota_bronce: specials.bota_bronce || ""
+      }
+    };
+    
+    await writeDb(db);
+    res.json({ message: "Predicciones guardadas correctamente." });
+  } catch (err) {
+    console.error("Error en POST /api/predictions/:userId:", err);
+    res.status(500).json({ error: "Error al guardar las predicciones." });
+  }
 });
 
 // Get predictions of ALL participants (only allowed AFTER deadline, or for admin)
-app.get('/api/predictions-master', authenticateToken, (req, res) => {
-  if (!isDeadlinePassed() && !req.user.isAdmin) {
-    return res.status(403).json({ error: "Las predicciones de otros participantes estarán bloqueadas hasta el cierre de la fecha límite." });
-  }
-  
-  const db = readDb();
-  // Map predictions to user names
-  const result = {};
-  for (const userId in db.predictions) {
-    const userObj = db.users.find(u => u.id === userId);
-    if (userObj && (!userObj.isAdmin || userObj.username === "Sergio B")) {
-      result[userObj.username] = db.predictions[userId];
+app.get('/api/predictions-master', authenticateToken, async (req, res) => {
+  try {
+    if (!isDeadlinePassed() && !req.user.isAdmin) {
+      return res.status(403).json({ error: "Las predicciones de otros participantes estarán bloqueadas hasta el cierre de la fecha límite." });
     }
+    
+    const db = await readDb();
+    // Map predictions to user names
+    const result = {};
+    for (const userId in db.predictions) {
+      const userObj = db.users.find(u => u.id === userId);
+      if (userObj && (!userObj.isAdmin || userObj.username === "Sergio B")) {
+        result[userObj.username] = db.predictions[userId];
+      }
+    }
+    res.json(result);
+  } catch (err) {
+    console.error("Error en /api/predictions-master:", err);
+    res.status(500).json({ error: "Error al recuperar los pronósticos grupales." });
   }
-  res.json(result);
 });
 
 // ==============================================================================
@@ -289,41 +301,46 @@ function calculateParticipantScore(predObj, matchesList, config, winners) {
 }
 
 // Get Leaderboard
-app.get('/api/leaderboard', (req, res) => {
-  const db = readDb();
-  const list = [];
-  
-  db.users.forEach(u => {
-    if (u.isAdmin && u.username !== "Sergio B") return;
-    const predObj = db.predictions[u.id] || { matches: {}, specials: {} };
-    const score = calculateParticipantScore(predObj, db.matches, db.config, db.config.winners);
+app.get('/api/leaderboard', async (req, res) => {
+  try {
+    const db = await readDb();
+    const list = [];
     
-    list.push({
-      userId: u.id,
-      username: u.username,
-      ...score
+    db.users.forEach(u => {
+      if (u.isAdmin && u.username !== "Sergio B") return;
+      const predObj = db.predictions[u.id] || { matches: {}, specials: {} };
+      const score = calculateParticipantScore(predObj, db.matches, db.config, db.config.winners);
+      
+      list.push({
+        userId: u.id,
+        username: u.username,
+        ...score
+      });
     });
-  });
-  
-  // Sort descending by total, then by matchPoints
-  list.sort((a, b) => b.total - a.total || b.matchPoints - a.matchPoints || a.username.localeCompare(b.username));
-  
-  // Add ranks
-  let currentRank = 0;
-  let currentPoints = -1;
-  list.forEach((p, idx) => {
-    if (p.total !== currentPoints) {
-      currentRank = idx + 1;
-      currentPoints = p.total;
-    }
-    p.rank = currentRank;
-  });
-  
-  res.json({
-    leaderboard: list,
-    config: db.config,
-    rankingHistory: db.rankingHistory
-  });
+    
+    // Sort descending by total, then by matchPoints
+    list.sort((a, b) => b.total - a.total || b.matchPoints - a.matchPoints || a.username.localeCompare(b.username));
+    
+    // Add ranks
+    let currentRank = 0;
+    let currentPoints = -1;
+    list.forEach((p, idx) => {
+      if (p.total !== currentPoints) {
+        currentRank = idx + 1;
+        currentPoints = p.total;
+      }
+      p.rank = currentRank;
+    });
+    
+    res.json({
+      leaderboard: list,
+      config: db.config,
+      rankingHistory: db.rankingHistory
+    });
+  } catch (err) {
+    console.error("Error en /api/leaderboard:", err);
+    res.status(500).json({ error: "Error al recuperar la clasificación." });
+  }
 });
 
 // ==============================================================================
@@ -331,236 +348,266 @@ app.get('/api/leaderboard', (req, res) => {
 // ==============================================================================
 
 // Get admin status of database (for display in admin view)
-app.get('/api/admin/dashboard', requireAdmin, (req, res) => {
-  const db = readDb();
-  res.json({
-    config: db.config,
-    usersCount: db.users.filter(u => !u.isAdmin || u.username === "Sergio B").length,
-    predictionsCount: Object.keys(db.predictions).length,
-    matches: db.matches
-  });
+app.get('/api/admin/dashboard', requireAdmin, async (req, res) => {
+  try {
+    const db = await readDb();
+    res.json({
+      config: db.config,
+      usersCount: db.users.filter(u => !u.isAdmin || u.username === "Sergio B").length,
+      predictionsCount: Object.keys(db.predictions).length,
+      matches: db.matches
+    });
+  } catch (err) {
+    console.error("Error en /api/admin/dashboard:", err);
+    res.status(500).json({ error: "Error al recuperar el panel de administrador." });
+  }
 });
 
 // Update Point Settings
-app.post('/api/admin/config-points', requireAdmin, (req, res) => {
-  const { points } = req.body;
-  if (!points) {
-    return res.status(400).json({ error: "Settings missing." });
+app.post('/api/admin/config-points', requireAdmin, async (req, res) => {
+  try {
+    const { points } = req.body;
+    if (!points) {
+      return res.status(400).json({ error: "Settings missing." });
+    }
+    
+    const db = await readDb();
+    db.config.points = {
+      outcome: parseInt(points.outcome) || 1,
+      exact: parseInt(points.exact) || 3,
+      balon_oro: parseInt(points.balon_oro) || 10,
+      balon_plata: parseInt(points.balon_plata) || 5,
+      balon_bronce: parseInt(points.balon_bronce) || 3,
+      bota_oro: parseInt(points.bota_oro) || 10,
+      bota_plata: parseInt(points.bota_plata) || 5,
+      bota_bronce: parseInt(points.bota_bronce) || 3
+    };
+    
+    await writeDb(db);
+    res.json({ message: "Configuración de puntos actualizada.", config: db.config });
+  } catch (err) {
+    console.error("Error en /api/admin/config-points:", err);
+    res.status(500).json({ error: "Error al actualizar la configuración de puntos." });
   }
-  
-  const db = readDb();
-  db.config.points = {
-    outcome: parseInt(points.outcome) || 1,
-    exact: parseInt(points.exact) || 3,
-    balon_oro: parseInt(points.balon_oro) || 10,
-    balon_plata: parseInt(points.balon_plata) || 5,
-    balon_bronce: parseInt(points.balon_bronce) || 3,
-    bota_oro: parseInt(points.bota_oro) || 10,
-    bota_plata: parseInt(points.bota_plata) || 5,
-    bota_bronce: parseInt(points.bota_bronce) || 3
-  };
-  
-  writeDb(db);
-  res.json({ message: "Configuración de puntos actualizada.", config: db.config });
 });
 
 // Update Official Award Winners
-app.post('/api/admin/config-winners', requireAdmin, (req, res) => {
-  const { winners } = req.body;
-  if (!winners) {
-    return res.status(400).json({ error: "Winners missing." });
+app.post('/api/admin/config-winners', requireAdmin, async (req, res) => {
+  try {
+    const { winners } = req.body;
+    if (!winners) {
+      return res.status(400).json({ error: "Winners missing." });
+    }
+    
+    const db = await readDb();
+    db.config.winners = {
+      balon_oro: winners.balon_oro || "",
+      balon_plata: winners.balon_plata || "",
+      balon_bronce: winners.balon_bronce || "",
+      bota_oro: winners.bota_oro || "",
+      bota_plata: winners.bota_plata || "",
+      bota_bronce: winners.bota_bronce || ""
+    };
+    
+    await writeDb(db);
+    res.json({ message: "Ganadores oficiales actualizados.", config: db.config });
+  } catch (err) {
+    console.error("Error en /api/admin/config-winners:", err);
+    res.status(500).json({ error: "Error al registrar ganadores oficiales." });
   }
-  
-  const db = readDb();
-  db.config.winners = {
-    balon_oro: winners.balon_oro || "",
-    balon_plata: winners.balon_plata || "",
-    balon_bronce: winners.balon_bronce || "",
-    bota_oro: winners.bota_oro || "",
-    bota_plata: winners.bota_plata || "",
-    bota_bronce: winners.bota_bronce || ""
-  };
-  
-  writeDb(db);
-  res.json({ message: "Ganadores oficiales actualizados.", config: db.config });
 });
 
 // Change Admin Password
-app.post('/api/admin/change-password', requireAdmin, (req, res) => {
-  const { password } = req.body;
-  if (!password || password.trim() === "" || password.length < 6) {
-    return res.status(400).json({ error: "Contraseña inválida. Debe tener al menos 6 caracteres." });
+app.post('/api/admin/change-password', requireAdmin, async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (!password || password.trim() === "" || password.length < 6) {
+      return res.status(400).json({ error: "Contraseña inválida. Debe tener al menos 6 caracteres." });
+    }
+    
+    const db = await readDb();
+    const adminUser = db.users.find(u => u.isAdmin);
+    if (!adminUser) {
+      return res.status(404).json({ error: "Usuario administrador no encontrado." });
+    }
+    
+    const salt = crypto.randomBytes(16).toString('hex');
+    adminUser.salt = salt;
+    adminUser.passwordHash = hashPassword(password, salt);
+    
+    await writeDb(db);
+    res.json({ message: "Contraseña de administrador actualizada con éxito." });
+  } catch (err) {
+    console.error("Error en /api/admin/change-password:", err);
+    res.status(500).json({ error: "Error al cambiar la contraseña." });
   }
-  
-  const db = readDb();
-  const adminUser = db.users.find(u => u.isAdmin);
-  if (!adminUser) {
-    return res.status(404).json({ error: "Usuario administrador no encontrado." });
-  }
-  
-  const salt = crypto.randomBytes(16).toString('hex');
-  adminUser.salt = salt;
-  adminUser.passwordHash = hashPassword(password, salt);
-  
-  writeDb(db);
-  res.json({ message: "Contraseña de administrador actualizada con éxito." });
 });
 
 // Update Match Results (and auto-calculate ranking evolution)
-app.post('/api/admin/matches/:matchId', requireAdmin, (req, res) => {
-  const { matchId } = req.params;
-  const { gl, gv, pkl, pkv } = req.body;
-  
-  const db = readDb();
-  const matchIndex = db.matches.findIndex(m => m.id === matchId);
-  if (matchIndex === -1) {
-    return res.status(404).json({ error: "Partido no encontrado." });
-  }
-  
-  // Parse goals
-  const finalGl = (gl === null || gl === undefined || gl === "") ? null : parseInt(gl);
-  const finalGv = (gv === null || gv === undefined || gv === "") ? null : parseInt(gv);
-  
-  // Parse penalties (only if tie and not group stage)
-  const isKnockout = db.matches[matchIndex].phase !== "Group Stage";
-  let finalPkl = null;
-  let finalPkv = null;
-  if (isKnockout && finalGl === finalGv && finalGl !== null) {
-    finalPkl = (pkl === null || pkl === undefined || pkl === "") ? null : parseInt(pkl);
-    finalPkv = (pkv === null || pkv === undefined || pkv === "") ? null : parseInt(pkv);
-  }
-  
-  // Update match record
-  db.matches[matchIndex].gl = finalGl;
-  db.matches[matchIndex].gv = finalGv;
-  db.matches[matchIndex].pkl = finalPkl;
-  db.matches[matchIndex].pkv = finalPkv;
-  
-  // --------------------------------------------------------------------------
-  // RANKING SNAPSHOT FOR EVOLUTION CHART
-  // --------------------------------------------------------------------------
-  // Calculate rankings UP TO the current state of matches (only counting matches with results)
-  if (finalGl !== null && finalGv !== null) {
-    // Check if snapshot for this match already exists, if so, delete it
-    db.rankingHistory = db.rankingHistory.filter(h => h.matchId !== matchId);
+app.post('/api/admin/matches/:matchId', requireAdmin, async (req, res) => {
+  try {
+    const { matchId } = req.params;
+    const { gl, gv, pkl, pkv } = req.body;
     
-    // Compile points up to this match for all users
-    const userStandings = [];
-    db.users.forEach(u => {
-      if (u.isAdmin && u.username !== "Sergio B") return;
-      const predObj = db.predictions[u.id] || { matches: {}, specials: {} };
+    const db = await readDb();
+    const matchIndex = db.matches.findIndex(m => m.id === matchId);
+    if (matchIndex === -1) {
+      return res.status(404).json({ error: "Partido no encontrado." });
+    }
+    
+    // Parse goals
+    const finalGl = (gl === null || gl === undefined || gl === "") ? null : parseInt(gl);
+    const finalGv = (gv === null || gv === undefined || gv === "") ? null : parseInt(gv);
+    
+    // Parse penalties (only if tie and not group stage)
+    const isKnockout = db.matches[matchIndex].phase !== "Group Stage";
+    let finalPkl = null;
+    let finalPkv = null;
+    if (isKnockout && finalGl === finalGv && finalGl !== null) {
+      finalPkl = (pkl === null || pkl === undefined || pkl === "") ? null : parseInt(pkl);
+      finalPkv = (pkv === null || pkv === undefined || pkv === "") ? null : parseInt(pkv);
+    }
+    
+    // Update match record
+    db.matches[matchIndex].gl = finalGl;
+    db.matches[matchIndex].gv = finalGv;
+    db.matches[matchIndex].pkl = finalPkl;
+    db.matches[matchIndex].pkv = finalPkv;
+    
+    // --------------------------------------------------------------------------
+    // RANKING SNAPSHOT FOR EVOLUTION CHART
+    // --------------------------------------------------------------------------
+    // Calculate rankings UP TO the current state of matches (only counting matches with results)
+    if (finalGl !== null && finalGv !== null) {
+      // Check if snapshot for this match already exists, if so, delete it
+      db.rankingHistory = db.rankingHistory.filter(h => h.matchId !== matchId);
       
-      // Calculate scores but ONLY for matches that have results, excluding specials
-      let matchPoints = 0;
-      db.matches.forEach(m => {
-        if (m.gl !== null && m.gv !== null && m.gl !== "" && m.gv !== "") {
-          const pred = predObj.matches[m.id];
-          if (pred && pred.gl !== undefined && pred.gv !== undefined && pred.gl !== null && pred.gv !== null && pred.gl !== "" && pred.gv !== "") {
-            const realGl = parseInt(m.gl);
-            const realGv = parseInt(m.gv);
-            const predGl = parseInt(pred.gl);
-            const predGv = parseInt(pred.gv);
-            
-            const isExact = (realGl === predGl) && (realGv === predGv);
-            const realDiff = realGl - realGv;
-            const predDiff = predGl - predGv;
-            const isOutcome = Math.sign(realDiff) === Math.sign(predDiff);
-            
-            if (isExact) {
-              matchPoints += db.config.points.exact;
-            } else if (isOutcome) {
-              matchPoints += db.config.points.outcome;
+      // Compile points up to this match for all users
+      const userStandings = [];
+      db.users.forEach(u => {
+        if (u.isAdmin && u.username !== "Sergio B") return;
+        const predObj = db.predictions[u.id] || { matches: {}, specials: {} };
+        
+        // Calculate scores but ONLY for matches that have results, excluding specials
+        let matchPoints = 0;
+        db.matches.forEach(m => {
+          if (m.gl !== null && m.gv !== null && m.gl !== "" && m.gv !== "") {
+            const pred = predObj.matches[m.id];
+            if (pred && pred.gl !== undefined && pred.gv !== undefined && pred.gl !== null && pred.gv !== null && pred.gl !== "" && pred.gv !== "") {
+              const realGl = parseInt(m.gl);
+              const realGv = parseInt(m.gv);
+              const predGl = parseInt(pred.gl);
+              const predGv = parseInt(pred.gv);
+              
+              const isExact = (realGl === predGl) && (realGv === predGv);
+              const realDiff = realGl - realGv;
+              const predDiff = predGl - predGv;
+              const isOutcome = Math.sign(realDiff) === Math.sign(predDiff);
+              
+              if (isExact) {
+                matchPoints += db.config.points.exact;
+              } else if (isOutcome) {
+                matchPoints += db.config.points.outcome;
+              }
             }
           }
-        }
+        });
+        
+        userStandings.push({
+          username: u.username,
+          points: matchPoints
+        });
       });
       
-      userStandings.push({
-        username: u.username,
-        points: matchPoints
+      // Sort and assign ranks
+      userStandings.sort((a, b) => b.points - a.points || a.username.localeCompare(b.username));
+      
+      let currentRank = 0;
+      let currentPoints = -1;
+      const ranks = {};
+      userStandings.forEach((p, idx) => {
+        if (p.points !== currentPoints) {
+          currentRank = idx + 1;
+          currentPoints = p.points;
+        }
+        ranks[p.username] = currentRank;
       });
-    });
+      
+      // Add snapshot record
+      db.rankingHistory.push({
+        matchId: matchId,
+        timestamp: Date.now(),
+        ranks: ranks
+      });
+      
+      // Sort history by match ID order
+      // Order matches by their index in db.matches
+      db.rankingHistory.sort((a, b) => {
+        const idxA = db.matches.findIndex(m => m.id === a.matchId);
+        const idxB = db.matches.findIndex(m => m.id === b.matchId);
+        return idxA - idxB;
+      });
+    } else {
+      // If goals were cleared, delete snapshot for this match
+      db.rankingHistory = db.rankingHistory.filter(h => h.matchId !== matchId);
+    }
     
-    // Sort and assign ranks
-    userStandings.sort((a, b) => b.points - a.points || a.username.localeCompare(b.username));
-    
-    let currentRank = 0;
-    let currentPoints = -1;
-    const ranks = {};
-    userStandings.forEach((p, idx) => {
-      if (p.points !== currentPoints) {
-        currentRank = idx + 1;
-        currentPoints = p.points;
-      }
-      ranks[p.username] = currentRank;
-    });
-    
-    // Add snapshot record
-    db.rankingHistory.push({
-      matchId: matchId,
-      timestamp: Date.now(),
-      ranks: ranks
-    });
-    
-    // Sort history by match ID order
-    // Order matches by their index in db.matches
-    db.rankingHistory.sort((a, b) => {
-      const idxA = db.matches.findIndex(m => m.id === a.matchId);
-      const idxB = db.matches.findIndex(m => m.id === b.matchId);
-      return idxA - idxB;
-    });
-  } else {
-    // If goals were cleared, delete snapshot for this match
-    db.rankingHistory = db.rankingHistory.filter(h => h.matchId !== matchId);
+    await writeDb(db);
+    res.json({ message: "Resultado del partido guardado con éxito.", match: db.matches[matchIndex] });
+  } catch (err) {
+    console.error("Error en /api/admin/matches/:matchId:", err);
+    res.status(500).json({ error: "Error al actualizar el marcador del partido." });
   }
-  
-  writeDb(db);
-  res.json({ message: "Resultado del partido guardado con éxito.", match: db.matches[matchIndex] });
 });
 
 // Reset all data (predictions, match results, ranking history) – admin only
-app.post('/api/admin/reset-data', requireAdmin, (req, res) => {
-  const db = readDb();
-  
-  // Clear all predictions for every user
-  for (const userId in db.predictions) {
-    db.predictions[userId] = {
-      matches: {},
-      specials: {
-        balon_oro: "",
-        balon_plata: "",
-        balon_bronce: "",
-        bota_oro: "",
-        bota_plata: "",
-        bota_bronce: ""
-      }
+app.post('/api/admin/reset-data', requireAdmin, async (req, res) => {
+  try {
+    const db = await readDb();
+    
+    // Clear all predictions for every user
+    for (const userId in db.predictions) {
+      db.predictions[userId] = {
+        matches: {},
+        specials: {
+          balon_oro: "",
+          balon_plata: "",
+          balon_bronce: "",
+          bota_oro: "",
+          bota_plata: "",
+          bota_bronce: ""
+        }
+      };
+    }
+    
+    // Clear all match results
+    db.matches.forEach(m => {
+      m.gl = null;
+      m.gv = null;
+      m.pkl = null;
+      m.pkv = null;
+    });
+    
+    // Clear ranking history
+    db.rankingHistory = [];
+    
+    // Clear official winners
+    db.config.winners = {
+      balon_oro: "",
+      balon_plata: "",
+      balon_bronce: "",
+      bota_oro: "",
+      bota_plata: "",
+      bota_bronce: ""
     };
+    
+    await writeDb(db);
+    console.log('⚠️  ADMIN RESET: All predictions, match results, and ranking history have been cleared.');
+    res.json({ message: "Todos los datos han sido reseteados correctamente. Las cuentas de usuario se mantienen." });
+  } catch (err) {
+    console.error("Error en /api/admin/reset-data:", err);
+    res.status(500).json({ error: "Error al resetear los datos del juego." });
   }
-  
-  // Clear all match results
-  db.matches.forEach(m => {
-    m.gl = null;
-    m.gv = null;
-    m.pkl = null;
-    m.pkv = null;
-  });
-  
-  // Clear ranking history
-  db.rankingHistory = [];
-  
-  // Clear official winners
-  db.config.winners = {
-    balon_oro: "",
-    balon_plata: "",
-    balon_bronce: "",
-    bota_oro: "",
-    bota_plata: "",
-    bota_bronce: ""
-  };
-  
-  writeDb(db);
-  console.log('⚠️  ADMIN RESET: All predictions, match results, and ranking history have been cleared.');
-  res.json({ message: "Todos los datos han sido reseteados correctamente. Las cuentas de usuario se mantienen." });
 });
 
 // Serve frontend routing fallback
@@ -568,9 +615,15 @@ app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`\n=============================================================`);
-  console.log(`⚽ PORRA MUNDIAL 2026 SERVER RUNNING AT: http://localhost:${PORT}`);
-  console.log(`🔒 Prediction Deadline: ${DEADLINE.toLocaleString()}`);
-  console.log(`=============================================================\n`);
+// Initialize database and start listening
+dbConnector.initDb().then(() => {
+  app.listen(PORT, () => {
+    console.log(`\n=============================================================`);
+    console.log(`⚽ PORRA MUNDIAL 2026 SERVER RUNNING AT: http://localhost:${PORT}`);
+    console.log(`🔒 Prediction Deadline: ${DEADLINE.toLocaleString()}`);
+    console.log(`=============================================================\n`);
+  });
+}).catch(err => {
+  console.error("❌ Fatal Error: Could not initialize database:", err);
+  process.exit(1);
 });
