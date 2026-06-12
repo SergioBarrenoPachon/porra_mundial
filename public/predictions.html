@@ -142,12 +142,23 @@
 
     <!-- TAB: KNOCKOUTS -->
     <div id="tab-knockouts" class="tab-content" style="display: none;">
-      <p style="color: var(--color-text-muted); text-align: center; margin-bottom: 8px; font-size: 0.85rem;">
+      <p style="color: var(--color-text-muted); text-align: center; margin-bottom: 15px; font-size: 0.85rem;" class="desktop-only-text">
         📐 Desplaza horizontalmente para ver toda la llave del torneo. Los equipos avanzan automáticamente según tus resultados.
       </p>
+      
+      <!-- Mobile round selector buttons -->
+      <div class="mobile-round-selector-container">
+        <button class="round-select-btn active" id="btn-r32-col" onclick="selectMobileRound('r32-col', this)">1/16</button>
+        <button class="round-select-btn" id="btn-r16-col" onclick="selectMobileRound('r16-col', this)">1/8</button>
+        <button class="round-select-btn" id="btn-r8-col" onclick="selectMobileRound('r8-col', this)">Cuartos</button>
+        <button class="round-select-btn" id="btn-r4-col" onclick="selectMobileRound('r4-col', this)">Semis</button>
+        <button class="round-select-btn" id="btn-final-col" onclick="selectMobileRound('final-col', this)">Final</button>
+      </div>
+
       <div class="bracket-wrapper" id="bracket-wrapper">
         <!-- Entire bracket populated dynamically by JS -->
       </div>
+
       <!-- Third place match rendered separately below -->
       <div class="bracket-special-matches" id="bracket-third-place-container"></div>
     </div>

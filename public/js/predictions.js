@@ -26,6 +26,7 @@ let userPredictions = { matches: {}, specials: {} };
 let draftPredictions = { matches: {}, specials: {} };
 let isLocked = false;
 let currentTab = 'groups';
+let currentMobileRound = 'r32-col';
 
 // Initialize Page
 document.addEventListener("DOMContentLoaded", async () => {
@@ -599,6 +600,9 @@ function advanceBracket(groupStandings, thirdsRanking) {
   html += '</div>'; // close .bracket-container
   wrapper.innerHTML = html;
 
+  // Apply mobile visibility state
+  selectMobileRound(currentMobileRound);
+
   // Render third-place match separately below the bracket
   const t3Container = document.getElementById('bracket-third-place-container');
   t3Container.innerHTML = `
@@ -679,6 +683,7 @@ function renderBracketMatchHtml(m) {
         <span class="bracket-team-name ${isPlaceholderL ? 'placeholder' : ''}" title="${m.local}">${m.local}</span>
       </div>
       <div class="bracket-score-cell">
+        ${isTie ? `<input type="text" pattern="[0-9]*" class="bracket-pk-input" value="${pred.pkl ?? ''}" oninput="onPKChange('${m.id}', 'pkl', this.value)" placeholder="PK" ${disabledAttr}>` : ''}
         <input type="text" pattern="[0-9]*" class="bracket-score-input" value="${pred.gl ?? ''}" oninput="onScoreChange('${m.id}', 'gl', this.value)" ${disabledAttr}>
       </div>
     </div>
@@ -692,22 +697,11 @@ function renderBracketMatchHtml(m) {
         <span class="bracket-team-name ${isPlaceholderV ? 'placeholder' : ''}" title="${m.visitor}">${m.visitor}</span>
       </div>
       <div class="bracket-score-cell">
+        ${isTie ? `<input type="text" pattern="[0-9]*" class="bracket-pk-input" value="${pred.pkv ?? ''}" oninput="onPKChange('${m.id}', 'pkv', this.value)" placeholder="PK" ${disabledAttr}>` : ''}
         <input type="text" pattern="[0-9]*" class="bracket-score-input" value="${pred.gv ?? ''}" oninput="onScoreChange('${m.id}', 'gv', this.value)" ${disabledAttr}>
       </div>
     </div>
   `;
-
-  // Penalties section (only when tie)
-  if (isTie) {
-    html += `
-      <div class="bracket-pk-section">
-        <span class="bracket-pk-label">PK:</span>
-        <input type="text" pattern="[0-9]*" class="bracket-pk-input" value="${pred.pkl ?? ''}" oninput="onPKChange('${m.id}', 'pkl', this.value)" placeholder="–" ${disabledAttr}>
-        <span class="bracket-pk-divider">-</span>
-        <input type="text" pattern="[0-9]*" class="bracket-pk-input" value="${pred.pkv ?? ''}" oninput="onPKChange('${m.id}', 'pkv', this.value)" placeholder="–" ${disabledAttr}>
-      </div>
-    `;
-  }
 
   html += '</div>'; // close .bracket-match
   return html;
@@ -828,4 +822,31 @@ function showToast(message, isError = false) {
     toast.style.transform = 'translateY(10px)';
     setTimeout(() => toast.remove(), 300);
   }, 3000);
+}
+
+// Mobile round toggle handler
+function selectMobileRound(colClass, btn) {
+  currentMobileRound = colClass;
+  
+  // Update button active states
+  document.querySelectorAll('.round-select-btn').forEach(b => b.classList.remove('active'));
+  
+  if (btn) {
+    btn.classList.add('active');
+  } else {
+    const activeBtn = document.getElementById(`btn-${colClass}`);
+    if (activeBtn) activeBtn.classList.add('active');
+  }
+  
+  // Show target round column, hide others
+  document.querySelectorAll('.bracket-round-col').forEach(col => {
+    col.classList.remove('active');
+    if (col.classList.contains(colClass)) {
+      col.classList.add('active');
+    }
+    // If showing Final, also show the Champion column (trophy-col)
+    if (colClass === 'final-col' && col.classList.contains('trophy-col')) {
+      col.classList.add('active');
+    }
+  });
 }
