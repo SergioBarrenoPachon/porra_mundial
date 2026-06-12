@@ -637,15 +637,9 @@ app.get('/api/leaderboard', async (req, res) => {
     // Sort descending by total, then by matchPoints
     list.sort((a, b) => b.total - a.total || b.matchPoints - a.matchPoints || a.username.localeCompare(b.username));
     
-    // Add ranks
-    let currentRank = 0;
-    let currentPoints = -1;
+    // Add ranks sequentially to avoid podium / leaderboard gaps in case of ties
     list.forEach((p, idx) => {
-      if (p.total !== currentPoints) {
-        currentRank = idx + 1;
-        currentPoints = p.total;
-      }
-      p.rank = currentRank;
+      p.rank = idx + 1;
     });
     
     res.json({
@@ -816,19 +810,22 @@ app.post('/api/admin/matches/:matchId', requireAdmin, async (req, res) => {
       let currentRank = 0;
       let currentPoints = -1;
       const ranks = {};
+      const pointsMap = {};
       userStandings.forEach((p, idx) => {
         if (p.points !== currentPoints) {
           currentRank = idx + 1;
           currentPoints = p.points;
         }
         ranks[p.username] = currentRank;
+        pointsMap[p.username] = p.points;
       });
       
       // Add snapshot record
       db.rankingHistory.push({
         matchId: matchId,
         timestamp: Date.now(),
-        ranks: ranks
+        ranks: ranks,
+        points: pointsMap
       });
       
       // Sort history by match ID order

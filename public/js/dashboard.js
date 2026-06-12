@@ -119,57 +119,67 @@ function renderLeaderboard() {
     return;
   }
   
-  // Find top 3 players
-  const top1 = leaderboardData.find(p => p.rank === 1);
-  const top2 = leaderboardData.find(p => p.rank === 2);
-  const top3 = leaderboardData.find(p => p.rank === 3);
+  // Get the first 3 sorted players (handles ties by index rather than strict ranks)
+  const p1 = leaderboardData[0]; // Center step
+  const p2 = leaderboardData[1]; // Left step (second place)
+  const p3 = leaderboardData[2]; // Right step (third place)
   
   // Max score to calculate relative width of progress bars
   const maxScore = Math.max(1, leaderboardData[0]?.total || 0);
   
+  const getPodiumBadge = (rank) => {
+    if (rank === 1) return '🥇';
+    if (rank === 2) return '🥈';
+    if (rank === 3) return '🥉';
+    return `#${rank}`;
+  };
+  
   let podiumHtml = '';
-  if (top1 || top2 || top3) {
+  if (p1 || p2 || p3) {
     podiumHtml += `<div class="podium-container">`;
     
-    // 2nd Place
-    if (top2) {
-      const isMe = currentUser && currentUser.username === top2.username;
+    // Left step: 2nd sorted player (Second Height)
+    if (p2) {
+      const isMe = currentUser && currentUser.username === p2.username;
       const highlightBorder = isMe ? 'style="border-color: var(--accent-gold);"' : '';
+      const badge = getPodiumBadge(p2.rank);
       podiumHtml += `
         <div class="podium-step second" ${highlightBorder}>
-          <div class="podium-badge">🥈</div>
-          <div class="podium-name" title="${top2.username}">${top2.username} ${isMe ? '(Tú)' : ''}</div>
-          <div class="podium-pts">${top2.total} pts</div>
+          <div class="podium-badge">${badge}</div>
+          <div class="podium-name" title="${p2.username}">${p2.username} ${isMe ? '(Tú)' : ''}</div>
+          <div class="podium-pts">${p2.total} pts</div>
         </div>
       `;
     } else {
       podiumHtml += `<div class="podium-step second" style="opacity: 0.3; border-style: dashed;"><div class="podium-badge">🥈</div></div>`;
     }
     
-    // 1st Place
-    if (top1) {
-      const isMe = currentUser && currentUser.username === top1.username;
+    // Center step: 1st sorted player (Tallest Height)
+    if (p1) {
+      const isMe = currentUser && currentUser.username === p1.username;
       const highlightBorder = isMe ? 'style="border-color: var(--primary);"' : '';
+      const badge = p1.rank === 1 ? '👑' : getPodiumBadge(p1.rank);
       podiumHtml += `
         <div class="podium-step first" ${highlightBorder}>
-          <div class="podium-badge" style="filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4));">👑</div>
-          <div class="podium-name" title="${top1.username}" style="color: var(--accent-gold); font-size: 0.95rem;">${top1.username} ${isMe ? '(Tú)' : ''}</div>
-          <div class="podium-pts">${top1.total} pts</div>
+          <div class="podium-badge" style="filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4));">${badge}</div>
+          <div class="podium-name" title="${p1.username}" style="color: var(--accent-gold); font-size: 0.95rem;">${p1.username} ${isMe ? '(Tú)' : ''}</div>
+          <div class="podium-pts">${p1.total} pts</div>
         </div>
       `;
     } else {
       podiumHtml += `<div class="podium-step first" style="opacity: 0.3; border-style: dashed;"><div class="podium-badge">🥇</div></div>`;
     }
     
-    // 3rd Place
-    if (top3) {
-      const isMe = currentUser && currentUser.username === top3.username;
+    // Right step: 3rd sorted player (Shortest Height)
+    if (p3) {
+      const isMe = currentUser && currentUser.username === p3.username;
       const highlightBorder = isMe ? 'style="border-color: var(--accent-gold);"' : '';
+      const badge = getPodiumBadge(p3.rank);
       podiumHtml += `
         <div class="podium-step third" ${highlightBorder}>
-          <div class="podium-badge">🥉</div>
-          <div class="podium-name" title="${top3.username}">${top3.username} ${isMe ? '(Tú)' : ''}</div>
-          <div class="podium-pts">${top3.total} pts</div>
+          <div class="podium-badge">${badge}</div>
+          <div class="podium-name" title="${p3.username}">${p3.username} ${isMe ? '(Tú)' : ''}</div>
+          <div class="podium-pts">${p3.total} pts</div>
         </div>
       `;
     } else {
@@ -276,6 +286,8 @@ function renderChart() {
     return;
   }
   
+  const displayType = document.getElementById('chart-display-type')?.value || 'rank';
+  
   // X-Axis labels: Banderas + Siglas de los equipos en vez de ID de partido
   const labels = rankingHistory.map(h => {
     const m = allMatches.find(x => x.id === h.matchId);
@@ -296,7 +308,11 @@ function renderChart() {
   // Build datasets
   const datasets = participants.map((username, idx) => {
     const dataPoints = rankingHistory.map(h => {
-      return h.ranks[username] || null; // Returns their rank, or null if not registered at that time
+      if (displayType === 'points') {
+        return h.points ? (h.points[username] !== undefined ? h.points[username] : null) : null;
+      } else {
+        return h.ranks[username] || null; // Returns their rank
+      }
     });
     
     const color = LINE_COLORS[idx % LINE_COLORS.length];
@@ -325,6 +341,10 @@ function renderChart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
       plugins: {
         legend: {
           position: 'top',
@@ -336,7 +356,9 @@ function renderChart() {
         tooltip: {
           callbacks: {
             label: function(context) {
-              return `${context.dataset.label}: Puesto #${context.raw}`;
+              return displayType === 'rank' 
+                ? `${context.dataset.label}: Puesto #${context.raw}` 
+                : `${context.dataset.label}: ${context.raw} pts`;
             }
           }
         }
@@ -347,15 +369,17 @@ function renderChart() {
           grid: { color: 'rgba(255, 255, 255, 0.05)' }
         },
         y: {
-          reverse: true, // Rank 1 is at the top!
-          min: 1,
-          max: Math.max(1, participants.length), // Estrictamente limitado por el número de participantes
+          reverse: displayType === 'rank', // Rank 1 is at the top!
+          min: displayType === 'rank' ? 1 : 0,
+          max: displayType === 'rank' ? Math.max(1, participants.length) : undefined,
           ticks: {
             color: '#718096',
             stepSize: 1,
             precision: 0,
             callback: function(value) {
-              if (Number.isInteger(value)) return '#' + value;
+              if (Number.isInteger(value)) {
+                return displayType === 'rank' ? '#' + value : value + ' pts';
+              }
               return '';
             }
           },
@@ -365,6 +389,17 @@ function renderChart() {
     }
   });
 }
+
+window.toggleChartDisplayType = function() {
+  const displayType = document.getElementById('chart-display-type').value;
+  const desc = document.getElementById('chart-desc-text');
+  if (displayType === 'points') {
+    desc.innerText = "Histórico de los puntos totales acumulados de cada participante partido a partido (a más puntos, mejor).";
+  } else {
+    desc.innerText = "Histórico del puesto de cada participante partido a partido (el puesto #1 es el mejor).";
+  }
+  renderChart();
+};
 
 // Helper to calculate match winner on client
 function getMatchWinner(local, visitor, gl, gv, pkl, pkv) {

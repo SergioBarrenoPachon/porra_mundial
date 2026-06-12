@@ -82,8 +82,14 @@
 
       <!-- Right Card: Ranking Evolution Chart -->
       <div class="card evolution-card">
-        <h2 class="group-title">📈 Evolución de Posiciones</h2>
-        <p style="color: var(--color-text-muted); font-size: 0.85rem;">Histórico del puesto de cada participante partido a partido (los valores más altos representan mejores puestos).</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+          <h2 class="group-title" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">📈 Evolución Temporal</h2>
+          <select id="chart-display-type" class="search-input-box" style="width: auto; padding: 6px 12px; margin-top: 0; height: 36px; line-height: 1;" onchange="toggleChartDisplayType()">
+            <option value="rank">Ver por Puesto (Ranking)</option>
+            <option value="points">Ver por Puntos Totales</option>
+          </select>
+        </div>
+        <p id="chart-desc-text" style="color: var(--color-text-muted); font-size: 0.85rem; margin-bottom: 15px;">Histórico del puesto de cada participante partido a partido (el puesto #1 es el mejor).</p>
         <div class="chart-container">
           <canvas id="evolutionChart"></canvas>
         </div>
