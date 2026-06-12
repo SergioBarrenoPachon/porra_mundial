@@ -180,6 +180,7 @@ async function readDb() {
       return data;
     } catch (err) {
       console.error('❌ [DB] Error reading from PostgreSQL database:', err);
+      console.error('❌ [DB] Returning default fallback structure due to previous read failure.');
       // Return basic fallback structure to prevent complete crash
       const fallback = { config: {}, users: [], predictions: {}, matches: [], rankingHistory: [] };
       ensureDefaults(fallback);
@@ -228,9 +229,25 @@ async function writeDb(data) {
   }
 }
 
+async function getDbStatus() {
+  const db = await readDb();
+  return {
+    isPostgres: usePostgres,
+    users: Array.isArray(db.users) ? db.users.length : 0,
+    matches: Array.isArray(db.matches) ? db.matches.length : 0,
+    rankingHistory: Array.isArray(db.rankingHistory) ? db.rankingHistory.length : 0,
+    hasConfig: !!db.config,
+    config: db.config ? {
+      points: db.config.points || {},
+      winners: db.config.winners || {}
+    } : {}
+  };
+}
+
 module.exports = {
   initDb,
   readDb,
   writeDb,
+  getDbStatus,
   isPostgres: usePostgres
 };

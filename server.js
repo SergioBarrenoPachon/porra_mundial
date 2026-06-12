@@ -91,6 +91,17 @@ app.get('/api/users-list', async (req, res) => {
   }
 });
 
+// Database health endpoint
+app.get('/api/db-status', async (req, res) => {
+  try {
+    const status = await dbConnector.getDbStatus();
+    res.json(status);
+  } catch (err) {
+    console.error("Error en /api/db-status:", err);
+    res.status(500).json({ error: "Error al recuperar el estado de la base de datos." });
+  }
+});
+
 // Login
 app.post('/api/auth/login', async (req, res) => {
   try {
@@ -1011,8 +1022,17 @@ app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Initialize database and start listening
-dbConnector.initDb().then(() => {
+// Initialize database, rebuild ranking history if needed, and start listening
+dbConnector.initDb().then(async () => {
+  try {
+    const db = await readDb();
+    rebuildRankingHistory(db);
+    await writeDb(db);
+    console.log('🔄 [DB] Ranking history rebuilt on startup.');
+  } catch (startupErr) {
+    console.error('⚠️ [Startup] Could not rebuild ranking history on startup:', startupErr);
+  }
+
   app.listen(PORT, () => {
     console.log(`\n=============================================================`);
     console.log(`⚽ PORRA MUNDIAL 2026 SERVER RUNNING AT: http://localhost:${PORT}`);
