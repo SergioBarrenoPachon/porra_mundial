@@ -382,19 +382,33 @@ function renderAllStandingsTables(groupStandings) {
 }
 
 // Rank the 12 third-place teams to find top 8
+// Check if all 6 matches of group g have a prediction
+function isGroupFullyPredicted(g) {
+  if (!allMatches) return false;
+  const groupMatches = allMatches.filter(m => m.phase === 'Group Stage' && m.group === g);
+  if (groupMatches.length === 0) return false;
+  return groupMatches.every(m => {
+    const pred = draftPredictions.matches[m.id];
+    return pred && pred.gl !== '' && pred.gl !== undefined && pred.gl !== null &&
+                  pred.gv !== '' && pred.gv !== undefined && pred.gv !== null;
+  });
+}
+
+// Rank the 12 third-place teams to find top 8
 function rankThirdPlaces(groupStandings) {
   const thirds = [];
   
   for (const g in groupStandings) {
     const t3 = groupStandings[g][2]; // 3rd position (index 2)
     if (t3) {
+      const isCompleted = isGroupFullyPredicted(g);
       thirds.push({
         group: g,
-        team: t3.team,
-        pts: t3.pts,
-        gf: t3.gf,
-        gc: t3.gc,
-        dg: t3.dg,
+        team: isCompleted ? t3.team : `3º Grupo ${g}`,
+        pts: isCompleted ? t3.pts : 0,
+        gf: isCompleted ? t3.gf : 0,
+        gc: isCompleted ? t3.gc : 0,
+        dg: isCompleted ? t3.dg : 0,
         fifaRank: t3.fifaRank
       });
     }
@@ -417,41 +431,23 @@ function advanceBracket(groupStandings, thirdsRanking) {
   
   // Map advancement teams (Round of 32 definitions)
   const advanceTeams = {
-    "1A": groupStandings['A'][0]?.team || "1A",
-    "2A": groupStandings['A'][1]?.team || "2A",
-    "1B": groupStandings['B'][0]?.team || "1B",
-    "2B": groupStandings['B'][1]?.team || "2B",
-    "1C": groupStandings['C'][0]?.team || "1C",
-    "2C": groupStandings['C'][1]?.team || "2C",
-    "1D": groupStandings['D'][0]?.team || "1D",
-    "2D": groupStandings['D'][1]?.team || "2D",
-    "1E": groupStandings['E'][0]?.team || "1E",
-    "2E": groupStandings['E'][1]?.team || "2E",
-    "1F": groupStandings['F'][0]?.team || "1F",
-    "2F": groupStandings['F'][1]?.team || "2F",
-    "1G": groupStandings['G'][0]?.team || "1G",
-    "2G": groupStandings['G'][1]?.team || "2G",
-    "1H": groupStandings['H'][0]?.team || "1H",
-    "2H": groupStandings['H'][1]?.team || "2H",
-    "1I": groupStandings['I'][0]?.team || "1I",
-    "2I": groupStandings['I'][1]?.team || "2I",
-    "1J": groupStandings['J'][0]?.team || "1J",
-    "2J": groupStandings['J'][1]?.team || "2J",
-    "1K": groupStandings['K'][0]?.team || "1K",
-    "2K": groupStandings['K'][1]?.team || "2K",
-    "1L": groupStandings['L'][0]?.team || "1L",
-    "2L": groupStandings['L'][1]?.team || "2L",
-    
-    // Top 8 thirds
-    "3o Top 1": top8Thirds[0]?.team || "3º Top 1",
-    "3o Top 2": top8Thirds[1]?.team || "3º Top 2",
-    "3o Top 3": top8Thirds[2]?.team || "3º Top 3",
-    "3o Top 4": top8Thirds[3]?.team || "3º Top 4",
-    "3o Top 5": top8Thirds[4]?.team || "3º Top 5",
-    "3o Top 6": top8Thirds[5]?.team || "3º Top 6",
-    "3o Top 7": top8Thirds[6]?.team || "3º Top 7",
-    "3o Top 8": top8Thirds[7]?.team || "3º Top 8"
+    // Top 8 thirds placeholders
+    "3o Top 1": top8Thirds[0]?.team || "3º Mejor 1",
+    "3o Top 2": top8Thirds[1]?.team || "3º Mejor 2",
+    "3o Top 3": top8Thirds[2]?.team || "3º Mejor 3",
+    "3o Top 4": top8Thirds[3]?.team || "3º Mejor 4",
+    "3o Top 5": top8Thirds[4]?.team || "3º Mejor 5",
+    "3o Top 6": top8Thirds[5]?.team || "3º Mejor 6",
+    "3o Top 7": top8Thirds[6]?.team || "3º Mejor 7",
+    "3o Top 8": top8Thirds[7]?.team || "3º Mejor 8"
   };
+
+  const groups = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+  groups.forEach(g => {
+    const isCompleted = isGroupFullyPredicted(g);
+    advanceTeams[`1${g}`] = isCompleted ? (groupStandings[g][0]?.team || `1º Grupo ${g}`) : `1º Grupo ${g}`;
+    advanceTeams[`2${g}`] = isCompleted ? (groupStandings[g][1]?.team || `2º Grupo ${g}`) : `2º Grupo ${g}`;
+  });
   
   // Match definitions for Round of 32 (D1 to D16, IDs M73 to M88)
   const r32Matches = [
@@ -498,8 +494,8 @@ function advanceBracket(groupStandings, thirdsRanking) {
   ];
 
   const r16Data = r16Matches.map(m => {
-    const localTeam = bracketTeams[m.lRef] || `Gan. ${m.lRef}`;
-    const visitorTeam = bracketTeams[m.vRef] || `Gan. ${m.vRef}`;
+    const localTeam = bracketTeams[m.lRef] || `Ganador ${m.lRef}`;
+    const visitorTeam = bracketTeams[m.vRef] || `Ganador ${m.vRef}`;
     const pred = draftPredictions.matches[m.id] || { gl: '', gv: '', pkl: '', pkv: '' };
     const winner = getWinnerOfMatch(localTeam, visitorTeam, pred.gl, pred.gv, pred.pkl, pred.pkv);
     bracketTeams[m.label] = winner;
@@ -515,8 +511,8 @@ function advanceBracket(groupStandings, thirdsRanking) {
   ];
 
   const r8Data = r8Matches.map(m => {
-    const localTeam = bracketTeams[m.lRef] || `Gan. ${m.lRef}`;
-    const visitorTeam = bracketTeams[m.vRef] || `Gan. ${m.vRef}`;
+    const localTeam = bracketTeams[m.lRef] || `Ganador ${m.lRef}`;
+    const visitorTeam = bracketTeams[m.vRef] || `Ganador ${m.vRef}`;
     const pred = draftPredictions.matches[m.id] || { gl: '', gv: '', pkl: '', pkv: '' };
     const winner = getWinnerOfMatch(localTeam, visitorTeam, pred.gl, pred.gv, pred.pkl, pred.pkv);
     bracketTeams[m.label] = winner;
@@ -524,10 +520,10 @@ function advanceBracket(groupStandings, thirdsRanking) {
   });
 
   // 4. Process Semifinals
-  const s1Local = bracketTeams["C1"] || "Gan. C1";
-  const s1Visitor = bracketTeams["C2"] || "Gan. C2";
-  const s2Local = bracketTeams["C3"] || "Gan. C3";
-  const s2Visitor = bracketTeams["C4"] || "Gan. C4";
+  const s1Local = bracketTeams["C1"] || "Ganador C1";
+  const s1Visitor = bracketTeams["C2"] || "Ganador C2";
+  const s2Local = bracketTeams["C3"] || "Ganador C3";
+  const s2Visitor = bracketTeams["C4"] || "Ganador C4";
 
   const s1Pred = draftPredictions.matches["M101"] || { gl: '', gv: '', pkl: '', pkv: '' };
   const s2Pred = draftPredictions.matches["M102"] || { gl: '', gv: '', pkl: '', pkv: '' };
@@ -544,8 +540,8 @@ function advanceBracket(groupStandings, thirdsRanking) {
   ];
 
   // 5. Process Final
-  const finalLocal = s1Winner || "Gan. S1";
-  const finalVisitor = s2Winner || "Gan. S2";
+  const finalLocal = s1Winner || "Ganador S1";
+  const finalVisitor = s2Winner || "Ganador S2";
   const finalPred = draftPredictions.matches["M104"] || { gl: '', gv: '', pkl: '', pkv: '' };
   const finalWinner = getWinnerOfMatch(finalLocal, finalVisitor, finalPred.gl, finalPred.gv, finalPred.pkl, finalPred.pkv);
 
@@ -554,8 +550,8 @@ function advanceBracket(groupStandings, thirdsRanking) {
   ];
 
   // 6. Third place match (rendered separately)
-  const t3Local = s1Loser || "Perd. S1";
-  const t3Visitor = s2Loser || "Perd. S2";
+  const t3Local = s1Loser || "Perdedor S1";
+  const t3Visitor = s2Loser || "Perdedor S2";
   const t3Pred = draftPredictions.matches["M103"] || { gl: '', gv: '', pkl: '', pkv: '' };
   const t3Data = { id: "M103", label: "3er Puesto", local: t3Local, visitor: t3Visitor, pred: t3Pred, isThirdPlace: true };
 
@@ -849,4 +845,50 @@ function selectMobileRound(colClass, btn) {
       col.classList.add('active');
     }
   });
+}
+
+// Helper to calculate the winner of a match based on scores and penalties
+function getWinnerOfMatch(local, visitor, gl, gv, pkl, pkv) {
+  if (gl === undefined || gl === null || gl === '' || gv === undefined || gv === null || gv === '') {
+    return null;
+  }
+  const goalsL = parseInt(gl);
+  const goalsV = parseInt(gv);
+  if (goalsL > goalsV) return local;
+  if (goalsL < goalsV) return visitor;
+  
+  // Tie: check penalties
+  if (pkl === undefined || pkl === null || pkl === '' || pkv === undefined || pkv === null || pkv === '') {
+    return null;
+  }
+  const pkL = parseInt(pkl);
+  const pkV = parseInt(pkv);
+  if (pkL > pkV) return local;
+  if (pkL < pkV) return visitor;
+  return null;
+}
+
+// Helper to determine the loser of a match
+function getLoserOfMatch(local, visitor, winner) {
+  if (!winner) return null;
+  if (winner === local) return visitor;
+  if (winner === visitor) return local;
+  return null;
+}
+
+// Toggle visibility of the Thirds ranking table body
+function toggleThirdsTable() {
+  const collapsible = document.getElementById('thirds-table-collapsible');
+  const icon = document.getElementById('thirds-toggle-icon');
+  if (!collapsible || !icon) return;
+  
+  if (collapsible.style.display === 'none') {
+    collapsible.style.display = 'block';
+    icon.innerHTML = '▼ Ocultar';
+    icon.style.background = 'rgba(245, 158, 11, 0.3)';
+  } else {
+    collapsible.style.display = 'none';
+    icon.innerHTML = '▶ Mostrar';
+    icon.style.background = 'rgba(245, 158, 11, 0.15)';
+  }
 }

@@ -107,36 +107,40 @@
 
     <!-- TAB: GROUPS -->
     <div id="tab-groups" class="tab-content">
-      
-      <!-- Tabla de Mejores Terceros -->
-      <div class="card" style="margin-bottom: 30px; display: none;" id="thirds-ranking-card">
-        <h2 class="group-title" style="border-color: var(--accent-gold);">🎯 Tabla de Terceros Lugares (Mundial 2026)</h2>
-        <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-bottom: 15px;">
-          Se clasifican a dieciseisavos de final los 8 mejores terceros de entre los 12 grupos. Esta tabla se calcula y ordena dinámicamente según tus pronósticos. Los clasificados se muestran en verde.
-        </p>
-        <div style="overflow-x: auto;">
-          <table class="group-standings-table" style="font-size: 0.85rem; width: 100%;">
-            <thead>
-              <tr>
-                <th style="width: 40px; text-align: center;">#</th>
-                <th style="width: 80px; text-align: center;">Grupo</th>
-                <th style="text-align: left;">Equipo</th>
-                <th style="width: 50px; text-align: center;">Pts</th>
-                <th style="width: 50px; text-align: center;">GF</th>
-                <th style="width: 50px; text-align: center;">DG</th>
-                <th style="width: 90px; text-align: center;">FIFA Rank</th>
-                <th style="width: 120px; text-align: center;">Estado</th>
-              </tr>
-            </thead>
-            <tbody id="thirds-table-body">
-              <!-- Populated dynamically by JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-
       <div class="group-grid" id="groups-container">
         <!-- Group cards populated dynamically by JS -->
+      </div>
+
+      <!-- Tabla de Mejores Terceros -->
+      <div class="card" style="margin-top: 30px; margin-bottom: 30px; display: none;" id="thirds-ranking-card">
+        <h2 class="group-title" style="border-color: var(--accent-gold); cursor: pointer; display: flex; justify-content: space-between; align-items: center; width: 100%;" onclick="toggleThirdsTable()">
+          <span>🎯 Tabla de Terceros Lugares (Mundial 2026)</span>
+          <span id="thirds-toggle-icon" style="font-size: 0.85rem; padding: 4px 10px; background: rgba(245, 158, 11, 0.15); border: 1px solid var(--accent-gold); border-radius: 8px; color: var(--accent-gold); font-weight: 700; transition: var(--transition-fast);">▶ Mostrar</span>
+        </h2>
+        <div id="thirds-table-collapsible" style="display: none; margin-top: 15px;">
+          <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-bottom: 15px;">
+            Se clasifican a dieciseisavos de final los 8 mejores terceros de entre los 12 grupos. Esta tabla se calcula y ordena dinámicamente según tus pronósticos. Los clasificados se muestran en verde.
+          </p>
+          <div style="overflow-x: auto;">
+            <table class="group-standings-table" style="font-size: 0.85rem; width: 100%;">
+              <thead>
+                <tr>
+                  <th style="width: 40px; text-align: center;">#</th>
+                  <th style="width: 80px; text-align: center;">Grupo</th>
+                  <th style="text-align: left;">Equipo</th>
+                  <th style="width: 50px; text-align: center;">Pts</th>
+                  <th style="width: 50px; text-align: center;">GF</th>
+                  <th style="width: 50px; text-align: center;">DG</th>
+                  <th style="width: 90px; text-align: center;">FIFA Rank</th>
+                  <th style="width: 120px; text-align: center;">Estado</th>
+                </tr>
+              </thead>
+              <tbody id="thirds-table-body">
+                <!-- Populated dynamically by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 

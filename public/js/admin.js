@@ -636,7 +636,7 @@ async function confirmResetData() {
 // Bind to window global scope for inline event handlers in admin.html
 window.switchAdminTab = switchAdminTab;
 window.loadUserPredictionsForAdmin = loadUserPredictionsForAdmin;
-window.onAdminAwardChange = onAdminAwardChange;
+window.onAdminAwardInputChange = onAdminAwardInputChange;
 window.saveUserPredictionsAsAdmin = saveUserPredictionsAsAdmin;
 window.togglePredPKInputsVisibility = togglePredPKInputsVisibility;
 window.confirmResetData = confirmResetData;
