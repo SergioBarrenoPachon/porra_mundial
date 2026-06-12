@@ -337,9 +337,13 @@ function renderChart() {
   const datasets = participants.map((username, idx) => {
     const dataPoints = rankingHistory.map(h => {
       if (displayType === 'points') {
-        return h.points ? (h.points[username] !== undefined ? h.points[username] : null) : null;
+        // Use explicit undefined check — value 0 is valid!
+        const pts = h.points ? h.points[username] : undefined;
+        return pts !== undefined ? pts : 0;
       } else {
-        return h.ranks[username] || null; // Returns their rank
+        // Rank: if user not in snapshot, fallback to last place
+        const rank = h.ranks ? h.ranks[username] : undefined;
+        return rank !== undefined ? rank : participants.length;
       }
     });
     
@@ -414,9 +418,11 @@ function renderChart() {
               const idx = context.dataIndex;
               const historyItem = rankingHistory[idx];
               if (historyItem) {
-                const rank = historyItem.ranks[username] || '-';
-                const pts = historyItem.points ? (historyItem.points[username] !== undefined ? historyItem.points[username] : '-') : '-';
-                return `${username}: Puesto #${rank} (${pts} pts)`;
+                const rank = historyItem.ranks ? historyItem.ranks[username] : undefined;
+                const rankStr = rank !== undefined ? '#' + rank : '#?';
+                const ptsRaw = historyItem.points ? historyItem.points[username] : undefined;
+                const ptsStr = ptsRaw !== undefined ? ptsRaw + ' pts' : '0 pts';
+                return `${username}: Puesto ${rankStr} (${ptsStr})`;
               }
               return displayType === 'rank' 
                 ? `${username}: Puesto #${context.raw}` 

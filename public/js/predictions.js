@@ -1058,6 +1058,27 @@ function renderTimeline() {
   container.innerHTML = html;
 }
 
+
+// Helper: map team name → flagcdn 2-letter country code
+// Used by renderTimeline for the <img> flag tags in each match card
+function getFlagCode(teamName) {
+  const FLAG_CODES = {
+    "Mexico": "mx", "Sudafrica": "za", "Corea del Sur": "kr", "Rep. Checa": "cz",
+    "Canada": "ca", "Bosnia y Herzegovina": "ba", "Catar": "qa", "Suiza": "ch",
+    "Brasil": "br", "Marruecos": "ma", "Haiti": "ht", "Escocia": "gb-sct",
+    "Estados Unidos": "us", "Paraguay": "py", "Australia": "au", "Turquia": "tr",
+    "Alemania": "de", "Curazao": "cw", "Costa de Marfil": "ci", "Ecuador": "ec",
+    "Paises Bajos": "nl", "Japon": "jp", "Suecia": "se", "Tunez": "tn",
+    "Belgica": "be", "Egipto": "eg", "Iran": "ir", "Nueva Zelanda": "nz",
+    "Espana": "es", "Cabo Verde": "cv", "Arabia Saudi": "sa", "Uruguay": "uy",
+    "Francia": "fr", "Senegal": "sn", "Noruega": "no", "Irak": "iq",
+    "Argentina": "ar", "Argelia": "dz", "Austria": "at", "Jordania": "jo",
+    "Portugal": "pt", "RD Congo": "cd", "Uzbekistan": "uz", "Colombia": "co",
+    "Inglaterra": "gb-eng", "Croacia": "hr", "Ghana": "gh", "Panama": "pa"
+  };
+  return FLAG_CODES[teamName] || null;
+}
+
 // Filter timeline list function
 function filterTimelineList() {
   const query = document.getElementById('search-timeline').value.toLowerCase().trim();
