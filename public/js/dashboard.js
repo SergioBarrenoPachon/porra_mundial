@@ -188,12 +188,20 @@ function renderLeaderboard() {
     const progressPercent = Math.min(100, Math.max(5, (p.total / maxScore) * 100));
     
     let avatarStyle = '';
-    if (p.rank === 1) avatarStyle = 'style="background: var(--accent-gold); color: #000; font-weight: 800;"';
-    else if (p.rank === 2) avatarStyle = 'style="background: hsl(0, 0%, 75%); color: #000;"';
-    else if (p.rank === 3) avatarStyle = 'style="background: hsl(20, 60%, 55%);"';
+    let rankClass = '';
+    if (p.rank === 1) {
+      avatarStyle = 'style="background: var(--accent-gold); color: #000; font-weight: 800;"';
+      rankClass = 'rank-first';
+    } else if (p.rank === 2) {
+      avatarStyle = 'style="background: hsl(0, 0%, 75%); color: #000;"';
+      rankClass = 'rank-second';
+    } else if (p.rank === 3) {
+      avatarStyle = 'style="background: hsl(20, 60%, 55%);"';
+      rankClass = 'rank-third';
+    }
     
     listHtml += `
-      <div class="leaderboard-item ${isMe ? 'is-me' : ''}">
+      <div class="leaderboard-item ${isMe ? 'is-me' : ''} ${rankClass}">
         <div class="item-rank">#${p.rank}</div>
         <div class="item-avatar" ${avatarStyle}>${initial}</div>
         <div class="item-info">
