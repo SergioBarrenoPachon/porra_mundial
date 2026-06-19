@@ -145,6 +145,63 @@
           </select>
         </div>
 
+        <!-- USER CONFIG PANEL -->
+        <div class="card" id="admin-user-config-panel" style="display: none; background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2); margin-bottom: 25px; padding: 20px;">
+          <h3 class="group-title" style="font-size: 1.1rem; border-color: var(--primary); margin-bottom: 15px;">⚙️ Ajustes del Participante</h3>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; align-items: start; margin-bottom: 20px;">
+            <!-- Leaderboard Visibility -->
+            <div>
+              <h4 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 12px; color: var(--secondary);">Visibilidad</h4>
+              <label class="form-label" style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #fff;">
+                <input type="checkbox" id="user-show-leaderboard" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--secondary);">
+                <span>Mostrar en el Leaderboard</span>
+              </label>
+              <p style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 8px;">Si se desmarca, el usuario no aparecerá en el ranking, en el gráfico ni en las comparativas.</p>
+            </div>
+            
+            <!-- Unlock Overrides -->
+            <div>
+              <h4 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 12px; color: var(--secondary);">Desbloqueo Temporal de Secciones</h4>
+              
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Groups -->
+                <div style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
+                  <label class="form-label" style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; cursor: pointer; color: #fff;">
+                    <input type="checkbox" id="override-enable-groups" onchange="toggleOverrideInput('groups')" style="width: 16px; height: 16px; accent-color: var(--primary);">
+                    <span>Fase de Grupos</span>
+                  </label>
+                  <input type="datetime-local" id="override-time-groups" class="form-control" style="display: none; background: rgba(7, 5, 15, 0.8); border-color: rgba(139, 92, 246, 0.4); font-size: 0.85rem; height: 36px; padding: 4px 8px;">
+                </div>
+                
+                <!-- Knockouts -->
+                <div style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
+                  <label class="form-label" style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; cursor: pointer; color: #fff;">
+                    <input type="checkbox" id="override-enable-knockouts" onchange="toggleOverrideInput('knockouts')" style="width: 16px; height: 16px; accent-color: var(--primary);">
+                    <span>Fase Eliminatoria</span>
+                  </label>
+                  <input type="datetime-local" id="override-time-knockouts" class="form-control" style="display: none; background: rgba(7, 5, 15, 0.8); border-color: rgba(139, 92, 246, 0.4); font-size: 0.85rem; height: 36px; padding: 4px 8px;">
+                </div>
+                
+                <!-- Awards -->
+                <div style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
+                  <label class="form-label" style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; cursor: pointer; color: #fff;">
+                    <input type="checkbox" id="override-enable-awards" onchange="toggleOverrideInput('awards')" style="width: 16px; height: 16px; accent-color: var(--primary);">
+                    <span>Premios Especiales</span>
+                  </label>
+                  <input type="datetime-local" id="override-time-awards" class="form-control" style="display: none; background: rgba(7, 5, 15, 0.8); border-color: rgba(139, 92, 246, 0.4); font-size: 0.85rem; height: 36px; padding: 4px 8px;">
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
+            <button onclick="saveUserConfig()" class="btn btn-primary" id="save-user-config-btn" style="width: auto; font-size: 0.85rem; padding: 8px 20px;">
+              💾 Guardar Ajustes de Usuario
+            </button>
+          </div>
+        </div>
+
         <div id="admin-user-predictions-view" style="display: none;">
           <div class="matches-admin-list" id="admin-user-matches-container" style="max-height: 500px; margin-bottom: 20px;">
             <!-- Populated dynamically by JS -->

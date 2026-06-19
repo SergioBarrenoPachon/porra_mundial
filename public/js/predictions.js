@@ -25,6 +25,9 @@ let allMatches = [];
 let userPredictions = { matches: {}, specials: {} };
 let draftPredictions = { matches: {}, specials: {} };
 let isLocked = false;
+let isGroupsLocked = false;
+let isKnockoutsLocked = false;
+let isAwardsLocked = false;
 let currentTab = 'groups';
 let currentMobileRound = 'r32-col';
 
@@ -57,20 +60,11 @@ async function loadDeadline() {
   
   // Administrators can always edit their predictions
   isLocked = data.isPassed && !currentUser.isAdmin;
+  isGroupsLocked = isLocked;
+  isKnockoutsLocked = isLocked;
+  isAwardsLocked = isLocked;
   
   if (data.isPassed) {
-    if (currentUser.isAdmin) {
-      document.getElementById('readonly-message-banner').innerHTML = `
-        <div style="background: rgba(46, 204, 113, 0.15); border: 1px solid var(--primary); padding: 12px; border-radius: 8px; text-align: center; color: #fff; font-weight: 600; font-size: 0.9rem;">
-          ⚽ Modo Administrador: La fecha límite ha pasado, pero tienes permiso para modificar tus pronósticos.
-        </div>
-      `;
-      document.getElementById('readonly-message-banner').style.display = 'block';
-      document.getElementById('save-bar').style.display = 'flex';
-    } else {
-      document.getElementById('readonly-message-banner').style.display = 'block';
-      document.getElementById('save-bar').style.display = 'none';
-    }
     document.getElementById('deadline-container').className = "countdown-box expired";
     document.getElementById('countdown-clock').innerText = "CERRADO";
   } else {
@@ -116,6 +110,7 @@ function switchTab(tabName) {
     document.querySelector('.phase-tab:nth-child(4)').classList.add('active');
     document.getElementById('tab-timeline').style.display = 'block';
     renderTimeline();
+    scrollToThirdToLastPlayedMatch();
   }
 }
 
@@ -127,6 +122,52 @@ async function loadMatchesAndPredictions() {
     
     const predRes = await fetch(`/api/predictions/${currentUser.id}`);
     userPredictions = await predRes.json();
+    
+    // Read individual section lock status from API response
+    const locks = userPredictions.locks || { groups: isLocked, knockouts: isLocked, awards: isLocked };
+    isGroupsLocked = locks.groups;
+    isKnockoutsLocked = locks.knockouts;
+    isAwardsLocked = locks.awards;
+    
+    // Update banner & save bar display based on section locks
+    const banner = document.getElementById('readonly-message-banner');
+    const saveBar = document.getElementById('save-bar');
+    const allLocked = isGroupsLocked && isKnockoutsLocked && isAwardsLocked;
+    
+    if (allLocked) {
+      if (banner) {
+        banner.innerHTML = `🔒 PREDICCIONES CERRADAS: La fecha límite del 13/06/2026 a las 21:00 ha expirado. Todos los campos están en modo de solo lectura.`;
+        banner.className = "readonly-banner";
+        banner.style.display = 'block';
+      }
+      if (saveBar) saveBar.style.display = 'none';
+    } else if (currentUser.isAdmin) {
+      if (banner) {
+        banner.innerHTML = `
+          <div style="background: rgba(46, 204, 113, 0.15); border: 1px solid var(--primary); padding: 12px; border-radius: 8px; text-align: center; color: #fff; font-weight: 600; font-size: 0.9rem;">
+            ⚽ Modo Administrador: La fecha límite ha pasado, pero tienes permiso para modificar tus pronósticos.
+          </div>
+        `;
+        banner.style.display = 'block';
+      }
+      if (saveBar) saveBar.style.display = 'flex';
+    } else {
+      // Regular user with some section overrides
+      const unlockedNames = [];
+      if (!isGroupsLocked) unlockedNames.push("Fase de Grupos");
+      if (!isKnockoutsLocked) unlockedNames.push("Fase Eliminatoria");
+      if (!isAwardsLocked) unlockedNames.push("Premios Especiales");
+      
+      if (banner) {
+        banner.innerHTML = `
+          <div style="background: rgba(46, 204, 113, 0.15); border: 1px solid var(--primary); padding: 12px; border-radius: 8px; text-align: center; color: #fff; font-weight: 600; font-size: 0.9rem;">
+            🔓 Tienes un desbloqueo temporal para editar las secciones: <strong>${unlockedNames.join(", ")}</strong>.
+          </div>
+        `;
+        banner.style.display = 'block';
+      }
+      if (saveBar) saveBar.style.display = 'flex';
+    }
     
     // Deep copy for draft
     draftPredictions = JSON.parse(JSON.stringify(userPredictions));
@@ -162,7 +203,7 @@ function renderGroups() {
       const pred = draftPredictions.matches[m.id] || { gl: '', gv: '' };
       const flagL = getFlagImgHtml(m.local);
       const flagV = getFlagImgHtml(m.visitor);
-      const disabledAttr = isLocked ? 'disabled' : '';
+      const disabledAttr = isGroupsLocked ? 'disabled' : '';
       
       const realResultHtml = (m.gl !== null && m.gv !== null) ? `<span style="color: var(--accent-gold); font-weight: 800; font-size: 0.75rem;">Real: ${m.gl} - ${m.gv}</span>` : '';
       
@@ -654,7 +695,7 @@ function buildConnectorColumn(pairCount) {
 function renderBracketMatchHtml(m) {
   const flagL = getFlagImgHtml(m.local);
   const flagV = getFlagImgHtml(m.visitor);
-  const disabledAttr = isLocked ? 'disabled' : '';
+  const disabledAttr = isKnockoutsLocked ? 'disabled' : '';
   const pred = m.pred;
 
   const isPlaceholderL = !TEAM_DATA[m.local];
@@ -733,7 +774,7 @@ function renderAwards() {
     { id: "bota_bronce", label: "Bota de Bronce", color: "hsl(20, 60%, 55%)", icon: "🥉" }
   ];
   
-  const disabledAttr = isLocked ? 'disabled' : '';
+  const disabledAttr = isAwardsLocked ? 'disabled' : '';
   
   awards.forEach(a => {
     const val = draftPredictions.specials[a.id] || "";
@@ -759,7 +800,7 @@ function onAwardInputChange(awardId, val) {
 
 // Floating save bar state management
 function updateSaveBar() {
-  if (isLocked) {
+  if (isGroupsLocked && isKnockoutsLocked && isAwardsLocked) {
     document.getElementById('save-bar').style.display = 'none';
     return;
   }
@@ -783,7 +824,7 @@ function updateSaveBar() {
 
 // Save Predictions API call
 async function savePredictions() {
-  if (isLocked) return;
+  if (isGroupsLocked && isKnockoutsLocked && isAwardsLocked) return;
   
   const btn = document.getElementById('save-btn');
   btn.innerText = "Guardando...";
@@ -1096,6 +1137,22 @@ function filterTimelineList() {
                           
     card.style.display = (matchesQuery && matchesStatus) ? '' : 'none';
   });
+}
+
+// Auto-scroll timeline to third-to-last played match
+function scrollToThirdToLastPlayedMatch() {
+  const sortedMatches = [...allMatches].sort(compareMatchesChronologically);
+  const playedMatches = sortedMatches.filter(m => m.gl !== null && m.gv !== null);
+  if (playedMatches.length > 0) {
+    const targetIndex = Math.max(0, playedMatches.length - 3);
+    const targetMatch = playedMatches[targetIndex];
+    setTimeout(() => {
+      const card = document.querySelector(`.tl-card[data-match-id="${targetMatch.id}"]`);
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 150);
+  }
 }
 
 // Bind timeline filter to window

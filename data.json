@@ -25,7 +25,13 @@
       "username": "Sofia",
       "passwordHash": "552806b874636c1531f10bda6695b365291d3eb271f850d964258f929ba6c3c4",
       "salt": "6b34c3535ac4714c1dcb013a937973ad",
-      "isAdmin": false
+      "isAdmin": false,
+      "showInLeaderboard": true,
+      "unlockOverrides": {
+        "groups": null,
+        "knockouts": null,
+        "awards": null
+      }
     },
     {
       "id": "user_pablo",
@@ -706,7 +712,7 @@
         }
       },
       "specials": {
-        "balon_oro": "Kylian MbappeLionel Messi",
+        "balon_oro": "Erling Haaland Test",
         "balon_plata": "Kylian Mbappe",
         "balon_bronce": "Luka Modric",
         "bota_oro": "Erling HaalandErling Haaland",

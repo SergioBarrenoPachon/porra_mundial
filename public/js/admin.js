@@ -168,6 +168,21 @@ function renderMatchesList() {
     `;
   });
   container.innerHTML = html;
+  scrollToFirstPendingMatch();
+}
+
+// Auto-scroll admin matches to first pending match
+function scrollToFirstPendingMatch() {
+  const sortedMatches = [...adminMatches].sort(compareMatchesChronologically);
+  const pendingMatch = sortedMatches.find(m => m.gl === null || m.gv === null);
+  if (pendingMatch) {
+    setTimeout(() => {
+      const row = document.getElementById(`match-row-${pendingMatch.id}`);
+      if (row) {
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 150);
+  }
 }
 
 // Show/hide penalties inputs dynamically when goals are edited
@@ -363,6 +378,7 @@ function switchAdminTab(tabName) {
   if (tabName === 'results') {
     document.getElementById('tab-btn-results').classList.add('active');
     document.getElementById('admin-tab-results').style.display = 'block';
+    scrollToFirstPendingMatch();
   } else if (tabName === 'predictions') {
     document.getElementById('tab-btn-predictions').classList.add('active');
     document.getElementById('admin-tab-predictions').style.display = 'block';
@@ -373,21 +389,27 @@ function switchAdminTab(tabName) {
   }
 }
 
+// Global cache for users list
+let adminUsersCache = [];
+
 // Load participants dropdown list
 async function loadUsersListForAdmin() {
   try {
-    const res = await fetch('/api/leaderboard');
-    const data = await res.json();
+    const res = await fetch('/api/admin/users');
+    const users = await res.json();
+    
+    adminUsersCache = users;
     
     const select = document.getElementById('admin-user-select');
     const currentVal = select.value;
     
     select.innerHTML = '<option value="">-- Selecciona un usuario --</option>';
     
-    data.leaderboard.forEach(p => {
+    users.forEach(u => {
+      if (u.isAdmin && u.username !== "Sergio B") return;
       const option = document.createElement('option');
-      option.value = p.userId;
-      option.textContent = p.username;
+      option.value = u.id;
+      option.textContent = u.username;
       select.appendChild(option);
     });
     
@@ -400,14 +422,109 @@ async function loadUsersListForAdmin() {
   }
 }
 
+// Show/hide date-picker based on override checkbox status
+function toggleOverrideInput(section) {
+  const checkbox = document.getElementById(`override-enable-${section}`);
+  const timeInput = document.getElementById(`override-time-${section}`);
+  if (checkbox.checked) {
+    timeInput.style.display = 'block';
+    if (!timeInput.value) {
+      const now = new Date();
+      now.setHours(now.getHours() + 2); // default to 2 hours from now
+      const tzOffset = now.getTimezoneOffset() * 60000;
+      const localISOTime = (new Date(now.getTime() - tzOffset)).toISOString().slice(0, 16);
+      timeInput.value = localISOTime;
+    }
+  } else {
+    timeInput.style.display = 'none';
+  }
+}
+
+// Save participant config (Leaderboard visibility + unlocks)
+async function saveUserConfig() {
+  if (!selectedUserId) return;
+  
+  const showInLeaderboard = document.getElementById('user-show-leaderboard').checked;
+  const unlockOverrides = {};
+  
+  const sections = ['groups', 'knockouts', 'awards'];
+  for (const s of sections) {
+    const checked = document.getElementById(`override-enable-${s}`).checked;
+    if (checked) {
+      const timeVal = document.getElementById(`override-time-${s}`).value;
+      if (!timeVal) {
+        showToast(`Por favor selecciona una fecha de expiración para la sección: ${s}`, true);
+        return;
+      }
+      unlockOverrides[s] = new Date(timeVal).toISOString();
+    } else {
+      unlockOverrides[s] = null;
+    }
+  }
+  
+  const btn = document.getElementById('save-user-config-btn');
+  btn.innerText = "Guardando...";
+  btn.disabled = true;
+  
+  try {
+    const res = await fetch(`/api/admin/users/${selectedUserId}/config`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ showInLeaderboard, unlockOverrides })
+    });
+    const data = await res.json();
+    
+    if (res.ok) {
+      showToast("Ajustes de usuario guardados con éxito.", false);
+      await loadUsersListForAdmin(); // refresh cache
+    } else {
+      showToast(data.error || "Error al guardar ajustes.", true);
+    }
+  } catch (err) {
+    console.error("Error saving user config:", err);
+    showToast("Error de conexión con el servidor.", true);
+  } finally {
+    btn.innerText = "Guardar Ajustes de Usuario";
+    btn.disabled = false;
+  }
+}
+
 // Fetch selected participant's predictions
 async function loadUserPredictionsForAdmin(userId) {
   selectedUserId = userId;
   const viewDiv = document.getElementById('admin-user-predictions-view');
+  const configDiv = document.getElementById('admin-user-config-panel');
   
   if (!userId) {
     viewDiv.style.display = 'none';
+    configDiv.style.display = 'none';
     return;
+  }
+  
+  // Find user details from cache and populate
+  const user = adminUsersCache.find(u => u.id === userId);
+  if (user) {
+    document.getElementById('user-show-leaderboard').checked = user.showInLeaderboard !== false;
+    
+    const overrides = user.unlockOverrides || {};
+    const sections = ['groups', 'knockouts', 'awards'];
+    sections.forEach(s => {
+      const checkbox = document.getElementById(`override-enable-${s}`);
+      const timeInput = document.getElementById(`override-time-${s}`);
+      
+      if (overrides[s]) {
+        checkbox.checked = true;
+        const dateObj = new Date(overrides[s]);
+        const tzOffset = dateObj.getTimezoneOffset() * 60000;
+        const localISOTime = (new Date(dateObj.getTime() - tzOffset)).toISOString().slice(0, 16);
+        timeInput.value = localISOTime;
+        timeInput.style.display = 'block';
+      } else {
+        checkbox.checked = false;
+        timeInput.value = '';
+        timeInput.style.display = 'none';
+      }
+    });
   }
   
   try {
@@ -416,6 +533,7 @@ async function loadUserPredictionsForAdmin(userId) {
       const data = await res.json();
       showToast(data.error || "Error al cargar predicciones", true);
       viewDiv.style.display = 'none';
+      configDiv.style.display = 'none';
       return;
     }
     
@@ -426,11 +544,14 @@ async function loadUserPredictionsForAdmin(userId) {
     renderUserMatchesList();
     renderUserAwardsForAdmin();
     
+    document.querySelector('#admin-user-config-panel h3').innerText = `⚙️ Ajustes de Participante: ${user ? user.username : userId}`;
+    configDiv.style.display = 'block';
     viewDiv.style.display = 'block';
   } catch (err) {
     console.error("Error loading user predictions:", err);
     showToast("Error al conectar con el servidor.", true);
     viewDiv.style.display = 'none';
+    configDiv.style.display = 'none';
   }
 }
 
@@ -685,4 +806,6 @@ window.onAdminAwardInputChange = onAdminAwardInputChange;
 window.saveUserPredictionsAsAdmin = saveUserPredictionsAsAdmin;
 window.togglePredPKInputsVisibility = togglePredPKInputsVisibility;
 window.confirmResetData = confirmResetData;
+window.toggleOverrideInput = toggleOverrideInput;
+window.saveUserConfig = saveUserConfig;
 

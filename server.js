@@ -161,6 +161,16 @@ function isDeadlinePassed() {
   return Date.now() > DEADLINE.getTime();
 }
 
+// Helper: check if a section is editable for a given user
+function isSectionEditable(reqUser, targetUser, section) {
+  if (reqUser && reqUser.isAdmin) return true;
+  if (!isDeadlinePassed()) return true;
+  if (targetUser && targetUser.unlockOverrides && targetUser.unlockOverrides[section]) {
+    return new Date(targetUser.unlockOverrides[section]) > new Date();
+  }
+  return false;
+}
+
 // Get deadline status
 app.get('/api/predictions/deadline', (req, res) => {
   res.json({
@@ -193,7 +203,18 @@ app.get('/api/predictions/:userId', authenticateToken, async (req, res) => {
     
     const db = await readDb();
     const userPred = db.predictions[userId] || { matches: {}, specials: {} };
-    res.json(userPred);
+    
+    const targetUser = db.users.find(u => u.id === userId);
+    const locks = {
+      groups: !isSectionEditable(req.user, targetUser, 'groups'),
+      knockouts: !isSectionEditable(req.user, targetUser, 'knockouts'),
+      awards: !isSectionEditable(req.user, targetUser, 'awards')
+    };
+    
+    res.json({
+      ...userPred,
+      locks
+    });
   } catch (err) {
     console.error("Error en GET /api/predictions/:userId:", err);
     res.status(500).json({ error: "Error al recuperar las predicciones." });
@@ -208,8 +229,18 @@ app.post('/api/predictions/:userId', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: "No tienes permiso para editar estas predicciones." });
     }
     
-    if (isDeadlinePassed() && !req.user.isAdmin) {
-      return res.status(403).json({ error: "La fecha límite para enviar o modificar predicciones ha expirado (Sábado 13/06/2026 21:00)." });
+    const db = await readDb();
+    const targetUser = db.users.find(u => u.id === userId);
+    if (!targetUser) {
+      return res.status(404).json({ error: "Usuario no encontrado." });
+    }
+    
+    const canEditGroups = isSectionEditable(req.user, targetUser, 'groups');
+    const canEditKnockouts = isSectionEditable(req.user, targetUser, 'knockouts');
+    const canEditAwards = isSectionEditable(req.user, targetUser, 'awards');
+    
+    if (!canEditGroups && !canEditKnockouts && !canEditAwards) {
+      return res.status(403).json({ error: "La fecha límite ha expirado y no tienes permisos de desbloqueo para esta sección." });
     }
     
     const { matches, specials } = req.body;
@@ -217,19 +248,43 @@ app.post('/api/predictions/:userId', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: "Datos de predicción incorrectos." });
     }
     
-    const db = await readDb();
+    const oldPred = db.predictions[userId] || { matches: {}, specials: {} };
+    const newMatches = {};
+    
+    db.matches.forEach(m => {
+      const mId = m.id;
+      const isGroup = m.phase === 'Group Stage';
+      const editable = isGroup ? canEditGroups : canEditKnockouts;
+      
+      if (editable) {
+        if (matches[mId] !== undefined) {
+          newMatches[mId] = matches[mId];
+        } else {
+          newMatches[mId] = { gl: '', gv: '', pkl: '', pkv: '' };
+        }
+      } else {
+        if (oldPred.matches && oldPred.matches[mId] !== undefined) {
+          newMatches[mId] = oldPred.matches[mId];
+        } else {
+          newMatches[mId] = { gl: '', gv: '', pkl: '', pkv: '' };
+        }
+      }
+    });
+    
+    const newSpecials = {};
+    const awardsKeys = ['balon_oro', 'balon_plata', 'balon_bronce', 'bota_oro', 'bota_plata', 'bota_bronce'];
+    awardsKeys.forEach(k => {
+      if (canEditAwards) {
+        newSpecials[k] = specials[k] || "";
+      } else {
+        newSpecials[k] = (oldPred.specials && oldPred.specials[k]) || "";
+      }
+    });
     
     // Update predictions for the user
     db.predictions[userId] = {
-      matches: matches, // { matchId: { gl, gv, pkl, pkv } }
-      specials: {
-        balon_oro: specials.balon_oro || "",
-        balon_plata: specials.balon_plata || "",
-        balon_bronce: specials.balon_bronce || "",
-        bota_oro: specials.bota_oro || "",
-        bota_plata: specials.bota_plata || "",
-        bota_bronce: specials.bota_bronce || ""
-      }
+      matches: newMatches,
+      specials: newSpecials
     };
     
     await writeDb(db);
@@ -252,7 +307,7 @@ app.get('/api/predictions-master', authenticateToken, async (req, res) => {
     const result = {};
     for (const userId in db.predictions) {
       const userObj = db.users.find(u => u.id === userId);
-      if (userObj && (!userObj.isAdmin || userObj.username === "Sergio B")) {
+      if (userObj && (!userObj.isAdmin || userObj.username === "Sergio B") && userObj.showInLeaderboard !== false) {
         result[userObj.username] = db.predictions[userId];
       }
     }
@@ -635,6 +690,7 @@ app.get('/api/leaderboard', async (req, res) => {
     
     db.users.forEach(u => {
       if (u.isAdmin && u.username !== "Sergio B") return;
+      if (u.showInLeaderboard === false) return;
       const predObj = db.predictions[u.id] || { matches: {}, specials: {} };
       const score = calculateParticipantScore(predObj, db.matches, db.config, db.config.winners);
       
@@ -681,6 +737,54 @@ app.get('/api/admin/dashboard', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error("Error en /api/admin/dashboard:", err);
     res.status(500).json({ error: "Error al recuperar el panel de administrador." });
+  }
+});
+
+// Get all users (admin only)
+app.get('/api/admin/users', requireAdmin, async (req, res) => {
+  try {
+    const db = await readDb();
+    const users = db.users.map(u => ({
+      id: u.id,
+      username: u.username,
+      isAdmin: !!u.isAdmin,
+      showInLeaderboard: u.showInLeaderboard !== false,
+      unlockOverrides: u.unlockOverrides || {}
+    }));
+    res.json(users);
+  } catch (err) {
+    console.error("Error en /api/admin/users:", err);
+    res.status(500).json({ error: "Error al recuperar los usuarios." });
+  }
+});
+
+// Update user configuration (admin only)
+app.post('/api/admin/users/:userId/config', requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { showInLeaderboard, unlockOverrides } = req.body;
+    
+    const db = await readDb();
+    const userIndex = db.users.findIndex(u => u.id === userId);
+    if (userIndex === -1) {
+      return res.status(404).json({ error: "Usuario no encontrado." });
+    }
+    
+    db.users[userIndex].showInLeaderboard = showInLeaderboard !== false;
+    db.users[userIndex].unlockOverrides = {
+      groups: (unlockOverrides && unlockOverrides.groups) || null,
+      knockouts: (unlockOverrides && unlockOverrides.knockouts) || null,
+      awards: (unlockOverrides && unlockOverrides.awards) || null
+    };
+    
+    // Rebuild ranking history since leaderboard visibility might have changed
+    rebuildRankingHistory(db);
+    
+    await writeDb(db);
+    res.json({ message: "Ajustes de usuario actualizados con éxito." });
+  } catch (err) {
+    console.error("Error en /api/admin/users/:userId/config:", err);
+    res.status(500).json({ error: "Error al actualizar la configuración de usuario." });
   }
 });
 
@@ -887,6 +991,7 @@ function rebuildRankingHistory(db) {
     const userStandings = [];
     db.users.forEach(u => {
       if (u.isAdmin && u.username !== "Sergio B") return;
+      if (u.showInLeaderboard === false) return; // Skip users hidden from leaderboard
       const predObj = db.predictions[u.id] || { matches: {}, specials: {} };
       const score = calculateParticipantScore(predObj, matchesUpToTarget, db.config, db.config.winners);
       userStandings.push({
