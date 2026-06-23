@@ -1675,18 +1675,17 @@ function initWorldCupTrophy3D() {
   renderer.setSize(w, h);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   
-  // Materials
-  const goldMaterial = new THREE.MeshStandardMaterial({
-    color: 0xEEB000,
-    metalness: 0.96,
-    roughness: 0.12,
-    clearcoat: 0.2
+  // Materials (using Phong to prevent black rendering in dark skyboxes/environments)
+  const goldMaterial = new THREE.MeshPhongMaterial({
+    color: 0xF59E0B, // FWC Gold
+    specular: 0xFFE082, // warm gold specular highlights
+    shininess: 90
   });
   
-  const greenMaterial = new THREE.MeshStandardMaterial({
-    color: 0x074A1B,
-    roughness: 0.3,
-    metalness: 0.25
+  const greenMaterial = new THREE.MeshPhongMaterial({
+    color: 0x005A1C, // Rich malachite green
+    specular: 0x3CAC3B, // neon green highlight
+    shininess: 50
   });
   
   const trophyGroup = new THREE.Group();
@@ -1806,13 +1805,13 @@ function initWorldCupTrophy3D() {
   }
 
   const globeMap = createGlobeTexture();
-  const globeMaterial = new THREE.MeshStandardMaterial({
+  const globeMaterial = new THREE.MeshPhongMaterial({
+    color: 0xF59E0B,
     map: globeMap,
     bumpMap: globeMap,
     bumpScale: 0.04,
-    metalness: 0.95,
-    roughness: 0.16,
-    color: 0xEEB000
+    specular: 0xFFE082,
+    shininess: 70
   });
 
   const globe = new THREE.Mesh(new THREE.SphereGeometry(0.35, 24, 24), globeMaterial);
