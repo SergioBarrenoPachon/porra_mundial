@@ -183,7 +183,17 @@
     // Scroll snapping helper for mobile sections
     function scrollToSection(id) {
       const el = document.getElementById(id);
-      if (el) {
+      if (!el) return;
+      
+      const container = document.querySelector('.mobile-snap-container');
+      const isMobile = window.innerWidth <= 900;
+      
+      if (isMobile && container && (id === 'section-leaderboard' || id === 'section-evolution')) {
+        // Horizontal scroll inside mobile snap container without vertical jump
+        const targetScrollLeft = container.scrollLeft + (el.getBoundingClientRect().left - container.getBoundingClientRect().left);
+        container.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
+      } else {
+        // Vertical scroll for bottom sections or on desktop
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }

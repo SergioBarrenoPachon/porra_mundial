@@ -217,114 +217,276 @@
     renderer.setSize(container.clientWidth, container.clientHeight);
 
     // Ball texture generation (procedural Adidas Trionda design)
+    function drawTriondaBallTexture(texCanvas, isBumpMap) {
+      const w = texCanvas.width;
+      const h = texCanvas.height;
+      const ctx = texCanvas.getContext('2d');
+      const scale = w / 1024;
+      
+      if (isBumpMap) {
+        ctx.fillStyle = '#808080'; // middle gray for bump
+        ctx.fillRect(0, 0, w, h);
+      } else {
+        ctx.fillStyle = '#F4F4F6'; // off-white leather base
+        ctx.fillRect(0, 0, w, h);
+      }
+      
+      // Helper for rounded rect
+      function roundedRect(c, x, y, width, height, r, fill, stroke) {
+        c.beginPath();
+        c.moveTo(x + r, y);
+        c.lineTo(x + width - r, y);
+        c.quadraticCurveTo(x + width, y, x + width, y + r);
+        c.lineTo(x + width, y + height - r);
+        c.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+        c.lineTo(x + r, y + height);
+        c.quadraticCurveTo(x, y + height, x, y + height - r);
+        c.lineTo(x, y + r);
+        c.quadraticCurveTo(x, y, x + r, y);
+        c.closePath();
+        if (fill) c.fill();
+        if (stroke) c.stroke();
+      }
+
+      // Helper to draw a star
+      function drawStar(c, cx, cy, spikes, outerRadius, innerRadius, color) {
+        let rot = Math.PI / 2 * 3;
+        let x = cx;
+        let y = cy;
+        let step = Math.PI / spikes;
+
+        c.beginPath();
+        c.moveTo(cx, cy - outerRadius);
+        for (let i = 0; i < spikes; i++) {
+          x = cx + Math.cos(rot) * outerRadius;
+          y = cy + Math.sin(rot) * outerRadius;
+          c.lineTo(x, y);
+          rot += step;
+
+          x = cx + Math.cos(rot) * innerRadius;
+          y = cy + Math.sin(rot) * innerRadius;
+          c.lineTo(x, y);
+          rot += step;
+        }
+        c.lineTo(cx, cy - outerRadius);
+        c.closePath();
+        c.fillStyle = color;
+        c.fill();
+      }
+
+      // Helper to draw maple leaf
+      function drawMapleLeaf(c, x, y, size, color) {
+        c.fillStyle = color;
+        c.beginPath();
+        c.moveTo(x, y - size);
+        c.lineTo(x + size*0.2, y - size*0.5);
+        c.lineTo(x + size*0.5, y - size*0.7);
+        c.lineTo(x + size*0.4, y - size*0.3);
+        c.lineTo(x + size*0.8, y - size*0.4);
+        c.lineTo(x + size*0.5, y - size*0.1);
+        c.lineTo(x + size*0.6, y + size*0.2);
+        c.lineTo(x + size*0.2, y + size*0.1);
+        c.lineTo(x + size*0.1, y + size*0.5);
+        c.lineTo(x + size*0.05, y + size*0.3);
+        c.lineTo(x, y + size*0.6);
+        c.lineTo(x - size*0.05, y + size*0.3);
+        c.lineTo(x - size*0.1, y + size*0.5);
+        c.lineTo(x - size*0.2, y + size*0.1);
+        c.lineTo(x - size*0.6, y + size*0.2);
+        c.lineTo(x - size*0.5, y - size*0.1);
+        c.lineTo(x - size*0.8, y - size*0.4);
+        c.lineTo(x - size*0.4, y - size*0.3);
+        c.lineTo(x - size*0.5, y - size*0.7);
+        c.lineTo(x - size*0.2, y - size*0.5);
+        c.closePath();
+        c.fill();
+      }
+
+      // Helper to draw panel (clipped using temporary canvas)
+      function drawClippedPanel(cx, cy, r, start, end, width, colorGradStart, colorGradEnd, drawInner) {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = w;
+        tempCanvas.height = h;
+        const tempCtx = tempCanvas.getContext('2d');
+        
+        // Draw sweep background
+        tempCtx.beginPath();
+        tempCtx.arc(cx * scale, cy * scale, r * scale, start, end);
+        
+        const grad = tempCtx.createLinearGradient(
+          (cx - r) * scale, (cy - r) * scale, 
+          (cx + r) * scale, (cy + r) * scale
+        );
+        grad.addColorStop(0, colorGradStart);
+        grad.addColorStop(1, colorGradEnd);
+        
+        tempCtx.strokeStyle = grad;
+        tempCtx.lineWidth = width * scale;
+        tempCtx.lineCap = 'round';
+        tempCtx.stroke();
+        
+        // Clip to drawing
+        tempCtx.globalCompositeOperation = 'source-atop';
+        
+        // Call inner drawing logic
+        drawInner(tempCtx, scale);
+        
+        // Draw back to main canvas
+        ctx.drawImage(tempCanvas, 0, 0);
+      }
+
+      if (!isBumpMap) {
+        // Draw Green Panel (Mexico - Agave Leaf & Trionda Text)
+        drawClippedPanel(200, 360, 130, -Math.PI * 0.8, Math.PI * 0.2, 80, '#3CAC3B', '#125411', (pCtx, s) => {
+          // Draw agave leaf stripes
+          pCtx.strokeStyle = 'rgba(0,0,0,0.18)';
+          pCtx.lineWidth = 4 * s;
+          for (let i = -5; i <= 5; i++) {
+            pCtx.beginPath();
+            pCtx.arc((200 + i*15) * s, 360 * s, 110 * s, -Math.PI, 0);
+            pCtx.stroke();
+          }
+          // Draw Trionda label plate
+          pCtx.fillStyle = 'rgba(0,0,0,0.7)';
+          roundedRect(pCtx, 140 * s, 340 * s, 120 * s, 45 * s, 8 * s, true, false);
+          
+          pCtx.fillStyle = '#FFF';
+          pCtx.font = `bold ${16 * s}px 'Outfit', sans-serif`;
+          pCtx.textAlign = 'center';
+          pCtx.fillText('TRIONDA', 200 * s, 360 * s);
+          
+          pCtx.fillStyle = '#F59E0B';
+          pCtx.font = `800 ${8 * s}px 'Outfit', sans-serif`;
+          pCtx.fillText('PRO', 200 * s, 370 * s);
+          
+          pCtx.fillStyle = '#FFF';
+          pCtx.font = `${5 * s}px sans-serif`;
+          pCtx.fillText('BALÓN OFICIAL DEL PARTIDO', 200 * s, 378 * s);
+        });
+
+        // Draw Blue Panel (USA - Stars & FWC Logo)
+        drawClippedPanel(512, 160, 120, Math.PI * 0.1, Math.PI * 1.1, 80, '#2A398D', '#111847', (pCtx, s) => {
+          // Draw stars
+          for (let i = 0; i < 8; i++) {
+            const starX = 512 + Math.sin(i * 0.8) * 80;
+            const starY = 160 + Math.cos(i * 0.8) * 40;
+            drawStar(pCtx, starX * s, starY * s, 5, 8 * s, 4 * s, '#38BDF8');
+          }
+          
+          // Draw FWC logo plate
+          pCtx.fillStyle = '#FFF';
+          roundedRect(pCtx, 482 * s, 135 * s, 60 * s, 50 * s, 6 * s, true, false);
+          
+          pCtx.fillStyle = '#2A398D';
+          pCtx.font = `bold ${10 * s}px 'Outfit', sans-serif`;
+          pCtx.textAlign = 'center';
+          pCtx.fillText('2026', 512 * s, 150 * s);
+          pCtx.font = `bold ${6 * s}px sans-serif`;
+          pCtx.fillText('FIFA', 512 * s, 175 * s);
+          
+          // Gold trophy shape
+          pCtx.fillStyle = '#F59E0B';
+          pCtx.beginPath();
+          pCtx.moveTo(509 * s, 165 * s);
+          pCtx.lineTo(515 * s, 165 * s);
+          pCtx.lineTo(514 * s, 156 * s);
+          pCtx.lineTo(516 * s, 153 * s);
+          pCtx.lineTo(508 * s, 153 * s);
+          pCtx.lineTo(510 * s, 156 * s);
+          pCtx.closePath();
+          pCtx.fill();
+        });
+
+        // Draw Red Panel (Canada - Maple Leaves)
+        drawClippedPanel(820, 360, 130, -Math.PI * 0.7, Math.PI * 0.3, 80, '#E61D25', '#7A0C10', (pCtx, s) => {
+          // Draw maple leaves
+          drawMapleLeaf(pCtx, 820 * s, 360 * s, 25 * s, '#F59E0B');
+          drawMapleLeaf(pCtx, 770 * s, 330 * s, 16 * s, '#4A0002');
+          drawMapleLeaf(pCtx, 870 * s, 370 * s, 14 * s, '#4A0002');
+        });
+
+        // Draw Adidas Red Logo
+        ctx.fillStyle = '#E61D25';
+        const adX = 360 * scale;
+        const adY = 220 * scale;
+        const adS = 22 * scale;
+        
+        ctx.beginPath();
+        ctx.moveTo(adX - adS*0.5, adY + adS*0.5); ctx.lineTo(adX - adS*0.3, adY - adS*0.1); ctx.lineTo(adX - adS*0.1, adY - adS*0.1); ctx.lineTo(adX - adS*0.3, adY + adS*0.5); ctx.closePath(); ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(adX - adS*0.1, adY + adS*0.5); ctx.lineTo(adX + adS*0.2, adY - adS*0.4); ctx.lineTo(adX + adS*0.4, adY - adS*0.4); ctx.lineTo(adX + adS*0.1, adY + adS*0.5); ctx.closePath(); ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(adX + adS*0.3, adY + adS*0.5); ctx.lineTo(adX + adS*0.7, adY - adS*0.7); ctx.lineTo(adX + adS*0.9, adY - adS*0.7); ctx.lineTo(adX + adS*0.5, adY + adS*0.5); ctx.closePath(); ctx.fill();
+
+        // Draw FIFA Quality Badge
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 1 * scale;
+        ctx.fillStyle = '#fff';
+        roundedRect(ctx, 640 * scale, 210 * scale, 40 * scale, 24 * scale, 3 * scale, true, true);
+        ctx.fillStyle = '#000';
+        ctx.font = `bold ${8 * scale}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText('FIFA', 660 * scale, 222 * scale);
+        ctx.font = `${4 * scale}px sans-serif`;
+        ctx.fillText('QUALITY PRO', 660 * scale, 229 * scale);
+      }
+
+      // Draw Panel Seams
+      const seamColor = isBumpMap ? '#000000' : 'rgba(0, 0, 0, 0.15)';
+      const seamWidth = isBumpMap ? 6 * scale : 2.5 * scale;
+      
+      ctx.strokeStyle = seamColor;
+      ctx.lineWidth = seamWidth;
+      ctx.lineCap = 'round';
+      
+      // Seam 1 (wavy horizontal 1)
+      ctx.beginPath();
+      ctx.moveTo(0, 150 * scale);
+      ctx.bezierCurveTo(256 * scale, 300 * scale, 768 * scale, 50 * scale, 1024 * scale, 150 * scale);
+      ctx.stroke();
+      
+      // Seam 2 (wavy horizontal 2)
+      ctx.beginPath();
+      ctx.moveTo(0, 362 * scale);
+      ctx.bezierCurveTo(256 * scale, 462 * scale, 768 * scale, 212 * scale, 1024 * scale, 362 * scale);
+      ctx.stroke();
+      
+      // Vertical seams
+      for (let i = 0; i < 4; i++) {
+        const x = i * 256 * scale;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.bezierCurveTo(x + 100 * scale, 150 * scale, x - 100 * scale, 362 * scale, x, h);
+        ctx.stroke();
+      }
+
+      // Noise texture for bump details
+      if (isBumpMap) {
+        const imgData = ctx.getImageData(0, 0, w, h);
+        const data = imgData.data;
+        for (let i = 0; i < data.length; i += 4) {
+          const noise = (Math.random() - 0.5) * 22;
+          data[i] = Math.min(255, Math.max(0, data[i] + noise));
+          data[i+1] = Math.min(255, Math.max(0, data[i+1] + noise));
+          data[i+2] = Math.min(255, Math.max(0, data[i+2] + noise));
+        }
+        ctx.putImageData(imgData, 0, 0);
+      }
+    }
+
     function createBallTexture() {
       const texCanvas = document.createElement('canvas');
       texCanvas.width = 1024;
       texCanvas.height = 512;
-      const ctx = texCanvas.getContext('2d');
-      
-      // Main background (dark carbon leather)
-      ctx.fillStyle = '#111113';
-      ctx.fillRect(0, 0, 1024, 512);
-
-      // Subtle leather seams/panel lines background
-      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-      ctx.lineWidth = 3;
-      for(let i=0; i<10; i++) {
-        const x = (i/10) * 1024;
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, 512);
-        ctx.stroke();
-      }
-      for(let i=0; i<6; i++) {
-        const y = (i/6) * 512;
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(1024, y);
-        ctx.stroke();
-      }
-
-      // Draw stylized Adidas Trionda sweeps (Neon Green, Electric Blue, Torch Red)
-      function drawSweep(cx, cy, r, color, glowColor, width, startAngle, endAngle) {
-        ctx.save();
-        ctx.strokeStyle = color;
-        ctx.lineWidth = width;
-        ctx.lineCap = 'round';
-        ctx.shadowColor = glowColor;
-        ctx.shadowBlur = 12;
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, startAngle, endAngle);
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      // Draw sweeps around 3 positions on the equirectangular map to wrap beautifully
-      // Area 1: Left (wraps to meet Right)
-      drawSweep(0, 256, 120, '#3CAC3B', 'rgba(60,172,59,0.7)', 28, -Math.PI/3, Math.PI/3);
-      drawSweep(1024, 256, 120, '#3CAC3B', 'rgba(60,172,59,0.7)', 28, Math.PI*2/3, Math.PI*4/3);
-
-      // Area 2: Middle Blue
-      drawSweep(341, 180, 100, '#2A398D', 'rgba(42,57,141,0.8)', 24, Math.PI/4, Math.PI*1.1);
-      drawSweep(341, 330, 90, '#E61D25', 'rgba(230,29,37,0.8)', 18, -Math.PI*0.8, Math.PI/6);
-
-      // Area 3: Middle Red/Green
-      drawSweep(682, 220, 110, '#E61D25', 'rgba(230,29,37,0.8)', 26, -Math.PI/2, Math.PI/3);
-      drawSweep(682, 360, 80, '#3CAC3B', 'rgba(60,172,59,0.7)', 16, Math.PI*0.7, Math.PI*1.6);
-
-      // Add a metallic FIFA World Cup branding logo/text slot
-      ctx.fillStyle = '#F59E0B';
-      ctx.font = 'bold 24px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText('FWC 26', 512, 256);
-      
-      // Decorative gold circles
-      ctx.strokeStyle = '#F59E0B';
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.arc(512, 256, 60, 0, Math.PI*2);
-      ctx.stroke();
-
+      drawTriondaBallTexture(texCanvas, false);
       return new THREE.CanvasTexture(texCanvas);
     }
 
-    // Leather bumps texture (for height details)
     function createBallBumpTexture() {
       const texCanvas = document.createElement('canvas');
       texCanvas.width = 1024;
       texCanvas.height = 512;
-      const ctx = texCanvas.getContext('2d');
-      
-      ctx.fillStyle = '#808080';
-      ctx.fillRect(0, 0, 1024, 512);
-
-      // Recessed seams
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 8;
-      ctx.shadowBlur = 6;
-      ctx.shadowColor = '#000';
-      
-      // Soccer ball panels drawing on bump map
-      for(let i=0; i<10; i++) {
-        const x = (i/10) * 1024;
-        ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,512); ctx.stroke();
-      }
-      for(let i=0; i<6; i++) {
-        const y = (i/6) * 512;
-        ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(1024,y); ctx.stroke();
-      }
-
-      // Leather pebbling texture noise
-      const imgData = ctx.getImageData(0, 0, 1024, 512);
-      const data = imgData.data;
-      for (let i = 0; i < data.length; i += 4) {
-        const noise = (Math.random() - 0.5) * 22;
-        data[i] = Math.min(255, Math.max(0, data[i] + noise));
-        data[i+1] = Math.min(255, Math.max(0, data[i+1] + noise));
-        data[i+2] = Math.min(255, Math.max(0, data[i+2] + noise));
-      }
-      ctx.putImageData(imgData, 0, 0);
-
+      drawTriondaBallTexture(texCanvas, true);
       return new THREE.CanvasTexture(texCanvas);
     }
 

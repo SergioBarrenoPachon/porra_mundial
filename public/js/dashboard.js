@@ -379,18 +379,22 @@ function drawCanvasContent() {
   const participants = leaderboardData.map(p => p.username);
   if (participants.length === 0) return;
   
-  // Assemble history values per user
+  // Assemble history values per user (prepended with "Inicio" state)
   const userValues = {};
   participants.forEach(user => {
-    userValues[user] = rankingHistory.map(h => {
-      if (displayType === 'points') {
-        const pts = h.points ? h.points[user] : undefined;
-        return pts !== undefined ? pts : 0;
-      } else {
-        const rk = h.ranks ? h.ranks[user] : undefined;
-        return rk !== undefined ? rk : participants.length;
-      }
-    });
+    const startVal = displayType === 'points' ? 0 : 1;
+    userValues[user] = [
+      startVal,
+      ...rankingHistory.map(h => {
+        if (displayType === 'points') {
+          const pts = h.points ? h.points[user] : undefined;
+          return pts !== undefined ? pts : 0;
+        } else {
+          const rk = h.ranks ? h.ranks[user] : undefined;
+          return rk !== undefined ? rk : participants.length;
+        }
+      })
+    ];
   });
   
   // Find min/max values
@@ -440,14 +444,14 @@ function drawCanvasContent() {
   }
   
   // X-Axis Match ticks and Labels
-  const numMatches = rankingHistory.length;
-  const stepX = numMatches > 1 ? graphWidth / (numMatches - 1) : graphWidth;
+  const numPoints = rankingHistory.length + 1;
+  const stepX = numPoints > 1 ? graphWidth / (numPoints - 1) : graphWidth;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   
-  const labelInterval = Math.max(1, Math.ceil(numMatches / 10));
+  const labelInterval = Math.max(1, Math.ceil(numPoints / 10));
   
-  rankingHistory.forEach((h, idx) => {
+  for (let idx = 0; idx < numPoints; idx++) {
     const xCoord = paddingLeft + idx * stepX;
     
     // Draw vertical dotted guide lines
@@ -457,29 +461,30 @@ function drawCanvasContent() {
     ctx.lineTo(xCoord, height - paddingBottom);
     ctx.stroke();
     
-    if (idx % labelInterval === 0 || idx === numMatches - 1) {
-      const match = allMatches.find(m => m.id === h.matchId);
-      let label = h.matchId;
-      if (match) {
-        const loc = getTeamAcronym(match.local);
-        const vis = getTeamAcronym(match.visitor);
-        label = `${loc}-${vis}`;
+    if (idx % labelInterval === 0 || idx === numPoints - 1) {
+      let label = "";
+      if (idx === 0) {
+        label = "Inicio";
+      } else {
+        const h = rankingHistory[idx - 1];
+        const match = allMatches.find(m => m.id === h.matchId);
+        label = h.matchId;
+        if (match) {
+          const loc = getTeamAcronym(match.local);
+          const vis = getTeamAcronym(match.visitor);
+          label = `${loc}-${vis}`;
+        }
       }
       ctx.fillText(label, xCoord, height - paddingBottom + 8);
     }
-  });
+  }
   
   // Calculate specific points coordinates for all users
   const userCoordinates = {};
   participants.forEach(user => {
     userCoordinates[user] = userValues[user].map((val, idx) => {
       const x = paddingLeft + idx * stepX;
-      let ratio = 0;
-      if (displayType === 'points') {
-        ratio = (val - minY) / (maxY - minY);
-      } else {
-        ratio = (val - minY) / (maxY - minY);
-      }
+      let ratio = (val - minY) / (maxY - minY);
       // Clamp ratio
       ratio = Math.max(0, Math.min(1, ratio));
       
@@ -534,6 +539,14 @@ function drawCanvasContent() {
     ctx.stroke();
   });
   
+  // Helper to get points gained in a specific match index (0-based relative to rankingHistory)
+  const getPointsGainedAtMatch = (user, matchIdx) => {
+    if (matchIdx < 0 || matchIdx >= rankingHistory.length) return 0;
+    const currentPts = rankingHistory[matchIdx].points?.[user] || 0;
+    const prevPts = matchIdx > 0 ? (rankingHistory[matchIdx - 1].points?.[user] || 0) : 0;
+    return currentPts - prevPts;
+  };
+  
   // 2. Draw FOCUSED User Spline & Fresnel Area
   if (focusedUser && userCoordinates[focusedUser]) {
     const coords = userCoordinates[focusedUser];
@@ -583,7 +596,6 @@ function drawCanvasContent() {
     ctx.lineWidth = 1.5;
     for (let x = paddingLeft; x <= currentLastX; x += 6) {
       const ratio = (x - paddingLeft) / graphWidth;
-      // Combine multiple sine waves for organic ripple feel
       const waveY = (height - paddingBottom - 40) + Math.sin(time * 2 + ratio * 10) * 12 + Math.cos(time + ratio * 5) * 6;
       if (x === paddingLeft) ctx.moveTo(x, waveY);
       else ctx.lineTo(x, waveY);
@@ -597,21 +609,19 @@ function drawCanvasContent() {
       const pEnd = coords[i + 1];
       if (pStart.x > limitX) break;
       
-      const vStart = vals[i];
-      const vEnd = vals[i + 1];
+      const ptsDiff = getPointsGainedAtMatch(focusedUser, i);
       
-      // Determine color based on performance
-      let isUp = false;
-      if (displayType === 'points') {
-        isUp = vEnd > vStart;
+      // Color selection (Gold for 3 points, Green for 1/2 points, Red for <= 0 points)
+      let segmentColor;
+      if (ptsDiff === 3) {
+        segmentColor = '#F59E0B'; // FWC Trophy Gold for exact score
+      } else if (ptsDiff > 0) {
+        segmentColor = '#3CAC3B'; // Neon Green
       } else {
-        isUp = vEnd < vStart; // Rank lower number is better!
+        segmentColor = '#E61D25'; // Torch Red
       }
       
-      const segmentColor = isUp ? '#3CAC3B' : '#E61D25';
-      const prevColor = i > 0 ? (displayType === 'points' ? (vals[i] > vals[i-1] ? '#3CAC3B' : '#E61D25') : (vals[i] < vals[i-1] ? '#3CAC3B' : '#E61D25')) : segmentColor;
-      
-      // Draw segment with linear gradient transition
+      // Draw segment with solid color to highlight +3 points segment clearly
       ctx.beginPath();
       ctx.moveTo(pStart.x, pStart.y);
       
@@ -620,11 +630,7 @@ function drawCanvasContent() {
       const cp2x = pStart.x + (stepX * 2) / 3;
       const cp2y = pEnd.y;
       
-      const grad = ctx.createLinearGradient(pStart.x, pStart.y, pEnd.x, pEnd.y);
-      grad.addColorStop(0, prevColor);
-      grad.addColorStop(1, segmentColor);
-      
-      ctx.strokeStyle = grad;
+      ctx.strokeStyle = segmentColor;
       ctx.lineWidth = 4;
       ctx.lineCap = 'round';
       
@@ -647,18 +653,35 @@ function drawCanvasContent() {
     coords.forEach((p, idx) => {
       if (p.x > limitX) return;
       
-      const vStart = idx > 0 ? vals[idx - 1] : 0;
-      const vEnd = vals[idx];
-      let isUp = displayType === 'points' ? vEnd > vStart : vEnd < vStart;
-      if (idx === 0) isUp = true;
+      if (idx === 0) {
+        // "Inicio" node: draw a clean neutral white/gray dot
+        ctx.fillStyle = '#fff';
+        ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        return;
+      }
       
-      const nodeColor = isUp ? '#3CAC3B' : '#E61D25';
+      // Calculate points gained in this match (index idx - 1)
+      const ptsGained = getPointsGainedAtMatch(focusedUser, idx - 1);
+      
+      let nodeColor;
+      if (ptsGained === 3) {
+        nodeColor = '#F59E0B'; // FIFA Gold for exact score
+      } else if (ptsGained > 0) {
+        nodeColor = '#3CAC3B'; // Neon Green
+      } else {
+        nodeColor = '#E61D25'; // Torch Red
+      }
       
       // Pulsing outer ring
       const timeOffset = performance.now() * 0.005;
       const pulseRing = 5.5 + Math.sin(timeOffset + idx * 0.5) * 3;
       
-      ctx.fillStyle = isUp ? 'rgba(60, 172, 59, 0.16)' : 'rgba(230, 29, 37, 0.16)';
+      ctx.fillStyle = ptsGained === 3 ? 'rgba(245, 158, 11, 0.16)' : (ptsGained > 0 ? 'rgba(60, 172, 59, 0.16)' : 'rgba(230, 29, 37, 0.16)');
       ctx.beginPath();
       ctx.arc(p.x, p.y, pulseRing, 0, Math.PI * 2);
       ctx.fill();
@@ -694,21 +717,25 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const graphWidth = canvas.clientWidth - paddingLeft - paddingRight;
     const graphHeight = canvas.clientHeight - paddingTop - paddingBottom;
-    const numMatches = rankingHistory.length;
-    const stepX = numMatches > 1 ? graphWidth / (numMatches - 1) : graphWidth;
+    const numPoints = rankingHistory.length + 1;
+    const stepX = numPoints > 1 ? graphWidth / (numPoints - 1) : graphWidth;
     
     const displayType = document.getElementById('chart-display-type')?.value || 'points';
     
     // Fetch values for focused user
-    const vals = rankingHistory.map(h => {
-      if (displayType === 'points') {
-        const pts = h.points ? h.points[focusedUser] : undefined;
-        return pts !== undefined ? pts : 0;
-      } else {
-        const rk = h.ranks ? h.ranks[focusedUser] : undefined;
-        return rk !== undefined ? rk : leaderboardData.length;
-      }
-    });
+    const startVal = displayType === 'points' ? 0 : 1;
+    const vals = [
+      startVal,
+      ...rankingHistory.map(h => {
+        if (displayType === 'points') {
+          const pts = h.points ? h.points[focusedUser] : undefined;
+          return pts !== undefined ? pts : 0;
+        } else {
+          const rk = h.ranks ? h.ranks[focusedUser] : undefined;
+          return rk !== undefined ? rk : leaderboardData.length;
+        }
+      })
+    ];
     
     let minY = displayType === 'points' ? 0 : 1;
     let maxY = 1;
@@ -728,7 +755,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let nearestIdx = -1;
     let minDistance = 14; // pixels trigger threshold
     
-    for (let i = 0; i < numMatches; i++) {
+    for (let i = 0; i < numPoints; i++) {
       const x = paddingLeft + i * stepX;
       const val = vals[i];
       let ratio = (val - minY) / (maxY - minY);
@@ -747,65 +774,106 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const tooltip = document.getElementById('custom-chart-tooltip');
     if (nearestIdx !== -1) {
-      const h = rankingHistory[nearestIdx];
-      const match = allMatches.find(m => m.id === h.matchId);
-      
-      let matchName = h.matchId;
-      let matchTeams = 'Pendiente';
-      let realScore = 'Pendiente';
-      
-      if (match) {
-        matchName = match.phase === 'Group Stage' ? `Fase de Grupos - G.${match.group}` : match.phase;
-        matchTeams = `${match.local} vs ${match.visitor}`;
-        realScore = match.gl !== null ? `${match.gl} - ${match.gv}` : 'Pendiente';
-      }
-      
-      const currentVal = vals[nearestIdx];
-      const prevVal = nearestIdx > 0 ? vals[nearestIdx - 1] : 0;
-      const ptsGained = displayType === 'points' ? (currentVal - prevVal) : 0;
-      
-      let predScore = 'Ninguna';
-      if (masterPredictions && masterPredictions[focusedUser] && masterPredictions[focusedUser].matches[h.matchId]) {
-        const pred = masterPredictions[focusedUser].matches[h.matchId];
-        if (pred.gl !== undefined && pred.gl !== null && pred.gl !== '') {
-          predScore = `${pred.gl} - ${pred.gv}`;
-        }
-      }
-      
-      // Position element safely within parent
-      let tooltipX = paddingLeft + nearestIdx * stepX + 16;
-      if (tooltipX + 180 > canvas.clientWidth) {
-        tooltipX = paddingLeft + nearestIdx * stepX - 190;
-      }
-      let tooltipY = mouseY - 65;
-      if (tooltipY < 10) tooltipY = 10;
-      
-      tooltip.style.left = `${tooltipX}px`;
-      tooltip.style.top = `${tooltipY}px`;
-      
-      const changeText = displayType === 'points' ? `+${ptsGained} pts` : `Puesto #${currentVal}`;
-      const changeColor = displayType === 'points' 
-        ? (ptsGained > 0 ? 'text-neonGreen' : 'text-torchRed')
-        : (nearestIdx === 0 || currentVal < vals[nearestIdx-1] ? 'text-neonGreen' : 'text-torchRed');
-        
-      tooltip.innerHTML = `
-        <div class="font-black text-[10px] uppercase tracking-wider border-b border-white/10 pb-1.5 mb-2 flex justify-between items-center gap-6">
-          <span class="text-gray-400 font-bold">${matchName}</span>
-          <span class="${changeColor} font-black">${changeText}</span>
-        </div>
-        <div class="space-y-1 text-[10px] text-gray-400 font-medium">
-          <div class="text-white font-bold">${matchTeams}</div>
-          <div>Marcador Real: <span class="text-gold font-bold">${realScore}</span></div>
-          <div>Tu Pronóstico: <span class="text-neonGreen font-bold">${predScore}</span></div>
-          <div class="mt-2 text-white/90 border-t border-white/5 pt-1.5 font-bold flex justify-between">
-            <span>Foco: ${focusedUser}</span>
-            <span>Total: ${displayType === 'points' ? currentVal : (h.points ? h.points[focusedUser] : 0)} pts</span>
+      const getPointsGainedAtMatch = (user, matchIdx) => {
+        if (matchIdx < 0 || matchIdx >= rankingHistory.length) return 0;
+        const currentPts = rankingHistory[matchIdx].points?.[user] || 0;
+        const prevPts = matchIdx > 0 ? (rankingHistory[matchIdx - 1].points?.[user] || 0) : 0;
+        return currentPts - prevPts;
+      };
+
+      if (nearestIdx === 0) {
+        tooltip.innerHTML = `
+          <div class="font-black text-[10px] uppercase tracking-wider border-b border-white/10 pb-1.5 mb-2 flex justify-between items-center gap-6">
+            <span class="text-gray-400 font-bold">Inicio</span>
+            <span class="text-gray-400 font-black">Comienzo</span>
           </div>
-        </div>
-      `;
-      
-      tooltip.style.opacity = '1';
-      tooltip.style.transform = 'scale(1) translateY(0)';
+          <div class="space-y-1 text-[10px] text-gray-400 font-medium">
+            <div class="text-white font-bold">Comienzo del Torneo</div>
+            <div class="mt-2 text-white/90 border-t border-white/5 pt-1.5 font-bold flex justify-between">
+              <span>Foco: ${focusedUser}</span>
+              <span>Total: ${displayType === 'points' ? 0 : 1} ${displayType === 'points' ? 'pts' : 'º'}</span>
+            </div>
+          </div>
+        `;
+        
+        let tooltipX = paddingLeft + nearestIdx * stepX + 16;
+        if (tooltipX + 180 > canvas.clientWidth) {
+          tooltipX = paddingLeft + nearestIdx * stepX - 190;
+        }
+        let tooltipY = mouseY - 65;
+        if (tooltipY < 10) tooltipY = 10;
+        
+        tooltip.style.left = `${tooltipX}px`;
+        tooltip.style.top = `${tooltipY}px`;
+        tooltip.style.opacity = '1';
+        tooltip.style.transform = 'scale(1) translateY(0)';
+      } else {
+        const h = rankingHistory[nearestIdx - 1];
+        const match = allMatches.find(m => m.id === h.matchId);
+        
+        let matchName = h.matchId;
+        let matchTeams = 'Pendiente';
+        let realScore = 'Pendiente';
+        
+        if (match) {
+          matchName = match.phase === 'Group Stage' ? `Fase de Grupos - G.${match.group}` : match.phase;
+          matchTeams = `${match.local} vs ${match.visitor}`;
+          realScore = match.gl !== null ? `${match.gl} - ${match.gv}` : 'Pendiente';
+        }
+        
+        const currentVal = vals[nearestIdx];
+        const ptsGained = getPointsGainedAtMatch(focusedUser, nearestIdx - 1);
+        
+        let predScore = 'Ninguna';
+        if (masterPredictions && masterPredictions[focusedUser] && masterPredictions[focusedUser].matches[h.matchId]) {
+          const pred = masterPredictions[focusedUser].matches[h.matchId];
+          if (pred.gl !== undefined && pred.gl !== null && pred.gl !== '') {
+            predScore = `${pred.gl} - ${pred.gv}`;
+          }
+        }
+        
+        // Position element safely within parent
+        let tooltipX = paddingLeft + nearestIdx * stepX + 16;
+        if (tooltipX + 180 > canvas.clientWidth) {
+          tooltipX = paddingLeft + nearestIdx * stepX - 190;
+        }
+        let tooltipY = mouseY - 65;
+        if (tooltipY < 10) tooltipY = 10;
+        
+        tooltip.style.left = `${tooltipX}px`;
+        tooltip.style.top = `${tooltipY}px`;
+        
+        const changeText = displayType === 'points' ? `+${ptsGained} pts` : `Puesto #${currentVal}`;
+        
+        let changeColor = 'text-torchRed';
+        if (displayType === 'points') {
+          if (ptsGained === 3) changeColor = 'text-gold';
+          else if (ptsGained > 0) changeColor = 'text-neonGreen';
+        } else {
+          const isUp = nearestIdx === 1 || currentVal < vals[nearestIdx-1];
+          if (ptsGained === 3) changeColor = 'text-gold';
+          else if (isUp) changeColor = 'text-neonGreen';
+        }
+          
+        tooltip.innerHTML = `
+          <div class="font-black text-[10px] uppercase tracking-wider border-b border-white/10 pb-1.5 mb-2 flex justify-between items-center gap-6">
+            <span class="text-gray-400 font-bold">${matchName}</span>
+            <span class="${changeColor} font-black">${changeText}</span>
+          </div>
+          <div class="space-y-1 text-[10px] text-gray-400 font-medium">
+            <div class="text-white font-bold">${matchTeams}</div>
+            <div>Marcador Real: <span class="text-gold font-bold">${realScore}</span></div>
+            <div>Tu Pronóstico: <span class="text-neonGreen font-bold">${predScore}</span></div>
+            <div class="mt-2 text-white/90 border-t border-white/5 pt-1.5 font-bold flex justify-between">
+              <span>Foco: ${focusedUser}</span>
+              <span>Total: ${displayType === 'points' ? currentVal : (h.points ? h.points[focusedUser] : 0)} pts</span>
+            </div>
+          </div>
+        `;
+        
+        tooltip.style.opacity = '1';
+        tooltip.style.transform = 'scale(1) translateY(0)';
+      }
     } else {
       tooltip.style.opacity = '0';
       tooltip.style.transform = 'scale(0.9) translateY(4px)';
@@ -1245,46 +1313,269 @@ function initDashboardHeroBall() {
   renderer.setSize(container.clientWidth, container.clientHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   
-  // Procedural texture mapping (FWC26 style)
+  // Ball texture generation (procedural Adidas Trionda design)
+  function drawTriondaBallTexture(texCanvas, isBumpMap) {
+    const w = texCanvas.width;
+    const h = texCanvas.height;
+    const ctx = texCanvas.getContext('2d');
+    const scale = w / 1024;
+    
+    if (isBumpMap) {
+      ctx.fillStyle = '#808080'; // middle gray for bump
+      ctx.fillRect(0, 0, w, h);
+    } else {
+      ctx.fillStyle = '#F4F4F6'; // off-white leather base
+      ctx.fillRect(0, 0, w, h);
+    }
+    
+    // Helper for rounded rect
+    function roundedRect(c, x, y, width, height, r, fill, stroke) {
+      c.beginPath();
+      c.moveTo(x + r, y);
+      c.lineTo(x + width - r, y);
+      c.quadraticCurveTo(x + width, y, x + width, y + r);
+      c.lineTo(x + width, y + height - r);
+      c.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+      c.lineTo(x + r, y + height);
+      c.quadraticCurveTo(x, y + height, x, y + height - r);
+      c.lineTo(x, y + r);
+      c.quadraticCurveTo(x, y, x + r, y);
+      c.closePath();
+      if (fill) c.fill();
+      if (stroke) c.stroke();
+    }
+
+    // Helper to draw a star
+    function drawStar(c, cx, cy, spikes, outerRadius, innerRadius, color) {
+      let rot = Math.PI / 2 * 3;
+      let x = cx;
+      let y = cy;
+      let step = Math.PI / spikes;
+
+      c.beginPath();
+      c.moveTo(cx, cy - outerRadius);
+      for (let i = 0; i < spikes; i++) {
+        x = cx + Math.cos(rot) * outerRadius;
+        y = cy + Math.sin(rot) * outerRadius;
+        c.lineTo(x, y);
+        rot += step;
+
+        x = cx + Math.cos(rot) * innerRadius;
+        y = cy + Math.sin(rot) * innerRadius;
+        c.lineTo(x, y);
+        rot += step;
+      }
+      c.lineTo(cx, cy - outerRadius);
+      c.closePath();
+      c.fillStyle = color;
+      c.fill();
+    }
+
+    // Helper to draw maple leaf
+    function drawMapleLeaf(c, x, y, size, color) {
+      c.fillStyle = color;
+      c.beginPath();
+      c.moveTo(x, y - size);
+      c.lineTo(x + size*0.2, y - size*0.5);
+      c.lineTo(x + size*0.5, y - size*0.7);
+      c.lineTo(x + size*0.4, y - size*0.3);
+      c.lineTo(x + size*0.8, y - size*0.4);
+      c.lineTo(x + size*0.5, y - size*0.1);
+      c.lineTo(x + size*0.6, y + size*0.2);
+      c.lineTo(x + size*0.2, y + size*0.1);
+      c.lineTo(x + size*0.1, y + size*0.5);
+      c.lineTo(x + size*0.05, y + size*0.3);
+      c.lineTo(x, y + size*0.6);
+      c.lineTo(x - size*0.05, y + size*0.3);
+      c.lineTo(x - size*0.1, y + size*0.5);
+      c.lineTo(x - size*0.2, y + size*0.1);
+      c.lineTo(x - size*0.6, y + size*0.2);
+      c.lineTo(x - size*0.5, y - size*0.1);
+      c.lineTo(x - size*0.8, y - size*0.4);
+      c.lineTo(x - size*0.4, y - size*0.3);
+      c.lineTo(x - size*0.5, y - size*0.7);
+      c.lineTo(x - size*0.2, y - size*0.5);
+      c.closePath();
+      c.fill();
+    }
+
+    // Helper to draw panel (clipped using temporary canvas)
+    function drawClippedPanel(cx, cy, r, start, end, width, colorGradStart, colorGradEnd, drawInner) {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = w;
+      tempCanvas.height = h;
+      const tempCtx = tempCanvas.getContext('2d');
+      
+      // Draw sweep background
+      tempCtx.beginPath();
+      tempCtx.arc(cx * scale, cy * scale, r * scale, start, end);
+      
+      const grad = tempCtx.createLinearGradient(
+        (cx - r) * scale, (cy - r) * scale, 
+        (cx + r) * scale, (cy + r) * scale
+      );
+      grad.addColorStop(0, colorGradStart);
+      grad.addColorStop(1, colorGradEnd);
+      
+      tempCtx.strokeStyle = grad;
+      tempCtx.lineWidth = width * scale;
+      tempCtx.lineCap = 'round';
+      tempCtx.stroke();
+      
+      // Clip to drawing
+      tempCtx.globalCompositeOperation = 'source-atop';
+      
+      // Call inner drawing logic
+      drawInner(tempCtx, scale);
+      
+      // Draw back to main canvas
+      ctx.drawImage(tempCanvas, 0, 0);
+    }
+
+    if (!isBumpMap) {
+      // Draw Green Panel (Mexico - Agave Leaf & Trionda Text)
+      drawClippedPanel(200, 360, 130, -Math.PI * 0.8, Math.PI * 0.2, 80, '#3CAC3B', '#125411', (pCtx, s) => {
+        // Draw agave leaf stripes
+        pCtx.strokeStyle = 'rgba(0,0,0,0.18)';
+        pCtx.lineWidth = 4 * s;
+        for (let i = -5; i <= 5; i++) {
+          pCtx.beginPath();
+          pCtx.arc((200 + i*15) * s, 360 * s, 110 * s, -Math.PI, 0);
+          pCtx.stroke();
+        }
+        // Draw Trionda label plate
+        pCtx.fillStyle = 'rgba(0,0,0,0.7)';
+        roundedRect(pCtx, 140 * s, 340 * s, 120 * s, 45 * s, 8 * s, true, false);
+        
+        pCtx.fillStyle = '#FFF';
+        pCtx.font = `bold ${16 * s}px 'Outfit', sans-serif`;
+        pCtx.textAlign = 'center';
+        pCtx.fillText('TRIONDA', 200 * s, 360 * s);
+        
+        pCtx.fillStyle = '#F59E0B';
+        pCtx.font = `800 ${8 * s}px 'Outfit', sans-serif`;
+        pCtx.fillText('PRO', 200 * s, 370 * s);
+        
+        pCtx.fillStyle = '#FFF';
+        pCtx.font = `${5 * s}px sans-serif`;
+        pCtx.fillText('BALÓN OFICIAL DEL PARTIDO', 200 * s, 378 * s);
+      });
+
+      // Draw Blue Panel (USA - Stars & FWC Logo)
+      drawClippedPanel(512, 160, 120, Math.PI * 0.1, Math.PI * 1.1, 80, '#2A398D', '#111847', (pCtx, s) => {
+        // Draw stars
+        for (let i = 0; i < 8; i++) {
+          const starX = 512 + Math.sin(i * 0.8) * 80;
+          const starY = 160 + Math.cos(i * 0.8) * 40;
+          drawStar(pCtx, starX * s, starY * s, 5, 8 * s, 4 * s, '#38BDF8');
+        }
+        
+        // Draw FWC logo plate
+        pCtx.fillStyle = '#FFF';
+        roundedRect(pCtx, 482 * s, 135 * s, 60 * s, 50 * s, 6 * s, true, false);
+        
+        pCtx.fillStyle = '#2A398D';
+        pCtx.font = `bold ${10 * s}px 'Outfit', sans-serif`;
+        pCtx.textAlign = 'center';
+        pCtx.fillText('2026', 512 * s, 150 * s);
+        pCtx.font = `bold ${6 * s}px sans-serif`;
+        pCtx.fillText('FIFA', 512 * s, 175 * s);
+        
+        // Gold trophy shape
+        pCtx.fillStyle = '#F59E0B';
+        pCtx.beginPath();
+        pCtx.moveTo(509 * s, 165 * s);
+        pCtx.lineTo(515 * s, 165 * s);
+        pCtx.lineTo(514 * s, 156 * s);
+        pCtx.lineTo(516 * s, 153 * s);
+        pCtx.lineTo(508 * s, 153 * s);
+        pCtx.lineTo(510 * s, 156 * s);
+        pCtx.closePath();
+        pCtx.fill();
+      });
+
+      // Draw Red Panel (Canada - Maple Leaves)
+      drawClippedPanel(820, 360, 130, -Math.PI * 0.7, Math.PI * 0.3, 80, '#E61D25', '#7A0C10', (pCtx, s) => {
+        // Draw maple leaves
+        drawMapleLeaf(pCtx, 820 * s, 360 * s, 25 * s, '#F59E0B');
+        drawMapleLeaf(pCtx, 770 * s, 330 * s, 16 * s, '#4A0002');
+        drawMapleLeaf(pCtx, 870 * s, 370 * s, 14 * s, '#4A0002');
+      });
+
+      // Draw Adidas Red Logo
+      ctx.fillStyle = '#E61D25';
+      const adX = 360 * scale;
+      const adY = 220 * scale;
+      const adS = 22 * scale;
+      
+      ctx.beginPath();
+      ctx.moveTo(adX - adS*0.5, adY + adS*0.5); ctx.lineTo(adX - adS*0.3, adY - adS*0.1); ctx.lineTo(adX - adS*0.1, adY - adS*0.1); ctx.lineTo(adX - adS*0.3, adY + adS*0.5); ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(adX - adS*0.1, adY + adS*0.5); ctx.lineTo(adX + adS*0.2, adY - adS*0.4); ctx.lineTo(adX + adS*0.4, adY - adS*0.4); ctx.lineTo(adX + adS*0.1, adY + adS*0.5); ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(adX + adS*0.3, adY + adS*0.5); ctx.lineTo(adX + adS*0.7, adY - adS*0.7); ctx.lineTo(adX + adS*0.9, adY - adS*0.7); ctx.lineTo(adX + adS*0.5, adY + adS*0.5); ctx.closePath(); ctx.fill();
+
+      // Draw FIFA Quality Badge
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 1 * scale;
+      ctx.fillStyle = '#fff';
+      roundedRect(ctx, 640 * scale, 210 * scale, 40 * scale, 24 * scale, 3 * scale, true, true);
+      ctx.fillStyle = '#000';
+      ctx.font = `bold ${8 * scale}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('FIFA', 660 * scale, 222 * scale);
+      ctx.font = `${4 * scale}px sans-serif`;
+      ctx.fillText('QUALITY PRO', 660 * scale, 229 * scale);
+    }
+
+    // Draw Panel Seams
+    const seamColor = isBumpMap ? '#000000' : 'rgba(0, 0, 0, 0.15)';
+    const seamWidth = isBumpMap ? 6 * scale : 2.5 * scale;
+    
+    ctx.strokeStyle = seamColor;
+    ctx.lineWidth = seamWidth;
+    ctx.lineCap = 'round';
+    
+    // Seam 1 (wavy horizontal 1)
+    ctx.beginPath();
+    ctx.moveTo(0, 150 * scale);
+    ctx.bezierCurveTo(256 * scale, 300 * scale, 768 * scale, 50 * scale, 1024 * scale, 150 * scale);
+    ctx.stroke();
+    
+    // Seam 2 (wavy horizontal 2)
+    ctx.beginPath();
+    ctx.moveTo(0, 362 * scale);
+    ctx.bezierCurveTo(256 * scale, 462 * scale, 768 * scale, 212 * scale, 1024 * scale, 362 * scale);
+    ctx.stroke();
+    
+    // Vertical seams
+    for (let i = 0; i < 4; i++) {
+      const x = i * 256 * scale;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.bezierCurveTo(x + 100 * scale, 150 * scale, x - 100 * scale, 362 * scale, x, h);
+      ctx.stroke();
+    }
+
+    // Noise texture for bump details
+    if (isBumpMap) {
+      const imgData = ctx.getImageData(0, 0, w, h);
+      const data = imgData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const noise = (Math.random() - 0.5) * 22;
+        data[i] = Math.min(255, Math.max(0, data[i] + noise));
+        data[i+1] = Math.min(255, Math.max(0, data[i+1] + noise));
+        data[i+2] = Math.min(255, Math.max(0, data[i+2] + noise));
+      }
+      ctx.putImageData(imgData, 0, 0);
+    }
+  }
+  
   function createBallTexture() {
     const texCanvas = document.createElement('canvas');
     texCanvas.width = 512;
     texCanvas.height = 256;
-    const ctx = texCanvas.getContext('2d');
-    
-    ctx.fillStyle = '#111113';
-    ctx.fillRect(0, 0, 512, 256);
-    
-    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-    ctx.lineWidth = 2;
-    for(let i=0; i<8; i++) {
-      const x = (i/8)*512;
-      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,256); ctx.stroke();
-    }
-    
-    function drawSweep(cx, cy, r, color, glow, width, start, end) {
-      ctx.save();
-      ctx.strokeStyle = color;
-      ctx.lineWidth = width;
-      ctx.lineCap = 'round';
-      ctx.shadowColor = glow;
-      ctx.shadowBlur = 8;
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, start, end);
-      ctx.stroke();
-      ctx.restore();
-    }
-    
-    drawSweep(0, 128, 60, '#3CAC3B', 'rgba(60,172,59,0.7)', 14, -Math.PI/3, Math.PI/3);
-    drawSweep(512, 128, 60, '#3CAC3B', 'rgba(60,172,59,0.7)', 14, Math.PI*2/3, Math.PI*4/3);
-    drawSweep(170, 90, 50, '#2A398D', 'rgba(42,57,141,0.8)', 12, Math.PI/4, Math.PI*1.1);
-    drawSweep(340, 110, 55, '#E61D25', 'rgba(230,29,37,0.8)', 13, -Math.PI/2, Math.PI/3);
-    
-    ctx.fillStyle = '#F59E0B';
-    ctx.font = 'bold 12px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('FWC 26', 256, 128);
-    
+    drawTriondaBallTexture(texCanvas, false);
     return new THREE.CanvasTexture(texCanvas);
   }
   
@@ -1292,27 +1583,7 @@ function initDashboardHeroBall() {
     const texCanvas = document.createElement('canvas');
     texCanvas.width = 512;
     texCanvas.height = 256;
-    const ctx = texCanvas.getContext('2d');
-    
-    ctx.fillStyle = '#808080';
-    ctx.fillRect(0, 0, 512, 256);
-    
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 4;
-    for(let i=0; i<8; i++) {
-      const x = (i/8)*512;
-      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,256); ctx.stroke();
-    }
-    
-    const imgData = ctx.getImageData(0,0,512,256);
-    const data = imgData.data;
-    for (let i=0; i<data.length; i+=4) {
-      const n = (Math.random()-0.5)*18;
-      data[i] = Math.min(255, Math.max(0, data[i]+n));
-      data[i+1] = Math.min(255, Math.max(0, data[i+1]+n));
-      data[i+2] = Math.min(255, Math.max(0, data[i+2]+n));
-    }
-    ctx.putImageData(imgData, 0, 0);
+    drawTriondaBallTexture(texCanvas, true);
     return new THREE.CanvasTexture(texCanvas);
   }
   
@@ -1397,7 +1668,7 @@ function initWorldCupTrophy3D() {
   const scene = new THREE.Scene();
   
   const camera = new THREE.PerspectiveCamera(38, w / h, 0.1, 10);
-  camera.position.set(0, 1.0, 3.4);
+  camera.position.set(0, 1.05, 3.4);
   camera.lookAt(0, 0.95, 0);
   
   const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
@@ -1413,43 +1684,140 @@ function initWorldCupTrophy3D() {
   });
   
   const greenMaterial = new THREE.MeshStandardMaterial({
-    color: 0x004D1A,
-    roughness: 0.25,
-    metalness: 0.3
+    color: 0x074A1B,
+    roughness: 0.3,
+    metalness: 0.25
   });
   
   const trophyGroup = new THREE.Group();
   
-  // Lathe body profile points
+  // 1. Stacked Conical Base (Malachite Rings & Gold base plates)
+  // Gold Bottom Plate (thick rim)
+  const baseRim = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.35, 0.04, 24), goldMaterial);
+  baseRim.position.y = 0.02;
+  trophyGroup.add(baseRim);
+  
+  // Green Bottom Ring (Malachite)
+  const baseRing1 = new THREE.Mesh(new THREE.CylinderGeometry(0.33, 0.34, 0.06, 24), greenMaterial);
+  baseRing1.position.y = 0.07;
+  trophyGroup.add(baseRing1);
+  
+  // Gold Middle Section (engraved rim)
+  const baseMiddle = new THREE.Mesh(new THREE.CylinderGeometry(0.315, 0.33, 0.08, 24), goldMaterial);
+  baseMiddle.position.y = 0.14;
+  trophyGroup.add(baseMiddle);
+  
+  // Green Top Ring (Malachite)
+  const baseRing2 = new THREE.Mesh(new THREE.CylinderGeometry(0.30, 0.315, 0.06, 24), greenMaterial);
+  baseRing2.position.y = 0.21;
+  trophyGroup.add(baseRing2);
+  
+  // Gold base cap/stem connector
+  const baseCap = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.30, 0.06, 24), goldMaterial);
+  baseCap.position.y = 0.27;
+  trophyGroup.add(baseCap);
+  
+  // 2. Gold Lathe Stem (starting at y=0.30)
   const points = [];
-  points.push(new THREE.Vector2(0.01, 0));
-  points.push(new THREE.Vector2(0.35, 0.01));
-  points.push(new THREE.Vector2(0.32, 0.15));
-  points.push(new THREE.Vector2(0.28, 0.25));
-  points.push(new THREE.Vector2(0.23, 0.45));
-  points.push(new THREE.Vector2(0.27, 0.65));
-  points.push(new THREE.Vector2(0.36, 0.85));
-  points.push(new THREE.Vector2(0.40, 1.05));
-  points.push(new THREE.Vector2(0.21, 1.25));
-  points.push(new THREE.Vector2(0.01, 1.28));
+  points.push(new THREE.Vector2(0.01, 0.30));
+  points.push(new THREE.Vector2(0.23, 0.30));
+  points.push(new THREE.Vector2(0.21, 0.45));
+  points.push(new THREE.Vector2(0.24, 0.65));
+  points.push(new THREE.Vector2(0.31, 0.85));
+  points.push(new THREE.Vector2(0.36, 1.05));
+  points.push(new THREE.Vector2(0.21, 1.23));
+  points.push(new THREE.Vector2(0.01, 1.25));
   
   const stem = new THREE.Mesh(new THREE.LatheGeometry(points, 24), goldMaterial);
   trophyGroup.add(stem);
   
-  // Globe top
-  const globe = new THREE.Mesh(new THREE.SphereGeometry(0.37, 24, 24), goldMaterial);
-  globe.position.y = 1.35;
+  // 3. Stylized Human Figures / Arms wrapping up
+  const curve1 = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0.08, 0.38, 0.05),
+    new THREE.Vector3(0.20, 0.65, 0.12),
+    new THREE.Vector3(0.24, 0.95, 0.08),
+    new THREE.Vector3(0.21, 1.20, 0.02)
+  ]);
+  const tube1 = new THREE.Mesh(new THREE.TubeGeometry(curve1, 16, 0.065, 8, false), goldMaterial);
+  trophyGroup.add(tube1);
+  
+  const curve2 = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-0.08, 0.38, -0.05),
+    new THREE.Vector3(-0.20, 0.65, -0.12),
+    new THREE.Vector3(-0.24, 0.95, -0.08),
+    new THREE.Vector3(-0.21, 1.20, -0.02)
+  ]);
+  const tube2 = new THREE.Mesh(new THREE.TubeGeometry(curve2, 16, 0.065, 8, false), goldMaterial);
+  trophyGroup.add(tube2);
+  
+  // 4. Globe top with raised continents
+  function createGlobeTexture() {
+    const c = document.createElement('canvas');
+    c.width = 256;
+    c.height = 128;
+    const tempCtx = c.getContext('2d');
+    
+    // Ocean background (darker textured gold)
+    tempCtx.fillStyle = '#C89300';
+    tempCtx.fillRect(0, 0, 256, 128);
+    
+    // Ocean ripples texture
+    tempCtx.fillStyle = 'rgba(0,0,0,0.06)';
+    for (let i = 0; i < 30; i++) {
+      tempCtx.fillRect(Math.random() * 256, Math.random() * 128, 6, 2);
+    }
+    
+    // Americas (West)
+    tempCtx.fillStyle = '#EEB000'; // Bright polished gold
+    tempCtx.beginPath();
+    tempCtx.moveTo(20, 20);
+    tempCtx.lineTo(60, 25);
+    tempCtx.lineTo(55, 45);
+    tempCtx.lineTo(40, 55);
+    tempCtx.lineTo(50, 75);
+    tempCtx.lineTo(45, 105);
+    tempCtx.lineTo(35, 110);
+    tempCtx.lineTo(25, 70);
+    tempCtx.lineTo(30, 50);
+    tempCtx.closePath();
+    tempCtx.fill();
+    
+    // Africa & Europe & Asia (East)
+    tempCtx.beginPath();
+    tempCtx.moveTo(110, 20);
+    tempCtx.lineTo(160, 15);
+    tempCtx.lineTo(210, 25);
+    tempCtx.lineTo(220, 75);
+    tempCtx.lineTo(180, 80);
+    tempCtx.lineTo(160, 60);
+    tempCtx.lineTo(150, 95);
+    tempCtx.lineTo(125, 105);
+    tempCtx.lineTo(115, 75);
+    tempCtx.lineTo(100, 45);
+    tempCtx.closePath();
+    tempCtx.fill();
+    
+    // Australia
+    tempCtx.beginPath();
+    tempCtx.arc(205, 95, 12, 0, Math.PI * 2);
+    tempCtx.fill();
+    
+    return new THREE.CanvasTexture(c);
+  }
+
+  const globeMap = createGlobeTexture();
+  const globeMaterial = new THREE.MeshStandardMaterial({
+    map: globeMap,
+    bumpMap: globeMap,
+    bumpScale: 0.04,
+    metalness: 0.95,
+    roughness: 0.16,
+    color: 0xEEB000
+  });
+
+  const globe = new THREE.Mesh(new THREE.SphereGeometry(0.35, 24, 24), globeMaterial);
+  globe.position.y = 1.32;
   trophyGroup.add(globe);
-  
-  // Green base rings
-  const ring1 = new THREE.Mesh(new THREE.TorusGeometry(0.30, 0.038, 8, 24), greenMaterial);
-  ring1.rotation.x = Math.PI / 2;
-  ring1.position.y = 0.06;
-  trophyGroup.add(ring1);
-  
-  const ring2 = ring1.clone();
-  ring2.position.y = 0.18;
-  trophyGroup.add(ring2);
   
   scene.add(trophyGroup);
   
