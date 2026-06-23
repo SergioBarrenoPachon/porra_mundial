@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Administración - Porra Mundial 2026</title>
-  <link rel="stylesheet" href="/css/style.css">
+  <link class="main-css" rel="stylesheet" href="/css/style.css">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
     // FOUC prevention session checker
     (async function() {
@@ -21,8 +23,26 @@
       }
     })();
   </script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            carbon: '#0F0F0F',
+            neonGreen: '#3CAC3B',
+            torchRed: '#E61D25',
+            electricBlue: '#2A398D',
+            gold: '#F59E0B'
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    /* Admin specific layout styles */
+    /* Prevent default focus ring styling since we use tailwind shadows */
+    select:focus, input:focus {
+      outline: none !important;
+    }
     .admin-grid {
       display: grid;
       grid-template-columns: 2fr 1fr;
@@ -33,188 +53,161 @@
         grid-template-columns: 1fr;
       }
     }
-    .matches-admin-list {
-      max-height: 700px;
-      overflow-y: auto;
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 10px;
-      background: rgba(0,0,0,0.2);
-    }
-    
-    .match-admin-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      gap: 15px;
-    }
-    .match-admin-info {
-      width: 40%;
-      font-size: 0.9rem;
-    }
-    .match-admin-scores {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .admin-score-input {
-      width: 38px;
-      height: 32px;
-      background: hsl(220, 20%, 15%);
-      border: 1px solid var(--border-color);
-      color: #fff;
-      text-align: center;
-      font-weight: 800;
-      border-radius: 6px;
-    }
-    .admin-score-input:focus {
-      background: #fff;
-      color: #000;
-      outline: none;
-    }
-    .pk-inputs-group {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      margin-left: 10px;
-      padding-left: 10px;
-      border-left: 1px dashed var(--accent-gold);
-    }
   </style>
 </head>
-<body class="admin-page">
+<body class="bg-carbon text-white min-h-screen pb-12 overflow-x-hidden">
 
-  <header>
-    <div class="nav-container">
-      <div class="brand">
-        <span>🏆 Porra<span class="brand-accent">Mundial2026</span></span>
+  <!-- Header -->
+  <header class="border-b border-white/5 bg-carbon/50 backdrop-blur-xl">
+    <div class="nav-container max-w-7xl mx-auto w-[92%] flex justify-between items-center py-4">
+      <div class="brand flex items-center gap-2">
+        <span class="text-xl md:text-2xl font-black tracking-wider uppercase">🏆 Porra<span class="brand-accent">Mundial2026</span></span>
       </div>
-      <nav>
+      <nav class="hidden md:flex gap-2">
         <a href="/predictions.html" class="nav-link">Mis Pronósticos</a>
         <a href="/dashboard.html" class="nav-link">Leaderboard</a>
         <a href="/admin.html" id="admin-nav-link" class="nav-link active">Panel de Control</a>
         <div class="nav-user">
           <span class="username-display" id="user-greeting">Administrador</span>
-          <button onclick="handleLogout()" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem; width: auto;">Cerrar Sesión</button>
+          <button onclick="handleLogout()" class="btn btn-outline py-1.5 px-3 text-xs" style="width: auto;">Cerrar Sesión</button>
         </div>
       </nav>
+      <!-- Mobile user greeting -->
+      <div class="md:hidden flex items-center gap-3">
+        <span class="username-display text-xs" id="user-greeting-mobile">Administrador</span>
+        <button onclick="handleLogout()" class="btn btn-outline py-1 px-2.5 text-[10px]" style="width: auto;">Salir</button>
+      </div>
+    </div>
+    <!-- Mobile sub-navigation links -->
+    <div class="md:hidden flex justify-around border-t border-white/5 mt-3 pt-2 w-[92%] mx-auto text-xs">
+      <a href="/predictions.html" class="text-gray-400 py-1 font-bold">Mis Pronósticos</a>
+      <a href="/dashboard.html" class="text-gray-400 py-1 font-bold">Leaderboard</a>
+      <a href="/admin.html" id="admin-nav-link-mobile" class="text-neonGreen py-1 font-bold border-b-2 border-neonGreen">Admin</a>
     </div>
   </header>
 
-  <main class="main-container">
-    <div class="hero-section" style="margin-bottom: 30px; padding: 30px 20px;">
-      <h1 class="hero-title" style="font-size: 2.2rem;">PANEL DE ADMINISTRACIÓN</h1>
-      <p class="hero-subtitle">Introduce los resultados oficiales del Mundial, configura los puntos de la porra y define los ganadores de trofeos individuales.</p>
+  <main class="main-container max-w-7xl mx-auto w-[92%] mt-8">
+    
+    <!-- Hero / Title Section -->
+    <div class="hero-section flex flex-col items-center text-center py-6 mb-8 relative">
+      <h1 class="hero-title text-2xl md:text-4xl lg:text-5xl font-black uppercase">Panel de Administración</h1>
+      <p class="hero-subtitle text-xs md:text-sm max-w-lg mt-2">
+        Introduce marcadores oficiales, ajusta la configuración de la porra y gestiona los participantes del juego.
+      </p>
     </div>
 
     <!-- Admin Tabs Menu -->
-    <div class="phase-tabs" style="margin-bottom: 30px;">
+    <div class="phase-tabs mb-8 flex justify-center gap-2 overflow-x-auto scrollbar-none pb-2">
       <div class="phase-tab active" id="tab-btn-results" onclick="switchAdminTab('results')">⚽ Resultados Oficiales</div>
       <div class="phase-tab" id="tab-btn-predictions" onclick="switchAdminTab('predictions')">📝 Pronósticos Participantes</div>
       <div class="phase-tab" id="tab-btn-settings" onclick="switchAdminTab('settings')">⚙️ Ajustes y Seguridad</div>
     </div>
 
     <!-- TAB 1: RESULTS -->
-    <div id="admin-tab-results" class="admin-tab-content">
-      <div class="card" style="max-width: 900px; margin: 0 auto;">
-        <h2 class="group-title">⚽ Resultados Oficiales del Torneo</h2>
-        <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-bottom: 15px;">Completa el marcador de cada partido. Al guardar se recalculan los puntos de todos los participantes y se actualiza el histórico de ranking de forma automática.</p>
+    <div id="admin-tab-results" class="admin-tab-content block">
+      <div class="card max-w-4xl mx-auto p-6 bg-white/[0.03] border border-white/10 rounded-3xl">
+        <h2 class="text-lg md:text-xl font-black uppercase tracking-tight border-b border-white/5 pb-4 mb-4 flex items-center gap-2">
+          <span>⚽</span> Resultados Oficiales del Torneo
+        </h2>
+        <p class="text-gray-400 text-xs font-medium mb-6 leading-relaxed">Completa el marcador de cada partido. Al guardar se recalculan los puntos de todos los participantes y se actualiza el histórico de ranking de forma automática.</p>
         
-        <div class="matches-admin-list" id="admin-matches-container">
+        <div class="admin-matches-list max-h-[700px] overflow-y-auto border border-white/5 bg-black/20 rounded-2xl p-4 divide-y divide-white/5" id="admin-matches-container">
           <!-- Populated dynamically by JS -->
-          <div style="color: var(--color-text-muted); padding: 30px; text-align: center;">Cargando partidos...</div>
+          <div class="text-gray-400 py-12 text-center text-sm font-medium">Cargando partidos...</div>
         </div>
       </div>
     </div>
 
     <!-- TAB 2: PARTICIPANTS PREDICTIONS -->
-    <div id="admin-tab-predictions" class="admin-tab-content" style="display: none;">
-      <div class="card" style="max-width: 900px; margin: 0 auto;">
-        <h2 class="group-title">📝 Editar Pronósticos de Participantes</h2>
-        <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-bottom: 20px;">
+    <div id="admin-tab-predictions" class="admin-tab-content hidden">
+      <div class="card max-w-4xl mx-auto p-6 bg-white/[0.03] border border-white/10 rounded-3xl">
+        <h2 class="text-lg md:text-xl font-black uppercase tracking-tight border-b border-white/5 pb-4 mb-4">📝 Editar Pronósticos de Participantes</h2>
+        <p class="text-gray-400 text-xs font-medium mb-6 leading-relaxed">
           Selecciona un participante para ver y modificar sus pronósticos. Como administrador, puedes realizar cambios incluso después del cierre de la fecha límite.
         </p>
         
-        <div class="form-group" style="max-width: 400px; margin-bottom: 25px;">
-          <label class="form-label" for="admin-user-select">Seleccionar Participante:</label>
-          <select id="admin-user-select" class="form-control" onchange="loadUserPredictionsForAdmin(this.value)">
-            <option value="">-- Selecciona un usuario --</option>
+        <div class="form-group max-w-xs mb-8">
+          <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2" for="admin-user-select">Seleccionar Participante:</label>
+          <select id="admin-user-select" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-white text-xs font-bold focus:border-neonGreen transition-all duration-300 appearance-none cursor-pointer" onchange="loadUserPredictionsForAdmin(this.value)">
+            <option value="" class="bg-carbon text-gray-500">-- Selecciona un usuario --</option>
             <!-- Populated dynamically by JS -->
           </select>
         </div>
 
         <!-- USER CONFIG PANEL -->
-        <div class="card" id="admin-user-config-panel" style="display: none; background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2); margin-bottom: 25px; padding: 20px;">
-          <h3 class="group-title" style="font-size: 1.1rem; border-color: var(--primary); margin-bottom: 15px;">⚙️ Ajustes del Participante</h3>
+        <div class="card hidden border-neonGreen/30 bg-neonGreen/[0.02] mb-8 p-6 rounded-2xl relative" id="admin-user-config-panel">
+          <h3 class="text-md font-black uppercase tracking-tight border-b border-white/5 pb-3 mb-6 flex items-center gap-2">
+            <span>⚙️</span> Ajustes del Participante
+          </h3>
           
-          <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; align-items: start; margin-bottom: 20px;">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start mb-6">
             <!-- Leaderboard Visibility -->
             <div>
-              <h4 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 12px; color: var(--secondary);">Visibilidad</h4>
-              <label class="form-label" style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #fff;">
-                <input type="checkbox" id="user-show-leaderboard" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--secondary);">
+              <h4 class="text-xs font-black uppercase tracking-widest text-neonGreen mb-3">Visibilidad</h4>
+              <label class="flex items-center gap-3 cursor-pointer text-sm font-bold text-gray-200">
+                <input type="checkbox" id="user-show-leaderboard" class="w-5 h-5 cursor-pointer accent-neonGreen rounded border-white/10 bg-black/40">
                 <span>Mostrar en el Leaderboard</span>
               </label>
-              <p style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 8px;">Si se desmarca, el usuario no aparecerá en el ranking, en el gráfico ni en las comparativas.</p>
+              <p class="text-[11px] text-gray-500 mt-2 leading-relaxed">Si se desmarca, el usuario no aparecerá en el ranking, en el gráfico ni en las comparativas de la porra.</p>
             </div>
             
             <!-- Unlock Overrides -->
             <div>
-              <h4 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 12px; color: var(--secondary);">Desbloqueo Temporal de Secciones</h4>
+              <h4 class="text-xs font-black uppercase tracking-widest text-neonGreen mb-3">Desbloqueo Temporal de Secciones</h4>
               
-              <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div class="flex flex-col gap-3">
                 <!-- Groups -->
-                <div style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
-                  <label class="form-label" style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; cursor: pointer; color: #fff;">
-                    <input type="checkbox" id="override-enable-groups" onchange="toggleOverrideInput('groups')" style="width: 16px; height: 16px; accent-color: var(--primary);">
+                <div class="bg-black/30 p-3 rounded-xl border border-white/5">
+                  <label class="flex items-center gap-3 cursor-pointer text-xs font-bold text-gray-200 mb-2">
+                    <input type="checkbox" id="override-enable-groups" onchange="toggleOverrideInput('groups')" class="w-4 h-4 accent-neonGreen rounded border-white/10 bg-black/40">
                     <span>Fase de Grupos</span>
                   </label>
-                  <input type="datetime-local" id="override-time-groups" class="form-control" style="display: none; background: rgba(7, 5, 15, 0.8); border-color: rgba(139, 92, 246, 0.4); font-size: 0.85rem; height: 36px; padding: 4px 8px;">
+                  <input type="datetime-local" id="override-time-groups" class="hidden w-full px-3 py-2 bg-black/50 border border-neonGreen/30 rounded-lg text-white text-xs font-semibold focus:border-neonGreen transition-all duration-300">
                 </div>
                 
                 <!-- Knockouts -->
-                <div style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
-                  <label class="form-label" style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; cursor: pointer; color: #fff;">
-                    <input type="checkbox" id="override-enable-knockouts" onchange="toggleOverrideInput('knockouts')" style="width: 16px; height: 16px; accent-color: var(--primary);">
+                <div class="bg-black/30 p-3 rounded-xl border border-white/5">
+                  <label class="flex items-center gap-3 cursor-pointer text-xs font-bold text-gray-200 mb-2">
+                    <input type="checkbox" id="override-enable-knockouts" onchange="toggleOverrideInput('knockouts')" class="w-4 h-4 accent-neonGreen rounded border-white/10 bg-black/40">
                     <span>Fase Eliminatoria</span>
                   </label>
-                  <input type="datetime-local" id="override-time-knockouts" class="form-control" style="display: none; background: rgba(7, 5, 15, 0.8); border-color: rgba(139, 92, 246, 0.4); font-size: 0.85rem; height: 36px; padding: 4px 8px;">
+                  <input type="datetime-local" id="override-time-knockouts" class="hidden w-full px-3 py-2 bg-black/50 border border-neonGreen/30 rounded-lg text-white text-xs font-semibold focus:border-neonGreen transition-all duration-300">
                 </div>
                 
                 <!-- Awards -->
-                <div style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
-                  <label class="form-label" style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; cursor: pointer; color: #fff;">
-                    <input type="checkbox" id="override-enable-awards" onchange="toggleOverrideInput('awards')" style="width: 16px; height: 16px; accent-color: var(--primary);">
+                <div class="bg-black/30 p-3 rounded-xl border border-white/5">
+                  <label class="flex items-center gap-3 cursor-pointer text-xs font-bold text-gray-200 mb-2">
+                    <input type="checkbox" id="override-enable-awards" onchange="toggleOverrideInput('awards')" class="w-4 h-4 accent-neonGreen rounded border-white/10 bg-black/40">
                     <span>Premios Especiales</span>
                   </label>
-                  <input type="datetime-local" id="override-time-awards" class="form-control" style="display: none; background: rgba(7, 5, 15, 0.8); border-color: rgba(139, 92, 246, 0.4); font-size: 0.85rem; height: 36px; padding: 4px 8px;">
+                  <input type="datetime-local" id="override-time-awards" class="hidden w-full px-3 py-2 bg-black/50 border border-neonGreen/30 rounded-lg text-white text-xs font-semibold focus:border-neonGreen transition-all duration-300">
                 </div>
               </div>
             </div>
           </div>
           
-          <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
-            <button onclick="saveUserConfig()" class="btn btn-primary" id="save-user-config-btn" style="width: auto; font-size: 0.85rem; padding: 8px 20px;">
+          <div class="flex justify-end pt-4 border-t border-white/5">
+            <button onclick="saveUserConfig()" class="btn btn-primary py-2 px-4 text-xs font-black uppercase tracking-widest rounded-xl" id="save-user-config-btn">
               💾 Guardar Ajustes de Usuario
             </button>
           </div>
         </div>
 
-        <div id="admin-user-predictions-view" style="display: none;">
-          <div class="matches-admin-list" id="admin-user-matches-container" style="max-height: 500px; margin-bottom: 20px;">
+        <div id="admin-user-predictions-view" class="hidden">
+          <div class="admin-matches-list max-h-[500px] overflow-y-auto border border-white/5 bg-black/20 rounded-2xl p-4 divide-y divide-white/5 mb-6" id="admin-user-matches-container">
             <!-- Populated dynamically by JS -->
           </div>
           
-          <div class="card" style="background: rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.05); margin-bottom: 20px; padding: 20px;">
-            <h3 class="group-title" style="font-size: 1.1rem; border-color: var(--accent-gold); margin-bottom: 15px;">🏆 Premios Especiales</h3>
+          <div class="card p-6 bg-black/20 border border-white/5 rounded-2xl mb-6">
+            <h3 class="text-sm font-black uppercase tracking-tight border-b border-white/5 pb-3 mb-4 flex items-center gap-2">
+              <span>🏆</span> Premios Especiales
+            </h3>
             <div class="specials-grid" id="admin-user-specials-container">
               <!-- Populated dynamically by JS -->
             </div>
           </div>
 
-          <button onclick="saveUserPredictionsAsAdmin()" class="btn btn-primary" id="save-user-pred-btn" style="max-width: 300px;">
+          <button onclick="saveUserPredictionsAsAdmin()" class="btn btn-primary py-3.5 px-6 font-black uppercase tracking-widest text-xs rounded-xl" id="save-user-pred-btn">
             Guardar Pronósticos del Usuario
           </button>
         </div>
@@ -222,94 +215,94 @@
     </div>
 
     <!-- TAB 3: SETTINGS -->
-    <div id="admin-tab-settings" class="admin-tab-content" style="display: none;">
+    <div id="admin-tab-settings" class="admin-tab-content hidden">
       <div class="admin-grid">
         <!-- Config Points Card -->
-        <div class="card">
-          <h2 class="group-title">⚙️ Ajustes de Puntuación</h2>
-          <form id="points-config-form" onsubmit="savePointsConfig(event)">
+        <div class="card p-6 bg-white/[0.03] border border-white/10 rounded-3xl">
+          <h2 class="text-lg md:text-xl font-black uppercase tracking-tight border-b border-white/5 pb-4 mb-6">⚙️ Ajustes de Puntuación</h2>
+          <form id="points-config-form" onsubmit="savePointsConfig(event)" class="space-y-5">
             <div class="form-group">
-              <label class="form-label" for="pts-outcome">Puntos Acierto Ganador (1X2)</label>
-              <input type="number" id="pts-outcome" class="form-control" required min="0">
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2" for="pts-outcome">Puntos Acierto Ganador (1X2)</label>
+              <input type="number" id="pts-outcome" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm focus:border-neonGreen transition-all duration-300" required min="0">
             </div>
             <div class="form-group">
-              <label class="form-label" for="pts-exact">Puntos Marcador Exacto</label>
-              <input type="number" id="pts-exact" class="form-control" required min="0">
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2" for="pts-exact">Puntos Marcador Exacto</label>
+              <input type="number" id="pts-exact" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm focus:border-neonGreen transition-all duration-300" required min="0">
             </div>
             <div class="form-group">
-              <label class="form-label" for="pts-oro">Puntos Balón/Bota de Oro</label>
-              <input type="number" id="pts-oro" class="form-control" required min="0">
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2" for="pts-oro">Puntos Balón/Bota de Oro</label>
+              <input type="number" id="pts-oro" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm focus:border-neonGreen transition-all duration-300" required min="0">
             </div>
             <div class="form-group">
-              <label class="form-label" for="pts-plata">Puntos Balón/Bota de Plata</label>
-              <input type="number" id="pts-plata" class="form-control" required min="0">
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2" for="pts-plata">Puntos Balón/Bota de Plata</label>
+              <input type="number" id="pts-plata" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm focus:border-neonGreen transition-all duration-300" required min="0">
             </div>
             <div class="form-group">
-              <label class="form-label" for="pts-bronce">Puntos Balón/Bota de Bronce</label>
-              <input type="number" id="pts-bronce" class="form-control" required min="0">
+              <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2" for="pts-bronce">Puntos Balón/Bota de Bronce</label>
+              <input type="number" id="pts-bronce" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm focus:border-neonGreen transition-all duration-300" required min="0">
             </div>
-            <button type="submit" class="btn btn-primary">Guardar Configuración</button>
+            <button type="submit" class="w-full btn btn-primary py-3.5 px-6 font-black uppercase tracking-widest text-xs rounded-xl shadow-lg shadow-neonGreen/20">Guardar Configuración</button>
           </form>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 30px;">
+        <div class="flex flex-col gap-8">
           <!-- Config Winners Card -->
-          <div class="card">
-            <h2 class="group-title">🏆 Ganadores Oficiales Trofeos</h2>
-            <form id="winners-config-form" onsubmit="saveWinnersConfig(event)">
+          <div class="card p-6 bg-white/[0.03] border border-white/10 rounded-3xl">
+            <h2 class="text-lg md:text-xl font-black uppercase tracking-tight border-b border-white/5 pb-4 mb-6">🏆 Ganadores Oficiales Trofeos</h2>
+            <form id="winners-config-form" onsubmit="saveWinnersConfig(event)" class="space-y-5">
               <div class="form-group">
-                <label class="form-label" for="win-balon-oro">Balón de Oro</label>
-                <input type="text" id="win-balon-oro" class="form-control" placeholder="Nombre del jugador...">
+                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2" for="win-balon-oro">Balón de Oro</label>
+                <input type="text" id="win-balon-oro" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm focus:border-neonGreen transition-all duration-300" placeholder="Nombre del jugador...">
               </div>
               <div class="form-group">
-                <label class="form-label" for="win-balon-plata">Balón de Plata</label>
-                <input type="text" id="win-balon-plata" class="form-control" placeholder="Nombre del jugador...">
+                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2" for="win-balon-plata">Balón de Plata</label>
+                <input type="text" id="win-balon-plata" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm focus:border-neonGreen transition-all duration-300" placeholder="Nombre del jugador...">
               </div>
               <div class="form-group">
-                <label class="form-label" for="win-balon-bronce">Balón de Bronce</label>
-                <input type="text" id="win-balon-bronce" class="form-control" placeholder="Nombre del jugador...">
+                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2" for="win-balon-bronce">Balón de Bronce</label>
+                <input type="text" id="win-balon-bronce" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm focus:border-neonGreen transition-all duration-300" placeholder="Nombre del jugador...">
               </div>
               <div class="form-group">
-                <label class="form-label" for="win-bota-oro">Bota de Oro</label>
-                <input type="text" id="win-bota-oro" class="form-control" placeholder="Nombre del jugador...">
+                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2" for="win-bota-oro">Bota de Oro</label>
+                <input type="text" id="win-bota-oro" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm focus:border-neonGreen transition-all duration-300" placeholder="Nombre del jugador...">
               </div>
               <div class="form-group">
-                <label class="form-label" for="win-bota-plata">Bota de Plata</label>
-                <input type="text" id="win-bota-plata" class="form-control" placeholder="Nombre del jugador...">
+                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2" for="win-bota-plata">Bota de Plata</label>
+                <input type="text" id="win-bota-plata" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm focus:border-neonGreen transition-all duration-300" placeholder="Nombre del jugador...">
               </div>
               <div class="form-group">
-                <label class="form-label" for="win-bota-bronce">Bota de Bronce</label>
-                <input type="text" id="win-bota-bronce" class="form-control" placeholder="Nombre del jugador...">
+                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2" for="win-bota-bronce">Bota de Bronce</label>
+                <input type="text" id="win-bota-bronce" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm focus:border-neonGreen transition-all duration-300" placeholder="Nombre del jugador...">
               </div>
-              <button type="submit" class="btn btn-primary">Registrar Ganadores</button>
+              <button type="submit" class="w-full btn btn-primary py-3.5 px-6 font-black uppercase tracking-widest text-xs rounded-xl shadow-lg shadow-neonGreen/20">Registrar Ganadores</button>
             </form>
           </div>
 
           <!-- Change Admin Password Card -->
-          <div class="card">
-            <h2 class="group-title">🔒 Cambiar Contraseña Admin</h2>
-            <form id="admin-password-form" onsubmit="changeAdminPassword(event)">
+          <div class="card p-6 bg-white/[0.03] border border-white/10 rounded-3xl">
+            <h2 class="text-lg md:text-xl font-black uppercase tracking-tight border-b border-white/5 pb-4 mb-6">🔒 Cambiar Contraseña Admin</h2>
+            <form id="admin-password-form" onsubmit="changeAdminPassword(event)" class="space-y-5">
               <div class="form-group">
-                <label class="form-label" for="new-admin-password">Nueva Contraseña</label>
-                <input type="password" id="new-admin-password" class="form-control" required minlength="6" placeholder="Mínimo 6 caracteres">
+                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2" for="new-admin-password">Nueva Contraseña</label>
+                <input type="password" id="new-admin-password" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm focus:border-neonGreen transition-all duration-300" required minlength="6" placeholder="Mínimo 6 caracteres">
               </div>
               <div class="form-group">
-                <label class="form-label" for="confirm-admin-password">Confirmar Contraseña</label>
-                <input type="password" id="confirm-admin-password" class="form-control" required minlength="6" placeholder="Repite la contraseña">
+                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2" for="confirm-admin-password">Confirmar Contraseña</label>
+                <input type="password" id="confirm-admin-password" class="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-xl text-white text-sm focus:border-neonGreen transition-all duration-300" required minlength="6" placeholder="Repite la contraseña">
               </div>
-              <button type="submit" class="btn btn-primary" id="change-pass-btn">Actualizar Contraseña</button>
+              <button type="submit" class="w-full btn btn-primary py-3.5 px-6 font-black uppercase tracking-widest text-xs rounded-xl shadow-lg shadow-neonGreen/20" id="change-pass-btn">Actualizar Contraseña</button>
             </form>
           </div>
 
           <!-- Reset All Data Card -->
-          <div class="card" style="border-color: rgba(244, 67, 54, 0.4);">
-            <h2 class="group-title" style="border-color: rgba(244, 67, 54, 0.5); color: #ff8a80;">⚠️ Zona Peligrosa</h2>
-            <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-bottom: 20px;">
-              Esta acción borrará <strong style="color: #ff8a80;">todas las predicciones</strong> de todos los participantes, 
-              <strong style="color: #ff8a80;">todos los resultados de partidos</strong>, el <strong style="color: #ff8a80;">historial de ranking</strong> 
-              y los <strong style="color: #ff8a80;">ganadores oficiales de trofeos</strong>. Las cuentas de usuario y contraseñas se mantienen.
+          <div class="card p-6 bg-white/[0.03] border border-torchRed/20 hover:border-torchRed/40 bg-torchRed/[0.01] rounded-3xl">
+            <h2 class="text-lg md:text-xl font-black uppercase tracking-tight border-b border-torchRed/20 pb-4 mb-6 text-red-200">⚠️ Zona Peligrosa</h2>
+            <p class="text-gray-400 text-xs font-medium leading-relaxed mb-6">
+              Esta acción borrará <strong class="text-red-300">todas las predicciones</strong> de todos los participantes, 
+              <strong class="text-red-300">todos los resultados de partidos</strong>, el <strong class="text-red-300">historial de ranking</strong> 
+              y los <strong class="text-red-300">ganadores oficiales de trofeos</strong>. Las cuentas de usuario y contraseñas se mantienen.
             </p>
-            <button onclick="confirmResetData()" class="btn" id="reset-data-btn" style="background: rgba(244, 67, 54, 0.15); border: 1px solid rgba(244, 67, 54, 0.5); color: #ff8a80; font-weight: 700; max-width: 300px;">
+            <button onclick="confirmResetData()" class="btn py-3 px-6 text-xs font-black uppercase tracking-widest rounded-xl bg-torchRed/10 border border-torchRed/30 text-red-200 hover:bg-torchRed/20 hover:border-torchRed/50 active:scale-95 transition-all duration-300" id="reset-data-btn">
               🗑️ Borrar Todos los Datos
             </button>
           </div>
@@ -319,6 +312,20 @@
   </main>
 
   <div class="toast-container" id="toast-container"></div>
+
+  <!-- Session and general scripts -->
+  <script>
+    async function handleLogout() {
+      try {
+        const res = await fetch('/api/auth/logout', { method: 'POST' });
+        if (res.ok) {
+          window.location.href = '/index.html';
+        }
+      } catch (err) {
+        console.error("Error logging out", err);
+      }
+    }
+  </script>
 
   <script src="/js/admin.js"></script>
 </body>

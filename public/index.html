@@ -5,63 +5,106 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Acceso - Porra Mundial 2026</title>
   <link rel="stylesheet" href="/css/style.css">
-  <style>
-    /* Custom style overlay for full-center alignment on auth card */
-    body {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            carbon: '#0F0F0F',
+            neonGreen: '#3CAC3B',
+            torchRed: '#E61D25',
+            electricBlue: '#2A398D',
+            gold: '#F59E0B'
+          }
+        }
+      }
     }
-    .auth-container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
+  </script>
+  <style>
+    /* Prevent default focus ring styling since we use tailwind shadows */
+    select:focus, input:focus {
+      outline: none !important;
     }
   </style>
 </head>
-<body>
+<body class="bg-carbon text-white min-h-screen flex flex-col justify-between overflow-x-hidden">
 
-  <header>
-    <div class="nav-container">
-      <div class="brand">
-        <span>🏆 Porra<span class="brand-accent">Mundial2026</span></span>
+  <!-- Header -->
+  <header class="border-b border-white/5 bg-carbon/50 backdrop-blur-xl">
+    <div class="nav-container max-w-7xl mx-auto w-[92%] flex justify-between items-center py-4">
+      <div class="brand flex items-center gap-2">
+        <span class="text-xl md:text-2xl font-black tracking-wider uppercase">🏆 Porra<span class="brand-accent">Mundial2026</span></span>
       </div>
     </div>
   </header>
 
-  <div class="auth-container">
-    <div class="card auth-card">
-      <div class="auth-header">
-        <h2 id="auth-title">Iniciar Sesión</h2>
-        <p id="auth-desc">Accede para ver o modificar tus predicciones.</p>
+  <!-- Split Container -->
+  <main class="flex-1 max-w-7xl mx-auto w-[92%] grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center py-10 lg:py-20">
+    
+    <!-- Hero/WebGL Section (Col 1-7 on desktop, top on mobile) -->
+    <div class="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left order-1 lg:order-1">
+      <!-- 3D Canvas Container -->
+      <div id="canvas3d-container" class="w-64 h-64 md:w-96 md:h-96 relative cursor-grab active:cursor-grabbing mb-6 lg:mb-8 transition-transform hover:scale-105 duration-500">
+        <canvas id="hero-ball-canvas" class="w-full h-full"></canvas>
+        <div class="absolute inset-0 bg-gradient-to-t from-carbon via-transparent to-transparent pointer-events-none"></div>
       </div>
-
-      <div id="error-message" style="display: none; background: rgba(244, 67, 54, 0.1); border: 1px solid var(--accent-red); color: #ff8a80; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: 600; font-size: 0.9rem;"></div>
-
-      <form id="auth-form" onsubmit="handleAuth(event)">
-        <div class="form-group">
-          <label for="username" class="form-label">Nombre de Usuario</label>
-          <select id="username" class="form-control" required>
-            <option value="" disabled selected>-- Selecciona tu usuario --</option>
-          </select>
-        </div>
-        
-        <div class="form-group">
-          <label for="password" class="form-label">Contraseña</label>
-          <input type="password" id="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
-        </div>
-
-        <button type="submit" class="btn btn-primary" id="submit-btn" style="margin-top: 10px;">
-          Ingresar
-        </button>
-      </form>
+      
+      <h1 class="text-3xl md:text-5xl lg:text-6xl font-black uppercase tracking-tight leading-none mb-4">
+        LA PORRA DEL <span class="bg-gradient-to-r from-neonGreen via-white to-electricBlue bg-clip-text text-transparent">MUNDIAL 2026</span>
+      </h1>
+      <p class="text-gray-400 text-sm md:text-base lg:text-lg max-w-lg font-medium leading-relaxed">
+        Únete a la experiencia interactiva definitiva. Pronostica marcadores, sigue la clasificación en tiempo real y compite con tus amigos por el trofeo virtual en el mundial de Norteamérica.
+      </p>
     </div>
-  </div>
+
+    <!-- Login Card Section (Col 8-12 on desktop, bottom on mobile) -->
+    <div class="lg:col-span-5 w-full order-2 lg:order-2 flex justify-center">
+      <div class="card w-full max-w-md p-8 rounded-3xl bg-white/[0.03] border border-white/10 backdrop-blur-xl shadow-2xl relative">
+        <!-- Glow accents inside card -->
+        <div class="absolute -top-12 -left-12 w-24 h-24 bg-neonGreen/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="absolute -bottom-12 -right-12 w-24 h-24 bg-electricBlue/20 rounded-full blur-2xl pointer-events-none"></div>
+
+        <div class="auth-header text-center mb-8">
+          <h2 class="text-2xl md:text-3xl font-black uppercase tracking-tight mb-2">Iniciar Sesión</h2>
+          <p class="text-gray-400 text-sm">Selecciona tu usuario de la porra e introduce tu contraseña.</p>
+        </div>
+
+        <div id="error-message" class="hidden bg-torchRed/10 border border-torchRed/30 text-red-200 px-4 py-3 rounded-xl mb-6 text-sm text-center font-bold"></div>
+
+        <form id="auth-form" onsubmit="handleAuth(event)" class="space-y-6">
+          <div class="form-group">
+            <label for="username" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Nombre de Usuario</label>
+            <select id="username" class="w-full px-4 py-3.5 bg-black/40 border border-white/10 rounded-xl text-white text-sm focus:border-neonGreen focus:ring-1 focus:ring-neonGreen transition-all duration-300 appearance-none cursor-pointer" required>
+              <option value="" disabled selected class="bg-carbon text-gray-500">-- Selecciona tu usuario --</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="password" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Contraseña</label>
+            <input type="password" id="password" class="w-full px-4 py-3.5 bg-black/40 border border-white/10 rounded-xl text-white text-sm focus:border-neonGreen focus:ring-1 focus:ring-neonGreen transition-all duration-300 placeholder-white/20" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+
+          <button type="submit" class="w-full py-4 px-6 bg-gradient-to-r from-neonGreen to-electricBlue hover:from-[#4ad449] hover:to-[#384cc2] text-white font-black uppercase tracking-widest text-xs rounded-xl shadow-lg shadow-neonGreen/20 hover:shadow-neonGreen/40 active:scale-95 transition-all duration-300 mt-2">
+            Ingresar a la Porra
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </main>
 
   <div class="toast-container" id="toast-container"></div>
 
+  <!-- Footer -->
+  <footer class="border-t border-white/5 py-6 text-center text-xs text-gray-500 font-medium">
+    &copy; 2026 Porra Mundial. Todos los derechos reservados.
+  </footer>
+
+  <!-- Script for Session/Auth and WebGL Ball -->
   <script>
     // Check if user is already logged in, redirect to predictions
     async function checkSession() {
@@ -86,6 +129,7 @@
           const opt = document.createElement('option');
           opt.value = u.username;
           opt.textContent = u.username;
+          opt.className = "bg-carbon text-white py-2";
           select.appendChild(opt);
         });
       } catch (err) {
@@ -102,11 +146,11 @@
       const password = document.getElementById('password').value;
       const errMsg = document.getElementById('error-message');
       
-      errMsg.style.display = 'none';
+      errMsg.classList.add('hidden');
 
       if (!username) {
         errMsg.innerText = "Por favor selecciona tu usuario.";
-        errMsg.style.display = 'block';
+        errMsg.classList.remove('hidden');
         return;
       }
       
@@ -121,7 +165,7 @@
         
         if (!res.ok) {
           errMsg.innerText = data.error || "Ocurrió un error inesperado.";
-          errMsg.style.display = 'block';
+          errMsg.classList.remove('hidden');
           showToast(data.error || "Error en la autenticación", true);
         } else {
           showToast(data.message, false);
@@ -136,7 +180,7 @@
       } catch (err) {
         console.error(err);
         errMsg.innerText = "Error al conectar con el servidor.";
-        errMsg.style.display = 'block';
+        errMsg.classList.remove('hidden');
         showToast("Error de conexión.", true);
       }
     }
@@ -154,6 +198,243 @@
         setTimeout(() => toast.remove(), 300);
       }, 3000);
     }
+
+    // ==========================================
+    // Three.js 3D Hero Soccer Ball Implementation
+    // ==========================================
+    const canvas = document.getElementById('hero-ball-canvas');
+    const container = document.getElementById('canvas3d-container');
+
+    const scene = new THREE.Scene();
+
+    // Camera
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.z = 6;
+
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(container.clientWidth, container.clientHeight);
+
+    // Ball texture generation (procedural Adidas Trionda design)
+    function createBallTexture() {
+      const texCanvas = document.createElement('canvas');
+      texCanvas.width = 1024;
+      texCanvas.height = 512;
+      const ctx = texCanvas.getContext('2d');
+      
+      // Main background (dark carbon leather)
+      ctx.fillStyle = '#111113';
+      ctx.fillRect(0, 0, 1024, 512);
+
+      // Subtle leather seams/panel lines background
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = 3;
+      for(let i=0; i<10; i++) {
+        const x = (i/10) * 1024;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, 512);
+        ctx.stroke();
+      }
+      for(let i=0; i<6; i++) {
+        const y = (i/6) * 512;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(1024, y);
+        ctx.stroke();
+      }
+
+      // Draw stylized Adidas Trionda sweeps (Neon Green, Electric Blue, Torch Red)
+      function drawSweep(cx, cy, r, color, glowColor, width, startAngle, endAngle) {
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        ctx.lineCap = 'round';
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, startAngle, endAngle);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Draw sweeps around 3 positions on the equirectangular map to wrap beautifully
+      // Area 1: Left (wraps to meet Right)
+      drawSweep(0, 256, 120, '#3CAC3B', 'rgba(60,172,59,0.7)', 28, -Math.PI/3, Math.PI/3);
+      drawSweep(1024, 256, 120, '#3CAC3B', 'rgba(60,172,59,0.7)', 28, Math.PI*2/3, Math.PI*4/3);
+
+      // Area 2: Middle Blue
+      drawSweep(341, 180, 100, '#2A398D', 'rgba(42,57,141,0.8)', 24, Math.PI/4, Math.PI*1.1);
+      drawSweep(341, 330, 90, '#E61D25', 'rgba(230,29,37,0.8)', 18, -Math.PI*0.8, Math.PI/6);
+
+      // Area 3: Middle Red/Green
+      drawSweep(682, 220, 110, '#E61D25', 'rgba(230,29,37,0.8)', 26, -Math.PI/2, Math.PI/3);
+      drawSweep(682, 360, 80, '#3CAC3B', 'rgba(60,172,59,0.7)', 16, Math.PI*0.7, Math.PI*1.6);
+
+      // Add a metallic FIFA World Cup branding logo/text slot
+      ctx.fillStyle = '#F59E0B';
+      ctx.font = 'bold 24px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('FWC 26', 512, 256);
+      
+      // Decorative gold circles
+      ctx.strokeStyle = '#F59E0B';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(512, 256, 60, 0, Math.PI*2);
+      ctx.stroke();
+
+      return new THREE.CanvasTexture(texCanvas);
+    }
+
+    // Leather bumps texture (for height details)
+    function createBallBumpTexture() {
+      const texCanvas = document.createElement('canvas');
+      texCanvas.width = 1024;
+      texCanvas.height = 512;
+      const ctx = texCanvas.getContext('2d');
+      
+      ctx.fillStyle = '#808080';
+      ctx.fillRect(0, 0, 1024, 512);
+
+      // Recessed seams
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 8;
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = '#000';
+      
+      // Soccer ball panels drawing on bump map
+      for(let i=0; i<10; i++) {
+        const x = (i/10) * 1024;
+        ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,512); ctx.stroke();
+      }
+      for(let i=0; i<6; i++) {
+        const y = (i/6) * 512;
+        ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(1024,y); ctx.stroke();
+      }
+
+      // Leather pebbling texture noise
+      const imgData = ctx.getImageData(0, 0, 1024, 512);
+      const data = imgData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const noise = (Math.random() - 0.5) * 22;
+        data[i] = Math.min(255, Math.max(0, data[i] + noise));
+        data[i+1] = Math.min(255, Math.max(0, data[i+1] + noise));
+        data[i+2] = Math.min(255, Math.max(0, data[i+2] + noise));
+      }
+      ctx.putImageData(imgData, 0, 0);
+
+      return new THREE.CanvasTexture(texCanvas);
+    }
+
+    const ballTexture = createBallTexture();
+    const bumpTexture = createBallBumpTexture();
+
+    // Sphere Geometry (High density for nice bump mapping)
+    const geometry = new THREE.SphereGeometry(2, 64, 64);
+    
+    // Premium Material
+    const material = new THREE.MeshStandardMaterial({
+      map: ballTexture,
+      bumpMap: bumpTexture,
+      bumpScale: 0.05,
+      metalness: 0.15,
+      roughness: 0.38,
+      clearcoat: 0.3,
+      clearcoatRoughness: 0.1
+    });
+
+    const ballMesh = new THREE.Mesh(geometry, material);
+    scene.add(ballMesh);
+
+    // Lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
+    scene.add(ambientLight);
+
+    // Neon blue backlight
+    const blueLight = new THREE.DirectionalLight(0x2A398D, 1.8);
+    blueLight.position.set(-5, 3, -2);
+    scene.add(blueLight);
+
+    // Neon green side light
+    const greenLight = new THREE.DirectionalLight(0x3CAC3B, 1.2);
+    greenLight.position.set(5, -2, 2);
+    scene.add(greenLight);
+
+    // Direct warm highlight
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.3);
+    dirLight.position.set(5, 5, 5);
+    scene.add(dirLight);
+
+    // Magnetic interaction variables
+    let targetRotationX = 0;
+    let targetRotationY = 0;
+    let mouseX = 0;
+    let mouseY = 0;
+    
+    const windowHalfX = window.innerWidth / 2;
+    const windowHalfY = window.innerHeight / 2;
+
+    document.addEventListener('mousemove', (e) => {
+      mouseX = (e.clientX - windowHalfX) / windowHalfX;
+      mouseY = (e.clientY - windowHalfY) / windowHalfY;
+      
+      // Magnetic pull: offset target rotation
+      targetRotationY = mouseX * 0.8;
+      targetRotationX = mouseY * 0.8;
+    });
+
+    // Touch/Device tilt support for mobile
+    let hasTilt = false;
+    window.addEventListener('deviceorientation', (e) => {
+      if (e.beta !== null && e.gamma !== null) {
+        hasTilt = true;
+        // Map tilt angles (gamma = left/right, beta = front/back)
+        targetRotationY = (e.gamma / 45) * 0.8;
+        targetRotationX = ((e.beta - 45) / 45) * 0.8;
+      }
+    });
+
+    // Fallback touch events for mobile
+    container.addEventListener('touchmove', (e) => {
+      if (!hasTilt && e.touches.length > 0) {
+        const touch = e.touches[0];
+        const tX = (touch.clientX - windowHalfX) / windowHalfX;
+        const tY = (touch.clientY - windowHalfY) / windowHalfY;
+        targetRotationY = tX * 1.0;
+        targetRotationX = tY * 1.0;
+      }
+    });
+
+    // Animation loop
+    const clock = new THREE.Clock();
+    
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const elapsedTime = clock.getElapsedTime();
+
+      // Smooth interpolation (lerp) for magnetic effect
+      ballMesh.rotation.y += (targetRotationY - ballMesh.rotation.y) * 0.05;
+      ballMesh.rotation.x += (targetRotationX - ballMesh.rotation.x) * 0.05;
+
+      // Base smooth continuous rotation
+      ballMesh.rotation.y += 0.003;
+      ballMesh.rotation.x += 0.001;
+
+      renderer.render(scene, camera);
+    }
+    
+    animate();
+
+    // Responsiveness
+    window.addEventListener('resize', () => {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+
   </script>
 </body>
 </html>

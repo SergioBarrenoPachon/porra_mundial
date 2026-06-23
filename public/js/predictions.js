@@ -47,8 +47,12 @@ async function verifySession() {
   } else {
     currentUser = data.user;
     document.getElementById('user-greeting').innerText = `¡Hola, ${currentUser.username}!`;
+    const greetingMob = document.getElementById('user-greeting-mobile');
+    if (greetingMob) greetingMob.innerText = `¡Hola, ${currentUser.username}!`;
     if (currentUser.isAdmin) {
       document.getElementById('admin-nav-link').style.display = 'inline-block';
+      const adminNavMob = document.getElementById('admin-nav-link-mobile');
+      if (adminNavMob) adminNavMob.style.display = 'inline-block';
     }
   }
 }

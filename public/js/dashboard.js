@@ -7,236 +7,13 @@ const TEAM_DATA = {
   "Alemania": { rank: 11, flag: "de" }, "Curazao": { rank: 90, flag: "cw" }, "Costa de Marfil": { rank: 38, flag: "ci" }, "Ecuador": { rank: 30, flag: "ec" },
   "Paises Bajos": { rank: 7, flag: "nl" }, "Japon": { rank: 18, flag: "jp" }, "Suecia": { rank: 23, flag: "se" }, "Tunez": { rank: 41, flag: "tn" },
   "Belgica": { rank: 6, flag: "be" }, "Egipto": { rank: 37, flag: "eg" }, "Iran": { rank: 20, flag: "ir" }, "Nueva Zelanda": { rank: 103, flag: "nz" },
-  "Espana": { rank: 3, flag: "es" }, "Cabo Verde": { rank: 65, flag: "cv" }, "Arabia Saudi": { rank: 53, flag: "sa" }, "Uruguay": { rank: 14, flag: "uy" },
+  "Espana": { rank: 3, flag: "es" }, "Cabo Verde": { rank: 65, flag: "cv" }, "Arabia Saudi": { flag: "sa" }, "Uruguay": { rank: 14, flag: "uy" },
   "Francia": { rank: 2, flag: "fr" }, "Senegal": { rank: 19, flag: "sn" }, "Noruega": { rank: 45, flag: "no" }, "Irak": { rank: 55, flag: "iq" },
   "Argentina": { rank: 1, flag: "ar" }, "Argelia": { rank: 44, flag: "dz" }, "Austria": { rank: 22, flag: "at" }, "Jordania": { rank: 71, flag: "jo" },
   "Portugal": { rank: 8, flag: "pt" }, "RD Congo": { rank: 62, flag: "cd" }, "Uzbekistan": { rank: 66, flag: "uz" }, "Colombia": { rank: 12, flag: "co" },
   "Inglaterra": { rank: 4, flag: "gb-eng" }, "Croacia": { rank: 10, flag: "hr" }, "Ghana": { rank: 64, flag: "gh" }, "Panama": { rank: 43, flag: "pa" }
 };
 
-function getFlagImgHtml(teamName) {
-  const data = TEAM_DATA[teamName];
-  if (!data || !data.flag) return '🏳️';
-  return `<img src="https://flagcdn.com/w40/${data.flag.toLowerCase()}.png" class="flag-img" alt="${teamName}" style="width: 20px; height: 13px; margin-right: 4px; vertical-align: middle;">`;
-}
-
-let currentUser = null;
-let allMatches = [];
-let leaderboardData = [];
-let rankingHistory = [];
-let masterPredictions = null;
-let evolutionChart = null;
-
-// Palette of colors for the evolution chart lines
-const LINE_COLORS = [
-  '#00B5AD', '#2185D0', '#E03997', '#FBBF24', '#38A169', 
-  '#E53E3E', '#805AD5', '#ED64A6', '#319795', '#D69E2E',
-  '#718096', '#ED8936', '#48BB78', '#38B2AC', '#4299E1',
-  '#667EEA', '#9F7AEA', '#ED64A6', '#E53E3E', '#ECC94B'
-];
-
-document.addEventListener("DOMContentLoaded", async () => {
-  await verifySession();
-  await loadMatches();
-  await loadLeaderboard();
-  await loadMasterPredictions();
-});
-
-async function verifySession() {
-  const res = await fetch('/api/auth/me');
-  const data = await res.json();
-  if (data.user) {
-    currentUser = data.user;
-    document.getElementById('user-greeting').innerText = `¡Hola, ${currentUser.username}!`;
-    if (currentUser.isAdmin) {
-      document.getElementById('admin-nav-link').style.display = 'inline-block';
-    }
-  }
-}
-
-async function loadMatches() {
-  const res = await fetch('/api/matches');
-  allMatches = await res.json();
-}
-
-async function loadLeaderboard() {
-  try {
-    const res = await fetch('/api/leaderboard');
-    const data = await res.json();
-    leaderboardData = data.leaderboard;
-    rankingHistory = data.rankingHistory || [];
-    
-    renderLeaderboard();
-    renderChart();
-  } catch (err) {
-    console.error("Error loading leaderboard:", err);
-    showToast("Error al cargar la clasificación.", true);
-  }
-}
-
-async function loadMasterPredictions() {
-  try {
-    const deadlineRes = await fetch('/api/predictions/deadline');
-    const deadlineData = await deadlineRes.json();
-    
-    // Block comparison matrix completely before the deadline (except for administrators)
-    const showBlocked = !deadlineData.isPassed && (!currentUser || !currentUser.isAdmin);
-    
-    if (showBlocked) {
-      document.getElementById('matrix-table-wrapper').style.display = 'none';
-      document.getElementById('search-matrix').style.display = 'none';
-      document.getElementById('matrix-blocked-container').style.display = 'block';
-      document.getElementById('matrix-lock-notice').style.display = 'none';
-      return;
-    }
-    
-    const res = await fetch('/api/predictions-master');
-    if (res.ok) {
-      masterPredictions = await res.json();
-      document.getElementById('matrix-lock-notice').innerText = "✅ Los pronósticos de todos los participantes ya están visibles.";
-      document.getElementById('matrix-table-wrapper').style.display = 'block';
-      document.getElementById('search-matrix').style.display = 'block';
-      document.getElementById('matrix-blocked-container').style.display = 'none';
-      renderMatrixTable();
-    } else {
-      document.getElementById('matrix-table-wrapper').style.display = 'none';
-      document.getElementById('search-matrix').style.display = 'none';
-      document.getElementById('matrix-blocked-container').style.display = 'block';
-      document.getElementById('matrix-lock-notice').style.display = 'none';
-    }
-  } catch (err) {
-    console.error("Error loading master predictions:", err);
-  }
-}
-
-// Render Leaderboard (Podium & List Layout)
-function renderLeaderboard() {
-  const container = document.getElementById('leaderboard-card-content');
-  if (!container) return;
-  
-  if (leaderboardData.length === 0) {
-    container.innerHTML = `<div style="color: var(--color-text-muted); padding: 30px; text-align: center;">No hay participantes registrados.</div>`;
-    return;
-  }
-  
-  // Get the first 3 sorted players (handles ties by index rather than strict ranks)
-  const p1 = leaderboardData[0]; // Center step
-  const p2 = leaderboardData[1]; // Left step (second place)
-  const p3 = leaderboardData[2]; // Right step (third place)
-  
-  // Max score to calculate relative width of progress bars
-  const maxScore = Math.max(1, leaderboardData[0]?.total || 0);
-  
-  const getPodiumBadge = (rank) => {
-    if (rank === 1) return '🥇';
-    if (rank === 2) return '🥈';
-    if (rank === 3) return '🥉';
-    return `#${rank}`;
-  };
-  
-  let podiumHtml = '';
-  if (p1 || p2 || p3) {
-    podiumHtml += `<div class="podium-container">`;
-    
-    // Left step: 2nd sorted player (Second Height)
-    if (p2) {
-      const isMe = currentUser && currentUser.username === p2.username;
-      const highlightBorder = isMe ? 'style="border-color: var(--accent-gold);"' : '';
-      const badge = getPodiumBadge(p2.rank);
-      podiumHtml += `
-        <div class="podium-step second" ${highlightBorder}>
-          <div class="podium-badge">${badge}</div>
-          <div class="podium-name" title="${p2.username}">${p2.username} ${isMe ? '(Tú)' : ''}</div>
-          <div class="podium-pts">${p2.total} pts</div>
-        </div>
-      `;
-    } else {
-      podiumHtml += `<div class="podium-step second" style="opacity: 0.3; border-style: dashed;"><div class="podium-badge">🥈</div></div>`;
-    }
-    
-    // Center step: 1st sorted player (Tallest Height)
-    if (p1) {
-      const isMe = currentUser && currentUser.username === p1.username;
-      const highlightBorder = isMe ? 'style="border-color: var(--primary);"' : '';
-      const badge = p1.rank === 1 ? '👑' : getPodiumBadge(p1.rank);
-      podiumHtml += `
-        <div class="podium-step first" ${highlightBorder}>
-          <div class="podium-badge" style="filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4));">${badge}</div>
-          <div class="podium-name" title="${p1.username}" style="color: var(--accent-gold); font-size: 0.95rem;">${p1.username} ${isMe ? '(Tú)' : ''}</div>
-          <div class="podium-pts">${p1.total} pts</div>
-        </div>
-      `;
-    } else {
-      podiumHtml += `<div class="podium-step first" style="opacity: 0.3; border-style: dashed;"><div class="podium-badge">🥇</div></div>`;
-    }
-    
-    // Right step: 3rd sorted player (Shortest Height)
-    if (p3) {
-      const isMe = currentUser && currentUser.username === p3.username;
-      const highlightBorder = isMe ? 'style="border-color: var(--accent-gold);"' : '';
-      const badge = getPodiumBadge(p3.rank);
-      podiumHtml += `
-        <div class="podium-step third" ${highlightBorder}>
-          <div class="podium-badge">${badge}</div>
-          <div class="podium-name" title="${p3.username}">${p3.username} ${isMe ? '(Tú)' : ''}</div>
-          <div class="podium-pts">${p3.total} pts</div>
-        </div>
-      `;
-    } else {
-      podiumHtml += `<div class="podium-step third" style="opacity: 0.3; border-style: dashed;"><div class="podium-badge">🥉</div></div>`;
-    }
-    
-    podiumHtml += `</div>`;
-  }
-  
-  // List of all players
-  let listHtml = `<div class="leaderboard-list">`;
-  
-  leaderboardData.forEach((p, idx) => {
-    const isMe = currentUser && currentUser.username === p.username;
-    const initial = p.username.charAt(0);
-    const progressPercent = Math.min(100, Math.max(5, (p.total / maxScore) * 100));
-    
-    let avatarStyle = '';
-    let rankClass = '';
-    if (p.rank === 1) {
-      avatarStyle = 'style="background: var(--accent-gold); color: #000; font-weight: 800;"';
-      rankClass = 'rank-first';
-    } else if (p.rank === 2) {
-      avatarStyle = 'style="background: hsl(0, 0%, 75%); color: #000;"';
-      rankClass = 'rank-second';
-    } else if (p.rank === 3) {
-      avatarStyle = 'style="background: hsl(20, 60%, 55%);"';
-      rankClass = 'rank-third';
-    }
-    
-    listHtml += `
-      <div class="leaderboard-item ${isMe ? 'is-me' : ''} ${rankClass}">
-        <div class="item-rank">#${p.rank}</div>
-        <div class="item-avatar" ${avatarStyle}>${initial}</div>
-        <div class="item-info">
-          <div class="item-name-wrapper">
-            <span class="item-username">${p.username}</span>
-            ${isMe ? '<span class="item-me-tag">Tú</span>' : ''}
-          </div>
-          <div class="item-points-bar-container">
-            <div class="item-points-bar" style="width: ${progressPercent}%;"></div>
-          </div>
-        </div>
-        <div class="item-score-pills">
-          <div class="score-pill">⚽ ${p.matchPoints} pts</div>
-          <div class="score-pill">🏆 ${p.totalSpecials} pts</div>
-          <div class="score-pill total">${p.total} pts</div>
-        </div>
-      </div>
-    `;
-  });
-  
-  listHtml += `</div>`;
-  container.innerHTML = podiumHtml + listHtml;
-}
-
-// Render ranking evolution chart (Chart.js)
 const TEAM_ACRONYMS = {
   "Argentina": "ARG", "Francia": "FRA", "Espana": "ESP", "Inglaterra": "ENG",
   "Brasil": "BRA", "Belgica": "BEL", "Paises Bajos": "NED", "Portugal": "POR",
@@ -253,24 +30,10 @@ const TEAM_ACRONYMS = {
   "Nueva Zelanda": "NZL", "Sudafrica": "RSA", "Curazao": "CUW"
 };
 
-function getFlagEmoji(countryCode) {
-  if (!countryCode) return '';
-  const code = countryCode.toLowerCase();
-  if (code === 'gb-sct') return '🏴󠁧󠁢󠁳󠁣󠁴󠁿';
-  if (code === 'gb-eng') return '🏴󠁧󠁢󠁥󠁮󠁧󠁿';
-  if (code.includes('-')) {
-    return getFlagEmoji(code.split('-')[0]);
-  }
-  const codePoints = code
-    .toUpperCase()
-    .split('')
-    .map(char => 127397 + char.charCodeAt(0));
-  return String.fromCodePoint(...codePoints);
-}
-
-function getTeamFlagEmoji(teamName) {
+function getFlagImgHtml(teamName) {
   const data = TEAM_DATA[teamName];
-  return data && data.flag ? getFlagEmoji(data.flag) : '';
+  if (!data || !data.flag) return '🏳️';
+  return `<img src="https://flagcdn.com/w40/${data.flag.toLowerCase()}.png" class="flag-img inline" alt="${teamName}" style="width: 20px; height: 13px; margin-right: 4px; vertical-align: middle;">`;
 }
 
 function getTeamAcronym(teamName) {
@@ -280,219 +43,797 @@ function getTeamAcronym(teamName) {
   return clean.substring(0, 3).toUpperCase();
 }
 
-const flagCache = {};
-function getPreloadedFlagImage(teamName) {
-  const data = TEAM_DATA[teamName];
-  if (!data || !data.flag) return null;
-  const url = `https://flagcdn.com/w40/${data.flag.toLowerCase()}.png`;
-  if (!flagCache[url]) {
-    const img = new Image();
-    img.src = url;
-    img.onload = () => {
-      if (evolutionChart) {
-        evolutionChart.draw();
-      }
-    };
-    flagCache[url] = img;
+let currentUser = null;
+let allMatches = [];
+let leaderboardData = [];
+let rankingHistory = [];
+let masterPredictions = null;
+let focusedUser = null;
+let activeTrophyAnimId = null;
+
+// Visual Colors for Custom Graph lines
+const LINE_COLORS = [
+  '#3CAC3B', '#2A398D', '#E61D25', '#F59E0B', '#10B981', 
+  '#EC4899', '#8B5CF6', '#3B82F6', '#06B6D4', '#F43F5E',
+  '#14B8A6', '#F97316', '#6366F1', '#A855F7', '#84CC16',
+  '#EAB308', '#D946EF', '#6B7280', '#0F172A', '#475569'
+];
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await verifySession();
+  await loadMatches();
+  await loadLeaderboard();
+  await loadMasterPredictions();
+  initDashboardHeroBall();
+});
+
+async function verifySession() {
+  const res = await fetch('/api/auth/me');
+  const data = await res.json();
+  if (data.user) {
+    currentUser = data.user;
+    focusedUser = currentUser.username;
+    document.getElementById('user-greeting').innerText = `¡Hola, ${currentUser.username}!`;
+    document.getElementById('user-greeting-mobile').innerText = `¡Hola, ${currentUser.username}!`;
+    if (currentUser.isAdmin) {
+      document.getElementById('admin-nav-link').style.display = 'inline-block';
+      document.getElementById('admin-nav-link-mobile').style.display = 'inline-block';
+    }
   }
-  return flagCache[url];
 }
 
-function renderChart() {
-  const ctx = document.getElementById('evolutionChart').getContext('2d');
+async function loadMatches() {
+  const res = await fetch('/api/matches');
+  allMatches = await res.json();
+}
+
+async function loadLeaderboard() {
+  try {
+    const res = await fetch('/api/leaderboard');
+    const data = await res.json();
+    leaderboardData = data.leaderboard;
+    rankingHistory = data.rankingHistory || [];
+    
+    if (!focusedUser && leaderboardData[0]) {
+      focusedUser = leaderboardData[0].username;
+    }
+    
+    renderLeaderboard();
+    renderChart();
+  } catch (err) {
+    console.error("Error loading leaderboard:", err);
+    showToast("Error al cargar la clasificación.", true);
+  }
+}
+
+async function loadMasterPredictions() {
+  try {
+    const deadlineRes = await fetch('/api/predictions/deadline');
+    const deadlineData = await deadlineRes.json();
+    
+    const showBlocked = !deadlineData.isPassed && (!currentUser || !currentUser.isAdmin);
+    
+    if (showBlocked) {
+      document.getElementById('matrix-table-wrapper').classList.add('hidden');
+      document.getElementById('search-matrix').classList.add('hidden');
+      document.getElementById('matrix-blocked-container').classList.remove('hidden');
+      document.getElementById('matrix-lock-notice').classList.add('hidden');
+      return;
+    }
+    
+    const res = await fetch('/api/predictions-master');
+    if (res.ok) {
+      masterPredictions = await res.json();
+      document.getElementById('matrix-lock-notice').innerText = "✅ Los pronósticos de todos los participantes ya están visibles.";
+      document.getElementById('matrix-table-wrapper').classList.remove('hidden');
+      document.getElementById('search-matrix').classList.remove('hidden');
+      document.getElementById('matrix-blocked-container').classList.add('hidden');
+      renderMatrixTable();
+    } else {
+      document.getElementById('matrix-table-wrapper').classList.add('hidden');
+      document.getElementById('search-matrix').classList.add('hidden');
+      document.getElementById('matrix-blocked-container').classList.remove('hidden');
+      document.getElementById('matrix-lock-notice').classList.add('hidden');
+    }
+  } catch (err) {
+    console.error("Error loading master predictions:", err);
+  }
+}
+
+// Render Leaderboard (Podium & List Layout)
+function renderLeaderboard() {
+  const container = document.getElementById('leaderboard-card-content');
+  if (!container) return;
   
-  if (rankingHistory.length === 0) {
-    ctx.font = "14px Segoe UI";
-    ctx.fillStyle = "#a0aec0";
-    ctx.textAlign = "center";
-    ctx.fillText("No hay partidos jugados todavía para registrar evolución.", 150, 100);
+  if (leaderboardData.length === 0) {
+    container.innerHTML = `<div class="text-gray-400 py-12 text-center text-sm font-medium">No hay participantes registrados.</div>`;
     return;
   }
   
-  const displayType = document.getElementById('chart-display-type')?.value || 'rank';
+  const p1 = leaderboardData[0]; 
+  const p2 = leaderboardData[1]; 
+  const p3 = leaderboardData[2]; 
   
-  // Flag images for rendering on axis
-  const flagImages = rankingHistory.map(h => {
-    const m = allMatches.find(x => x.id === h.matchId);
-    if (m) {
-      return {
-        local: getPreloadedFlagImage(m.local),
-        visitor: getPreloadedFlagImage(m.visitor)
-      };
+  const maxScore = Math.max(1, leaderboardData[0]?.total || 0);
+  
+  const getPodiumBadge = (rank) => {
+    if (rank === 1) return '🥇';
+    if (rank === 2) return '🥈';
+    if (rank === 3) return '🥉';
+    return `#${rank}`;
+  };
+  
+  let podiumHtml = '';
+  if (p1 || p2 || p3) {
+    podiumHtml += `<div class="podium-container">`;
+    
+    // Left step: 2nd place
+    if (p2) {
+      const isMe = currentUser && currentUser.username === p2.username;
+      const highlightBorder = isMe ? 'style="border-color: var(--neon-green);"' : '';
+      const badge = getPodiumBadge(p2.rank);
+      podiumHtml += `
+        <div class="podium-step second cursor-pointer" onclick="focusParticipant('${p2.username}')" ${highlightBorder}>
+          <div class="podium-badge text-xl mb-1">${badge}</div>
+          <div class="podium-name font-bold text-[11px] text-gray-200" title="${p2.username}">${p2.username} ${isMe ? '(Tú)' : ''}</div>
+          <div class="podium-pts font-black text-xs mt-1 text-[#3CAC3B]">${p2.total} pts</div>
+        </div>
+      `;
+    } else {
+      podiumHtml += `<div class="podium-step second opacity-30 border-dashed"><div class="podium-badge">🥈</div></div>`;
     }
-    return null;
+    
+    // Center step: 1st place with 3D Trophy
+    if (p1) {
+      const isMe = currentUser && currentUser.username === p1.username;
+      const highlightBorder = isMe ? 'style="border-color: #F59E0B;"' : '';
+      podiumHtml += `
+        <div class="podium-step first cursor-pointer flex flex-col items-center justify-between" onclick="focusParticipant('${p1.username}')" ${highlightBorder}>
+          <div class="w-16 h-[72px] relative flex items-center justify-center" id="trophy-3d-container">
+            <canvas id="trophy-3d-canvas" class="w-full h-full block"></canvas>
+          </div>
+          <div class="podium-name font-bold text-xs mt-1 text-[#F59E0B]" title="${p1.username}">${p1.username} ${isMe ? '(Tú)' : ''}</div>
+          <div class="podium-pts font-black text-sm mt-1 text-[#F59E0B]">${p1.total} pts</div>
+        </div>
+      `;
+    } else {
+      podiumHtml += `<div class="podium-step first opacity-30 border-dashed"><div class="podium-badge">🥇</div></div>`;
+    }
+    
+    // Right step: 3rd place
+    if (p3) {
+      const isMe = currentUser && currentUser.username === p3.username;
+      const highlightBorder = isMe ? 'style="border-color: var(--neon-green);"' : '';
+      const badge = getPodiumBadge(p3.rank);
+      podiumHtml += `
+        <div class="podium-step third cursor-pointer" onclick="focusParticipant('${p3.username}')" ${highlightBorder}>
+          <div class="podium-badge text-xl mb-1">${badge}</div>
+          <div class="podium-name font-bold text-[11px] text-gray-200" title="${p3.username}">${p3.username} ${isMe ? '(Tú)' : ''}</div>
+          <div class="podium-pts font-black text-xs mt-1 text-[#3CAC3B]">${p3.total} pts</div>
+        </div>
+      `;
+    } else {
+      podiumHtml += `<div class="podium-step third opacity-30 border-dashed"><div class="podium-badge">🥉</div></div>`;
+    }
+    
+    podiumHtml += `</div>`;
+  }
+  
+  // List of all players
+  let listHtml = `<div class="leaderboard-list mt-6">`;
+  
+  leaderboardData.forEach((p, idx) => {
+    const isMe = currentUser && currentUser.username === p.username;
+    const initial = p.username.charAt(0);
+    const progressPercent = Math.min(100, Math.max(5, (p.total / maxScore) * 100));
+    
+    let avatarStyle = '';
+    let rankClass = '';
+    if (p.rank === 1) {
+      avatarStyle = 'style="background: #F59E0B; color: #000; font-weight: 800;"';
+      rankClass = 'rank-first';
+    } else if (p.rank === 2) {
+      avatarStyle = 'style="background: hsl(0, 0%, 75%); color: #000;"';
+      rankClass = 'rank-second';
+    } else if (p.rank === 3) {
+      avatarStyle = 'style="background: #b45309;"';
+      rankClass = 'rank-third';
+    }
+    
+    const isFocused = p.username === focusedUser;
+    const borderFocusClass = isFocused ? 'border-neonGreen bg-white/[0.08] shadow-[0_0_15px_rgba(60,172,59,0.15)]' : '';
+    
+    listHtml += `
+      <div class="leaderboard-item ${isMe ? 'is-me' : ''} ${rankClass} ${borderFocusClass}" onclick="focusParticipant('${p.username}')">
+        <div class="item-rank">#${p.rank}</div>
+        <div class="item-avatar" ${avatarStyle}>${initial}</div>
+        <div class="item-info">
+          <div class="item-name-wrapper">
+            <span class="item-username font-black">${p.username}</span>
+            ${isMe ? '<span class="item-me-tag">Tú</span>' : ''}
+          </div>
+          <div class="item-points-bar-container">
+            <div class="item-points-bar" style="width: ${progressPercent}%;"></div>
+          </div>
+        </div>
+        <div class="item-score-pills flex-shrink-0">
+          <div class="score-pill">⚽ ${p.matchPoints} pts</div>
+          <div class="score-pill total">${p.total} pts</div>
+        </div>
+      </div>
+    `;
   });
+  
+  listHtml += `</div>`;
+  container.innerHTML = podiumHtml + listHtml;
+  
+  // Call World Cup 3D Trophy initialization after DOM updates
+  setTimeout(initWorldCupTrophy3D, 50);
+}
 
-  // X-Axis labels: include team acronyms and flags for each match
-  const labels = rankingHistory.map(h => {
-    const m = allMatches.find(x => x.id === h.matchId);
-    if (m) {
-      const locAcr = getTeamAcronym(m.local);
-      const visAcr = getTeamAcronym(m.visitor);
-      const locFlag = getTeamFlagEmoji(m.local);
-      const visFlag = getTeamFlagEmoji(m.visitor);
-      return `${locFlag} ${locAcr} – ${visAcr} ${visFlag}`;
+// Interactive focus function
+window.focusParticipant = function(username) {
+  focusedUser = username;
+  renderLeaderboard(); // Redraw selection outline
+  
+  // Re-run path drawing animation on line focus
+  chartAnimationProgress = 0;
+  renderChart();
+};
+
+// ==========================================
+// Custom HTML5 Canvas "Dynamic Pulse Graph"
+// ==========================================
+let chartAnimationProgress = 0;
+let chartAnimId = null;
+let continuousRippleId = null;
+
+function renderChart() {
+  const canvas = document.getElementById('evolutionChart');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  
+  if (rankingHistory.length === 0) {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = canvas.clientWidth * dpr;
+    canvas.height = canvas.clientHeight * dpr;
+    ctx.scale(dpr, dpr);
+    
+    ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+    ctx.font = "14px Outfit, sans-serif";
+    ctx.fillStyle = "#9ca3af";
+    ctx.textAlign = "center";
+    ctx.fillText("No hay partidos jugados todavía para registrar evolución.", canvas.clientWidth / 2, canvas.clientHeight / 2);
+    return;
+  }
+  
+  // Trigger entry linear progress animation
+  if (chartAnimationProgress === 0) {
+    animatePath();
+    return;
+  }
+  
+  drawCanvasContent();
+}
+
+function animatePath() {
+  if (chartAnimId) cancelAnimationFrame(chartAnimId);
+  const start = Date.now();
+  const duration = 1000; // 1s drawing animation
+  
+  function tick() {
+    const now = Date.now();
+    const t = Math.min(1, (now - start) / duration);
+    // Cubic ease out
+    chartAnimationProgress = 1 - Math.pow(1 - t, 3);
+    
+    drawCanvasContent();
+    
+    if (t < 1) {
+      chartAnimId = requestAnimationFrame(tick);
+    } else {
+      // Start perpetual Fresnel wave ripple animation once path loads
+      startContinuousRipple();
     }
-    return h.matchId;
-  });
+  }
+  chartAnimId = requestAnimationFrame(tick);
+}
+
+function startContinuousRipple() {
+  if (continuousRippleId) cancelAnimationFrame(continuousRippleId);
   
-  // Collect all unique participant usernames
-  const participants = [];
-  leaderboardData.forEach(p => participants.push(p.username));
+  function rippleTick() {
+    drawCanvasContent();
+    continuousRippleId = requestAnimationFrame(rippleTick);
+  }
+  continuousRippleId = requestAnimationFrame(rippleTick);
+}
+
+function drawCanvasContent() {
+  const canvas = document.getElementById('evolutionChart');
+  if (!canvas) return;
   
-  // Build datasets
-  const datasets = participants.map((username, idx) => {
-    const dataPoints = rankingHistory.map(h => {
+  const ctx = canvas.getContext('2d');
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
+  
+  // High-DPI Crisp scaling
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  ctx.scale(dpr, dpr);
+  
+  ctx.clearRect(0, 0, width, height);
+  
+  const displayType = document.getElementById('chart-display-type')?.value || 'points';
+  
+  const paddingLeft = 55;
+  const paddingRight = 20;
+  const paddingTop = 35;
+  const paddingBottom = 40;
+  
+  const graphWidth = width - paddingLeft - paddingRight;
+  const graphHeight = height - paddingTop - paddingBottom;
+  
+  const participants = leaderboardData.map(p => p.username);
+  if (participants.length === 0) return;
+  
+  // Assemble history values per user
+  const userValues = {};
+  participants.forEach(user => {
+    userValues[user] = rankingHistory.map(h => {
       if (displayType === 'points') {
-        // Use explicit undefined check — value 0 is valid!
-        const pts = h.points ? h.points[username] : undefined;
+        const pts = h.points ? h.points[user] : undefined;
         return pts !== undefined ? pts : 0;
       } else {
-        // Rank: if user not in snapshot, fallback to last place
-        const rank = h.ranks ? h.ranks[username] : undefined;
-        return rank !== undefined ? rank : participants.length;
+        const rk = h.ranks ? h.ranks[user] : undefined;
+        return rk !== undefined ? rk : participants.length;
+      }
+    });
+  });
+  
+  // Find min/max values
+  let minY = displayType === 'points' ? 0 : 1;
+  let maxY = 1;
+  
+  if (displayType === 'points') {
+    rankingHistory.forEach(h => {
+      if (h.points) {
+        Object.values(h.points).forEach(val => {
+          if (val > maxY) maxY = val;
+        });
+      }
+    });
+    maxY = Math.max(1, maxY + 2); // safety ceiling
+  } else {
+    maxY = Math.max(2, participants.length); // ranks bottom
+  }
+  
+  // Draw Grid Lines & Y-Axis Labels
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  ctx.fillStyle = '#9CA3AF';
+  ctx.font = '700 9px monospace';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  
+  const numTicks = 6;
+  for (let i = 0; i < numTicks; i++) {
+    const ratio = i / (numTicks - 1);
+    const val = minY + ratio * (maxY - minY);
+    
+    let yCoord;
+    if (displayType === 'points') {
+      yCoord = paddingTop + (1 - ratio) * graphHeight; // 0 points at bottom
+    } else {
+      yCoord = paddingTop + ratio * graphHeight; // #1 rank at top
+    }
+    
+    ctx.beginPath();
+    ctx.moveTo(paddingLeft, yCoord);
+    ctx.lineTo(width - paddingRight, yCoord);
+    ctx.stroke();
+    
+    const label = displayType === 'points' ? Math.round(val) + ' pts' : '#' + Math.round(val);
+    ctx.fillText(label, paddingLeft - 8, yCoord);
+  }
+  
+  // X-Axis Match ticks and Labels
+  const numMatches = rankingHistory.length;
+  const stepX = numMatches > 1 ? graphWidth / (numMatches - 1) : graphWidth;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  
+  const labelInterval = Math.max(1, Math.ceil(numMatches / 10));
+  
+  rankingHistory.forEach((h, idx) => {
+    const xCoord = paddingLeft + idx * stepX;
+    
+    // Draw vertical dotted guide lines
+    ctx.strokeStyle = 'rgba(255,255,255,0.02)';
+    ctx.beginPath();
+    ctx.moveTo(xCoord, paddingTop);
+    ctx.lineTo(xCoord, height - paddingBottom);
+    ctx.stroke();
+    
+    if (idx % labelInterval === 0 || idx === numMatches - 1) {
+      const match = allMatches.find(m => m.id === h.matchId);
+      let label = h.matchId;
+      if (match) {
+        const loc = getTeamAcronym(match.local);
+        const vis = getTeamAcronym(match.visitor);
+        label = `${loc}-${vis}`;
+      }
+      ctx.fillText(label, xCoord, height - paddingBottom + 8);
+    }
+  });
+  
+  // Calculate specific points coordinates for all users
+  const userCoordinates = {};
+  participants.forEach(user => {
+    userCoordinates[user] = userValues[user].map((val, idx) => {
+      const x = paddingLeft + idx * stepX;
+      let ratio = 0;
+      if (displayType === 'points') {
+        ratio = (val - minY) / (maxY - minY);
+      } else {
+        ratio = (val - minY) / (maxY - minY);
+      }
+      // Clamp ratio
+      ratio = Math.max(0, Math.min(1, ratio));
+      
+      const y = displayType === 'points' 
+        ? paddingTop + (1 - ratio) * graphHeight
+        : paddingTop + ratio * graphHeight;
+        
+      return { x, y };
+    });
+  });
+  
+  // Helper to generate bezier curves command sequences
+  function traceBezierCurve(pointsList, progress) {
+    if (pointsList.length === 0) return;
+    
+    const limitX = paddingLeft + progress * graphWidth;
+    
+    ctx.moveTo(pointsList[0].x, pointsList[0].y);
+    for (let i = 0; i < pointsList.length - 1; i++) {
+      const pStart = pointsList[i];
+      const pEnd = pointsList[i + 1];
+      
+      // Stop path segment draw according to path progress
+      if (pStart.x > limitX) break;
+      
+      const cp1x = pStart.x + stepX / 3;
+      const cp1y = pStart.y;
+      const cp2x = pStart.x + (stepX * 2) / 3;
+      const cp2y = pEnd.y;
+      
+      if (pEnd.x <= limitX) {
+        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, pEnd.x, pEnd.y);
+      } else {
+        // Interpolate bezier segment cut points
+        const segmentRatio = (limitX - pStart.x) / stepX;
+        const xCut = limitX;
+        const yCut = pStart.y + (pEnd.y - pStart.y) * segmentRatio; // linear fallback slice
+        ctx.lineTo(xCut, yCut);
+      }
+    }
+  }
+
+  // 1. Draw Background Gray/Blue Splines (for non-focused users)
+  ctx.shadowBlur = 0; // No glow on background lines
+  ctx.lineWidth = 1.2;
+  participants.forEach(user => {
+    if (user === focusedUser) return;
+    
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    traceBezierCurve(userCoordinates[user], chartAnimationProgress);
+    ctx.stroke();
+  });
+  
+  // 2. Draw FOCUSED User Spline & Fresnel Area
+  if (focusedUser && userCoordinates[focusedUser]) {
+    const coords = userCoordinates[focusedUser];
+    const vals = userValues[focusedUser];
+    
+    // Draw Fresnel fill underneath spline
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(coords[0].x, height - paddingBottom);
+    ctx.lineTo(coords[0].x, coords[0].y);
+    
+    // Trace curve path
+    const limitX = paddingLeft + chartAnimationProgress * graphWidth;
+    for (let i = 0; i < coords.length - 1; i++) {
+      const pStart = coords[i];
+      const pEnd = coords[i + 1];
+      if (pStart.x > limitX) break;
+      
+      const cp1x = pStart.x + stepX / 3;
+      const cp1y = pStart.y;
+      const cp2x = pStart.x + (stepX * 2) / 3;
+      const cp2y = pEnd.y;
+      
+      if (pEnd.x <= limitX) {
+        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, pEnd.x, pEnd.y);
+      } else {
+        ctx.lineTo(limitX, pStart.y + (pEnd.y - pStart.y) * ((limitX - pStart.x) / stepX));
+      }
+    }
+    const currentLastX = Math.min(limitX, coords[coords.length - 1].x);
+    ctx.lineTo(currentLastX, height - paddingBottom);
+    ctx.closePath();
+    ctx.clip(); // Restrict drawing to area under line
+    
+    // Fill vertical gradient
+    const fillGrad = ctx.createLinearGradient(0, paddingTop, 0, height - paddingBottom);
+    fillGrad.addColorStop(0, 'rgba(60, 172, 59, 0.16)');  // Neon Green fading
+    fillGrad.addColorStop(0.5, 'rgba(42, 57, 141, 0.05)'); // Electric Blue blending
+    fillGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = fillGrad;
+    ctx.fill();
+    
+    // Secondary moving wave ripple (Fresnel effect)
+    const time = performance.now() * 0.0012;
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.035)';
+    ctx.lineWidth = 1.5;
+    for (let x = paddingLeft; x <= currentLastX; x += 6) {
+      const ratio = (x - paddingLeft) / graphWidth;
+      // Combine multiple sine waves for organic ripple feel
+      const waveY = (height - paddingBottom - 40) + Math.sin(time * 2 + ratio * 10) * 12 + Math.cos(time + ratio * 5) * 6;
+      if (x === paddingLeft) ctx.moveTo(x, waveY);
+      else ctx.lineTo(x, waveY);
+    }
+    ctx.stroke();
+    ctx.restore();
+    
+    // Draw neon glowing spline segments (colors matching rises/falls)
+    for (let i = 0; i < coords.length - 1; i++) {
+      const pStart = coords[i];
+      const pEnd = coords[i + 1];
+      if (pStart.x > limitX) break;
+      
+      const vStart = vals[i];
+      const vEnd = vals[i + 1];
+      
+      // Determine color based on performance
+      let isUp = false;
+      if (displayType === 'points') {
+        isUp = vEnd > vStart;
+      } else {
+        isUp = vEnd < vStart; // Rank lower number is better!
+      }
+      
+      const segmentColor = isUp ? '#3CAC3B' : '#E61D25';
+      const prevColor = i > 0 ? (displayType === 'points' ? (vals[i] > vals[i-1] ? '#3CAC3B' : '#E61D25') : (vals[i] < vals[i-1] ? '#3CAC3B' : '#E61D25')) : segmentColor;
+      
+      // Draw segment with linear gradient transition
+      ctx.beginPath();
+      ctx.moveTo(pStart.x, pStart.y);
+      
+      const cp1x = pStart.x + stepX / 3;
+      const cp1y = pStart.y;
+      const cp2x = pStart.x + (stepX * 2) / 3;
+      const cp2y = pEnd.y;
+      
+      const grad = ctx.createLinearGradient(pStart.x, pStart.y, pEnd.x, pEnd.y);
+      grad.addColorStop(0, prevColor);
+      grad.addColorStop(1, segmentColor);
+      
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      
+      // Apply neon glow using shadow properties
+      ctx.shadowBlur = 14;
+      ctx.shadowColor = segmentColor;
+      
+      if (pEnd.x <= limitX) {
+        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, pEnd.x, pEnd.y);
+      } else {
+        ctx.lineTo(limitX, pStart.y + (pEnd.y - pStart.y) * ((limitX - pStart.x) / stepX));
+      }
+      ctx.stroke();
+    }
+    
+    // Reset shadow
+    ctx.shadowBlur = 0;
+    
+    // Draw pulsing nodes on spline points
+    coords.forEach((p, idx) => {
+      if (p.x > limitX) return;
+      
+      const vStart = idx > 0 ? vals[idx - 1] : 0;
+      const vEnd = vals[idx];
+      let isUp = displayType === 'points' ? vEnd > vStart : vEnd < vStart;
+      if (idx === 0) isUp = true;
+      
+      const nodeColor = isUp ? '#3CAC3B' : '#E61D25';
+      
+      // Pulsing outer ring
+      const timeOffset = performance.now() * 0.005;
+      const pulseRing = 5.5 + Math.sin(timeOffset + idx * 0.5) * 3;
+      
+      ctx.fillStyle = isUp ? 'rgba(60, 172, 59, 0.16)' : 'rgba(230, 29, 37, 0.16)';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, pulseRing, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Solid inner core
+      ctx.fillStyle = '#fff';
+      ctx.strokeStyle = nodeColor;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    });
+  }
+}
+
+// Tooltip mouse tracker inside the graph canvas
+document.addEventListener('DOMContentLoaded', () => {
+  const canvas = document.getElementById('evolutionChart');
+  if (!canvas) return;
+  
+  canvas.addEventListener('mousemove', (e) => {
+    if (rankingHistory.length === 0 || !leaderboardData || !focusedUser) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    const paddingLeft = 55;
+    const paddingRight = 20;
+    const paddingTop = 35;
+    const paddingBottom = 40;
+    
+    const graphWidth = canvas.clientWidth - paddingLeft - paddingRight;
+    const graphHeight = canvas.clientHeight - paddingTop - paddingBottom;
+    const numMatches = rankingHistory.length;
+    const stepX = numMatches > 1 ? graphWidth / (numMatches - 1) : graphWidth;
+    
+    const displayType = document.getElementById('chart-display-type')?.value || 'points';
+    
+    // Fetch values for focused user
+    const vals = rankingHistory.map(h => {
+      if (displayType === 'points') {
+        const pts = h.points ? h.points[focusedUser] : undefined;
+        return pts !== undefined ? pts : 0;
+      } else {
+        const rk = h.ranks ? h.ranks[focusedUser] : undefined;
+        return rk !== undefined ? rk : leaderboardData.length;
       }
     });
     
-    const color = LINE_COLORS[idx % LINE_COLORS.length];
-    const alphaColor = `${color}88`;
-    
-    return {
-      label: username,
-      data: dataPoints,
-      borderColor: color,
-      backgroundColor: alphaColor,
-      fill: false,
-      tension: 0.35,
-      borderWidth: username === (currentUser?.username) ? 4 : 2,
-      pointRadius: username === (currentUser?.username) ? 6 : 4,
-      pointHoverRadius: username === (currentUser?.username) ? 8 : 6,
-      pointBackgroundColor: color,
-      pointBorderColor: '#fff',
-      pointBorderWidth: 1,
-      spanGaps: true
-    };
-  });
-  
-  if (evolutionChart) evolutionChart.destroy();
-  
-  const flagPlugin = {
-    id: 'flagPlugin',
-    afterDraw: (chart) => {
-      const { ctx, scales: { x } } = chart;
-      if (!x) return;
-      
-      rankingHistory.forEach((h, index) => {
-        const flags = flagImages[index];
-        if (!flags) return;
-        
-        const xPos = x.getPixelForTick(index);
-        const yPos = x.bottom + 4; // draw below the axis line but above the text
-        
-        const width = 16;
-        const height = 11;
-        
-        if (flags.local && flags.local.complete) {
-          ctx.drawImage(flags.local, xPos - 36, yPos, width, height);
-        }
-        if (flags.visitor && flags.visitor.complete) {
-          ctx.drawImage(flags.visitor, xPos + 20, yPos, width, height);
+    let minY = displayType === 'points' ? 0 : 1;
+    let maxY = 1;
+    if (displayType === 'points') {
+      rankingHistory.forEach(h => {
+        if (h.points) {
+          Object.values(h.points).forEach(val => {
+            if (val > maxY) maxY = val;
+          });
         }
       });
+      maxY = Math.max(1, maxY + 2);
+    } else {
+      maxY = Math.max(2, leaderboardData.length);
     }
-  };
-
-  evolutionChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: datasets
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: {
-        mode: 'index',
-        intersect: false
-      },
-      plugins: {
-        legend: {
-          position: 'top',
-          labels: {
-            color: '#cbd5e0',
-            font: { family: 'Segoe UI', size: 11 },
-            usePointStyle: true,
-            pointStyle: 'circle',
-            padding: 16,
-            boxWidth: 10
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              const username = context.dataset.label;
-              const idx = context.dataIndex;
-              const historyItem = rankingHistory[idx];
-              if (historyItem) {
-                const rank = historyItem.ranks ? historyItem.ranks[username] : undefined;
-                const rankStr = rank !== undefined ? '#' + rank : '#?';
-                const ptsRaw = historyItem.points ? historyItem.points[username] : undefined;
-                const ptsStr = ptsRaw !== undefined ? ptsRaw + ' pts' : '0 pts';
-                return `${username}: Puesto ${rankStr} (${ptsStr})`;
-              }
-              return displayType === 'rank' 
-                ? `${username}: Puesto #${context.raw}` 
-                : `${username}: ${context.raw} pts`;
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          ticks: { 
-            color: '#718096',
-            padding: 18,
-            maxRotation: 0,
-            minRotation: 0,
-            autoSkip: false
-          },
-          grid: { color: 'rgba(255, 255, 255, 0.05)' }
-        },
-        y: {
-          reverse: displayType === 'rank', // Rank 1 is at the top!
-          min: displayType === 'rank' ? 1 : 0,
-          max: displayType === 'rank' ? Math.max(1, participants.length) : undefined,
-          ticks: {
-            color: '#718096',
-            stepSize: 1,
-            precision: 0,
-            callback: function(value) {
-              if (Number.isInteger(value)) {
-                return displayType === 'rank' ? '#' + value : value + ' pts';
-              }
-              return '';
-            }
-          },
-          grid: { color: 'rgba(255, 255, 255, 0.05)' }
+    
+    let nearestIdx = -1;
+    let minDistance = 14; // pixels trigger threshold
+    
+    for (let i = 0; i < numMatches; i++) {
+      const x = paddingLeft + i * stepX;
+      const val = vals[i];
+      let ratio = (val - minY) / (maxY - minY);
+      ratio = Math.max(0, Math.min(1, ratio));
+      
+      const y = displayType === 'points'
+        ? paddingTop + (1 - ratio) * graphHeight
+        : paddingTop + ratio * graphHeight;
+        
+      const dist = Math.hypot(mouseX - x, mouseY - y);
+      if (dist < minDistance) {
+        minDistance = dist;
+        nearestIdx = i;
+      }
+    }
+    
+    const tooltip = document.getElementById('custom-chart-tooltip');
+    if (nearestIdx !== -1) {
+      const h = rankingHistory[nearestIdx];
+      const match = allMatches.find(m => m.id === h.matchId);
+      
+      let matchName = h.matchId;
+      let matchTeams = 'Pendiente';
+      let realScore = 'Pendiente';
+      
+      if (match) {
+        matchName = match.phase === 'Group Stage' ? `Fase de Grupos - G.${match.group}` : match.phase;
+        matchTeams = `${match.local} vs ${match.visitor}`;
+        realScore = match.gl !== null ? `${match.gl} - ${match.gv}` : 'Pendiente';
+      }
+      
+      const currentVal = vals[nearestIdx];
+      const prevVal = nearestIdx > 0 ? vals[nearestIdx - 1] : 0;
+      const ptsGained = displayType === 'points' ? (currentVal - prevVal) : 0;
+      
+      let predScore = 'Ninguna';
+      if (masterPredictions && masterPredictions[focusedUser] && masterPredictions[focusedUser].matches[h.matchId]) {
+        const pred = masterPredictions[focusedUser].matches[h.matchId];
+        if (pred.gl !== undefined && pred.gl !== null && pred.gl !== '') {
+          predScore = `${pred.gl} - ${pred.gv}`;
         }
       }
-    },
-    plugins: [flagPlugin]
+      
+      // Position element safely within parent
+      let tooltipX = paddingLeft + nearestIdx * stepX + 16;
+      if (tooltipX + 180 > canvas.clientWidth) {
+        tooltipX = paddingLeft + nearestIdx * stepX - 190;
+      }
+      let tooltipY = mouseY - 65;
+      if (tooltipY < 10) tooltipY = 10;
+      
+      tooltip.style.left = `${tooltipX}px`;
+      tooltip.style.top = `${tooltipY}px`;
+      
+      const changeText = displayType === 'points' ? `+${ptsGained} pts` : `Puesto #${currentVal}`;
+      const changeColor = displayType === 'points' 
+        ? (ptsGained > 0 ? 'text-neonGreen' : 'text-torchRed')
+        : (nearestIdx === 0 || currentVal < vals[nearestIdx-1] ? 'text-neonGreen' : 'text-torchRed');
+        
+      tooltip.innerHTML = `
+        <div class="font-black text-[10px] uppercase tracking-wider border-b border-white/10 pb-1.5 mb-2 flex justify-between items-center gap-6">
+          <span class="text-gray-400 font-bold">${matchName}</span>
+          <span class="${changeColor} font-black">${changeText}</span>
+        </div>
+        <div class="space-y-1 text-[10px] text-gray-400 font-medium">
+          <div class="text-white font-bold">${matchTeams}</div>
+          <div>Marcador Real: <span class="text-gold font-bold">${realScore}</span></div>
+          <div>Tu Pronóstico: <span class="text-neonGreen font-bold">${predScore}</span></div>
+          <div class="mt-2 text-white/90 border-t border-white/5 pt-1.5 font-bold flex justify-between">
+            <span>Foco: ${focusedUser}</span>
+            <span>Total: ${displayType === 'points' ? currentVal : (h.points ? h.points[focusedUser] : 0)} pts</span>
+          </div>
+        </div>
+      `;
+      
+      tooltip.style.opacity = '1';
+      tooltip.style.transform = 'scale(1) translateY(0)';
+    } else {
+      tooltip.style.opacity = '0';
+      tooltip.style.transform = 'scale(0.9) translateY(4px)';
+    }
   });
-}
+  
+  canvas.addEventListener('mouseleave', () => {
+    const tooltip = document.getElementById('custom-chart-tooltip');
+    tooltip.style.opacity = '0';
+    tooltip.style.transform = 'scale(0.9) translateY(4px)';
+  });
+});
 
 window.toggleChartDisplayType = function() {
   const displayType = document.getElementById('chart-display-type').value;
   const desc = document.getElementById('chart-desc-text');
   if (displayType === 'points') {
-    desc.innerText = "Histórico de los puntos totales acumulados de cada participante partido a partido (a más puntos, mejor).";
+    desc.innerText = "Histórico de los puntos totales acumulados de cada participante partido a partido (a más puntos, mejor). Haz clic en un participante de la tabla para enfocar su línea.";
   } else {
-    desc.innerText = "Histórico del puesto de cada participante partido a partido (el puesto #1 es el mejor).";
+    desc.innerText = "Histórico del puesto de cada participante partido a partido (el puesto #1 es el mejor). Haz clic en un participante de la tabla para enfocar su línea.";
   }
+  chartAnimationProgress = 0; // reset anim progress
   renderChart();
 };
 
-// Helper to calculate match winner on client
+// ==========================================
+// Helper logic to simulate playoffs brackets
+// ==========================================
 function getMatchWinner(local, visitor, gl, gv, pkl, pkv) {
   if (gl === null || gl === undefined || gl === "" || gv === null || gv === undefined || gv === "") {
     return null;
@@ -512,7 +853,6 @@ function getMatchWinner(local, visitor, gl, gv, pkl, pkv) {
   return null;
 }
 
-// Simulates user predictions bracket on client
 function calculateUserBracket(predObj, dbMatches) {
   const standings = {};
   const groups = ['A','B','C','D','E','F','G','H','I','J','K','L'];
@@ -728,19 +1068,19 @@ function calculateUserBracket(predObj, dbMatches) {
   return userMatches;
 }
 
-// Render Match Comparison Matrix Table
+// Render Comparison Matrix
 function renderMatrixTable() {
   const thead = document.getElementById('matrix-head');
   const tbody = document.getElementById('matrix-body');
   
   if (!masterPredictions) {
-    tbody.innerHTML = `<tr><td colspan="4" style="color: var(--color-text-muted); padding: 30px;">Cargando predicciones...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" class="text-gray-400 py-8 text-center text-sm font-medium">Cargando predicciones...</td></tr>`;
     return;
   }
   
   const participants = Object.keys(masterPredictions).sort();
   
-  // Cache user predictions brackets
+  // Cache user prediction playoff brackets
   const userBrackets = {};
   participants.forEach(p => {
     userBrackets[p] = calculateUserBracket(masterPredictions[p], allMatches);
@@ -753,44 +1093,47 @@ function renderMatrixTable() {
   });
   const actualBracket = calculateUserBracket(officialPredObj, allMatches);
   
-  // Render Head Headers
+  // Headers
   let headHtml = `
-    <tr class="header-row">
-      <th style="text-align: left;">Partido</th>
-      <th>Fase</th>
-      <th>Resultado Real</th>
+    <tr class="header-row border-b border-white/10">
+      <th class="text-left font-extrabold text-[10px] tracking-widest text-gray-400 py-4 px-6">Partido</th>
+      <th class="font-extrabold text-[10px] tracking-widest text-gray-400 py-4">Fase</th>
+      <th class="font-extrabold text-[10px] tracking-widest text-gray-400 py-4 px-6">Resultado Real</th>
   `;
   
   participants.forEach(p => {
-    headHtml += `<th>${p}</th>`;
+    const isFocused = p === focusedUser;
+    const focusClass = isFocused ? 'text-neonGreen font-black border-x border-neonGreen/20 bg-neonGreen/5' : 'text-gray-200';
+    headHtml += `<th class="py-4 px-6 font-extrabold text-[11px] uppercase tracking-wide cursor-pointer ${focusClass}" onclick="focusParticipant('${p}')">${p}</th>`;
   });
   headHtml += '</tr>';
   thead.innerHTML = headHtml;
   
-  // Render Body Rows
+  // Rows
   let bodyHtml = '';
   
   allMatches.forEach(m => {
-    // Determine real outcome score
     const hasRealResult = m.gl !== null && m.gv !== null;
     const realScoreStr = hasRealResult ? `${m.gl} - ${m.gv}${m.pkl !== null ? ` (PK ${m.pkl}-${m.pkv})` : ''}` : 'Pendiente';
     
     bodyHtml += `
-      <tr class="matrix-row-item">
-        <td style="text-align: left; font-weight: 700; display: flex; align-items: center; gap: 6px; white-space: nowrap;">${getFlagImgHtml(m.local)} ${m.local} <span style="font-weight: 400; color: var(--color-text-muted);">vs</span> ${getFlagImgHtml(m.visitor)} ${m.visitor}</td>
-        <td>${m.phase === 'Group Stage' ? 'Grupo ' + m.group : m.phase}</td>
-        <td style="font-weight: 800; color: ${hasRealResult ? 'var(--accent-gold)' : 'var(--color-text-muted)'}">${realScoreStr}</td>
+      <tr class="matrix-row-item hover:bg-white/[0.02]">
+        <td class="text-left py-4 px-6 font-bold text-xs flex items-center gap-2 whitespace-nowrap">${getFlagImgHtml(m.local)} ${m.local} <span class="font-normal text-gray-500">vs</span> ${getFlagImgHtml(m.visitor)} ${m.visitor}</td>
+        <td class="py-4 text-xs font-semibold text-gray-400">${m.phase === 'Group Stage' ? 'Grupo ' + m.group : m.phase}</td>
+        <td class="py-4 px-6 font-black text-xs text-gold">${realScoreStr}</td>
     `;
     
     participants.forEach(p => {
+      const isFocused = p === focusedUser;
+      const focusCellBg = isFocused ? 'border-x border-neonGreen/10 bg-neonGreen/[0.02]' : '';
+      
       const pred = masterPredictions[p].matches[m.id];
       if (!pred || pred.gl === undefined || pred.gl === null || pred.gl === '') {
-        bodyHtml += `<td style="color: var(--color-text-muted);">-</td>`;
+        bodyHtml += `<td class="py-4 px-6 text-gray-600 text-xs font-bold ${focusCellBg}">-</td>`;
       } else {
         const isKnockout = m.phase !== 'Group Stage';
         
         if (!isKnockout) {
-          // Group stage scoring (blind goals comparison)
           const predScoreStr = `${pred.gl} - ${pred.gv}`;
           let ptsBadge = '';
           if (hasRealResult) {
@@ -810,9 +1153,9 @@ function renderMatrixTable() {
               ptsBadge = `<span class="matrix-points-badge points-zero">0</span>`;
             }
           }
-          bodyHtml += `<td>${predScoreStr} ${ptsBadge}</td>`;
+          bodyHtml += `<td class="py-4 px-6 text-xs font-bold text-white ${focusCellBg}">${predScoreStr} ${ptsBadge}</td>`;
         } else {
-          // Knockout stage scoring (bracket-aware)
+          // Knockout Stage (Bracket calculations)
           const hasPk = pred.pkl !== undefined && pred.pkl !== null && pred.pkl !== '';
           const predScoreStr = `${pred.gl} - ${pred.gv}${hasPk ? ` (${pred.pkl}-${pred.pkv})` : ''}`;
           const usrMatch = userBrackets[p][m.id];
@@ -843,10 +1186,10 @@ function renderMatrixTable() {
           
           let matchupText = '';
           if (usrMatch && usrMatch.local && usrMatch.visitor) {
-            matchupText = `<div style="font-size: 0.72rem; color: var(--color-text-muted); margin-top: 2px; line-height: 1.1;">${usrMatch.local} vs ${usrMatch.visitor}</div>`;
+            matchupText = `<div class="text-[9px] text-gray-500 font-semibold mt-1 leading-none">${getTeamAcronym(usrMatch.local)} vs ${getTeamAcronym(usrMatch.visitor)}</div>`;
           }
           
-          bodyHtml += `<td><div>${predScoreStr} ${ptsBadge}</div>${matchupText}</td>`;
+          bodyHtml += `<td class="py-4 px-6 text-xs font-bold text-white ${focusCellBg}"><div>${predScoreStr} ${ptsBadge}</div>${matchupText}</td>`;
         }
       }
     });
@@ -857,7 +1200,6 @@ function renderMatrixTable() {
   tbody.innerHTML = bodyHtml;
 }
 
-// Filter the Matrix Table search input
 function filterMatrixTable() {
   const query = document.getElementById('search-matrix').value.toLowerCase().trim();
   const rows = document.querySelectorAll('.matrix-row-item');
@@ -872,11 +1214,6 @@ function filterMatrixTable() {
   });
 }
 
-async function handleLogout() {
-  await fetch('/api/auth/logout', { method: 'POST' });
-  window.location.href = '/index.html';
-}
-
 function showToast(message, isError = false) {
   const container = document.getElementById('toast-container');
   const toast = document.createElement('div');
@@ -889,4 +1226,248 @@ function showToast(message, isError = false) {
     toast.style.transform = 'translateY(10px)';
     setTimeout(() => toast.remove(), 300);
   }, 3000);
+}
+
+// ==========================================
+// Three.js 3D Hero Soccer Ball (Dashboard)
+// ==========================================
+function initDashboardHeroBall() {
+  const canvas = document.getElementById('dashboard-ball-canvas');
+  const container = document.getElementById('dashboard-ball-container');
+  if (!canvas || !container) return;
+  
+  const scene = new THREE.Scene();
+  
+  const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 100);
+  camera.position.z = 5.0;
+  
+  const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  
+  // Procedural texture mapping (FWC26 style)
+  function createBallTexture() {
+    const texCanvas = document.createElement('canvas');
+    texCanvas.width = 512;
+    texCanvas.height = 256;
+    const ctx = texCanvas.getContext('2d');
+    
+    ctx.fillStyle = '#111113';
+    ctx.fillRect(0, 0, 512, 256);
+    
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = 2;
+    for(let i=0; i<8; i++) {
+      const x = (i/8)*512;
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,256); ctx.stroke();
+    }
+    
+    function drawSweep(cx, cy, r, color, glow, width, start, end) {
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.lineCap = 'round';
+      ctx.shadowColor = glow;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, start, end);
+      ctx.stroke();
+      ctx.restore();
+    }
+    
+    drawSweep(0, 128, 60, '#3CAC3B', 'rgba(60,172,59,0.7)', 14, -Math.PI/3, Math.PI/3);
+    drawSweep(512, 128, 60, '#3CAC3B', 'rgba(60,172,59,0.7)', 14, Math.PI*2/3, Math.PI*4/3);
+    drawSweep(170, 90, 50, '#2A398D', 'rgba(42,57,141,0.8)', 12, Math.PI/4, Math.PI*1.1);
+    drawSweep(340, 110, 55, '#E61D25', 'rgba(230,29,37,0.8)', 13, -Math.PI/2, Math.PI/3);
+    
+    ctx.fillStyle = '#F59E0B';
+    ctx.font = 'bold 12px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('FWC 26', 256, 128);
+    
+    return new THREE.CanvasTexture(texCanvas);
+  }
+  
+  function createBallBump() {
+    const texCanvas = document.createElement('canvas');
+    texCanvas.width = 512;
+    texCanvas.height = 256;
+    const ctx = texCanvas.getContext('2d');
+    
+    ctx.fillStyle = '#808080';
+    ctx.fillRect(0, 0, 512, 256);
+    
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 4;
+    for(let i=0; i<8; i++) {
+      const x = (i/8)*512;
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,256); ctx.stroke();
+    }
+    
+    const imgData = ctx.getImageData(0,0,512,256);
+    const data = imgData.data;
+    for (let i=0; i<data.length; i+=4) {
+      const n = (Math.random()-0.5)*18;
+      data[i] = Math.min(255, Math.max(0, data[i]+n));
+      data[i+1] = Math.min(255, Math.max(0, data[i+1]+n));
+      data[i+2] = Math.min(255, Math.max(0, data[i+2]+n));
+    }
+    ctx.putImageData(imgData, 0, 0);
+    return new THREE.CanvasTexture(texCanvas);
+  }
+  
+  const ballMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(1.6, 48, 48),
+    new THREE.MeshStandardMaterial({
+      map: createBallTexture(),
+      bumpMap: createBallBump(),
+      bumpScale: 0.04,
+      metalness: 0.15,
+      roughness: 0.4,
+      clearcoat: 0.2
+    })
+  );
+  scene.add(ballMesh);
+  
+  // Lights
+  scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+  
+  const bL = new THREE.DirectionalLight(0x2A398D, 1.5);
+  bL.position.set(-4, 2, -2);
+  scene.add(bL);
+  
+  const gL = new THREE.DirectionalLight(0x3CAC3B, 1.2);
+  gL.position.set(4, -2, 2);
+  scene.add(gL);
+  
+  const dL = new THREE.DirectionalLight(0xffffff, 1.2);
+  dL.position.set(3, 4, 3);
+  scene.add(dL);
+  
+  let targetX = 0, targetY = 0;
+  
+  document.addEventListener('mousemove', (e) => {
+    const halfX = window.innerWidth / 2;
+    const halfY = window.innerHeight / 2;
+    targetY = ((e.clientX - halfX)/halfX)*0.7;
+    targetX = ((e.clientY - halfY)/halfY)*0.7;
+  });
+  
+  window.addEventListener('deviceorientation', (e) => {
+    if (e.beta !== null && e.gamma !== null) {
+      targetY = (e.gamma / 45) * 0.7;
+      targetX = ((e.beta - 45)/ 45) * 0.7;
+    }
+  });
+  
+  function draw() {
+    requestAnimationFrame(draw);
+    ballMesh.rotation.y += (targetY - ballMesh.rotation.y)*0.05 + 0.003;
+    ballMesh.rotation.x += (targetX - ballMesh.rotation.x)*0.05 + 0.001;
+    renderer.render(scene, camera);
+  }
+  draw();
+  
+  window.addEventListener('resize', () => {
+    if (container.clientWidth) {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    }
+  });
+}
+
+// ==========================================
+// Three.js 3D World Cup Trophy (Podium #1)
+// ==========================================
+function initWorldCupTrophy3D() {
+  // Cancel active animation to prevent loop piling
+  if (activeTrophyAnimId) {
+    cancelAnimationFrame(activeTrophyAnimId);
+    activeTrophyAnimId = null;
+  }
+  
+  const canvas = document.getElementById('trophy-3d-canvas');
+  const container = document.getElementById('trophy-3d-container');
+  if (!canvas || !container) return;
+  
+  const w = container.clientWidth || 64;
+  const h = container.clientHeight || 72;
+  
+  const scene = new THREE.Scene();
+  
+  const camera = new THREE.PerspectiveCamera(38, w / h, 0.1, 10);
+  camera.position.set(0, 1.0, 3.4);
+  camera.lookAt(0, 0.95, 0);
+  
+  const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  
+  // Materials
+  const goldMaterial = new THREE.MeshStandardMaterial({
+    color: 0xEEB000,
+    metalness: 0.96,
+    roughness: 0.12,
+    clearcoat: 0.2
+  });
+  
+  const greenMaterial = new THREE.MeshStandardMaterial({
+    color: 0x004D1A,
+    roughness: 0.25,
+    metalness: 0.3
+  });
+  
+  const trophyGroup = new THREE.Group();
+  
+  // Lathe body profile points
+  const points = [];
+  points.push(new THREE.Vector2(0.01, 0));
+  points.push(new THREE.Vector2(0.35, 0.01));
+  points.push(new THREE.Vector2(0.32, 0.15));
+  points.push(new THREE.Vector2(0.28, 0.25));
+  points.push(new THREE.Vector2(0.23, 0.45));
+  points.push(new THREE.Vector2(0.27, 0.65));
+  points.push(new THREE.Vector2(0.36, 0.85));
+  points.push(new THREE.Vector2(0.40, 1.05));
+  points.push(new THREE.Vector2(0.21, 1.25));
+  points.push(new THREE.Vector2(0.01, 1.28));
+  
+  const stem = new THREE.Mesh(new THREE.LatheGeometry(points, 24), goldMaterial);
+  trophyGroup.add(stem);
+  
+  // Globe top
+  const globe = new THREE.Mesh(new THREE.SphereGeometry(0.37, 24, 24), goldMaterial);
+  globe.position.y = 1.35;
+  trophyGroup.add(globe);
+  
+  // Green base rings
+  const ring1 = new THREE.Mesh(new THREE.TorusGeometry(0.30, 0.038, 8, 24), greenMaterial);
+  ring1.rotation.x = Math.PI / 2;
+  ring1.position.y = 0.06;
+  trophyGroup.add(ring1);
+  
+  const ring2 = ring1.clone();
+  ring2.position.y = 0.18;
+  trophyGroup.add(ring2);
+  
+  scene.add(trophyGroup);
+  
+  // Lights
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  
+  const light1 = new THREE.DirectionalLight(0xffffff, 1.4);
+  light1.position.set(2, 4, 3);
+  scene.add(light1);
+  
+  const light2 = new THREE.DirectionalLight(0x3CAC3B, 0.7); // Green neon glow reflection
+  light2.position.set(-2, 1, 1);
+  scene.add(light2);
+  
+  function anim() {
+    activeTrophyAnimId = requestAnimationFrame(anim);
+    trophyGroup.rotation.y += 0.014;
+    renderer.render(scene, camera);
+  }
+  anim();
 }

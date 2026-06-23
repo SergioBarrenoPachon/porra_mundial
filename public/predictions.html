@@ -5,250 +5,83 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mis Pronósticos - Porra Mundial 2026</title>
   <link rel="stylesheet" href="/css/style.css">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            carbon: '#0F0F0F',
+            neonGreen: '#3CAC3B',
+            torchRed: '#E61D25',
+            electricBlue: '#2A398D',
+            gold: '#F59E0B'
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    /* Styling overrides for prediction bracket layout */
-    .save-status-indicator {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.9rem;
-      font-weight: 700;
+    /* Prevent default focus ring styling since we use tailwind shadows */
+    select:focus, input:focus {
+      outline: none !important;
     }
-    .save-status-indicator.unsaved { color: var(--accent-gold); }
-    .save-status-indicator.saved { color: var(--accent-green); }
-    
-    .team-badge-circle {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.1);
-      font-size: 0.75rem;
-      font-weight: 800;
-    }
-    
-    /* Highlight inputs in cream for high contrast */
-    .score-input {
-      background: hsl(220, 20%, 15%);
-      border: 1px solid var(--border-color);
-      color: #fff;
-    }
-    .score-input:focus {
-      background: #fff;
-      color: #000;
-      border-color: var(--primary);
-    }
-    
-    .bracket-round-header {
-      font-size: 1.15rem;
-      font-weight: 800;
-      margin-bottom: 15px;
-      color: var(--primary);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border-left: 3px solid var(--primary);
-      padding-left: 8px;
-    }
-    
-    /* Disable look overlay */
-    .readonly-banner {
-      background: hsla(350, 75%, 50%, 0.15);
-      border: 1px solid var(--accent-red);
-      color: #ff8a80;
-      padding: 16px;
-      border-radius: 12px;
-      margin-bottom: 30px;
-      text-align: center;
-      font-weight: 700;
-    }
-
-    /* ====================================================
-       TIMELINE CALENDAR CARD STYLES
-       ==================================================== */
-
-    /* Card: flexbox row on desktop, column on mobile */
-    .tl-card {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      gap: 0;
-      padding: 12px 16px;
-      background: rgba(7, 5, 15, 0.5);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      transition: border-color 0.2s;
-    }
-    .tl-card:hover { border-color: rgba(255,255,255,0.15); }
-    .tl-card.played  { border-left: 3px solid var(--accent-gold); }
-    .tl-card.pending { border-left: 3px solid rgba(255,255,255,0.06); }
-
-    /* Left: match info (takes all remaining space) */
-    .tl-info {
-      flex: 1;
-      min-width: 0;
-      padding-right: 14px;
-    }
-    .tl-meta {
-      font-size: 0.7rem;
-      color: var(--color-text-muted);
-      margin-bottom: 4px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .tl-teams {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      flex-wrap: nowrap;
-      overflow: hidden;
-    }
-    .tl-team-name {
-      font-weight: 800;
-      color: #fff;
-      font-size: 0.88rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .tl-vs {
-      font-size: 0.75rem;
-      color: var(--color-text-muted);
-      flex-shrink: 0;
-    }
-
-    /* Right: scores wrapper — always a flex row (result | prediction) */
-    .tl-scores-row {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      gap: 0;
-      flex-shrink: 0;
-    }
-
-    /* Result block */
-    .tl-result {
-      text-align: center;
-      padding: 0 14px;
-      border-left: 1px solid rgba(255,255,255,0.07);
-      min-width: 82px;
-    }
-
-    /* Prediction block */
-    .tl-prediction {
-      text-align: right;
-      padding: 0 0 0 14px;
-      border-left: 1px dashed rgba(255,255,255,0.07);
-      min-width: 100px;
-    }
-
-    /* Shared label above score */
-    .tl-section-label {
-      font-size: 0.6rem;
-      color: var(--color-text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      margin-bottom: 2px;
-      white-space: nowrap;
-    }
-
-    /* Score values */
-    .tl-score-real {
-      font-size: 1rem;
-      font-weight: 900;
-      white-space: nowrap;
-    }
-    .tl-score-real.has-result { color: var(--accent-gold); }
-    .tl-score-real.pending    { color: rgba(255,255,255,0.2); font-size: 0.78rem; font-weight: 400; }
-
-    .tl-score-pred {
-      font-size: 0.82rem;
-      font-weight: 700;
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 4px;
-    }
-    .tl-score-pred.has-pred { color: var(--secondary); }
-    .tl-score-pred.no-pred  { color: rgba(255,255,255,0.2); font-weight: 400; font-size: 0.72rem; }
-
-    /* MOBILE (≤ 580px): stack info above scores, scores remain side-by-side */
-    @media (max-width: 580px) {
-      .tl-card {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-        padding: 11px 13px;
-      }
-      .tl-info {
-        padding-right: 0;
-      }
-      .tl-team-name {
-        font-size: 0.82rem;
-        max-width: 100px;
-      }
-      .tl-scores-row {
-        width: 100%;
-      }
-      .tl-result {
-        flex: 1;
-        border-left: none;
-        border-right: 1px dashed rgba(255,255,255,0.08);
-        text-align: center;
-        padding: 0 10px 0 0;
-        min-width: 0;
-      }
-      .tl-prediction {
-        flex: 1;
-        border-left: none;
-        padding: 0 0 0 10px;
-        min-width: 0;
-      }
-      .tl-score-pred {
-        justify-content: flex-end;
-      }
-    }
-
   </style>
 </head>
-<body>
+<body class="bg-carbon text-white min-h-screen pb-24 overflow-x-hidden">
 
-  <header>
-    <div class="nav-container">
-      <div class="brand">
-        <span>🏆 Porra<span class="brand-accent">Mundial2026</span></span>
+  <!-- Header -->
+  <header class="border-b border-white/5 bg-carbon/50 backdrop-blur-xl">
+    <div class="nav-container max-w-7xl mx-auto w-[92%] flex justify-between items-center py-4">
+      <div class="brand flex items-center gap-2">
+        <span class="text-xl md:text-2xl font-black tracking-wider uppercase">🏆 Porra<span class="brand-accent">Mundial2026</span></span>
       </div>
-      <nav>
+      <nav class="hidden md:flex gap-2">
         <a href="/predictions.html" class="nav-link active">Mis Pronósticos</a>
         <a href="/dashboard.html" class="nav-link">Leaderboard</a>
         <a href="/admin.html" id="admin-nav-link" class="nav-link" style="display: none;">Panel de Control</a>
         <div class="nav-user">
           <span class="username-display" id="user-greeting">Invitado</span>
-          <button onclick="handleLogout()" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem; width: auto;">Cerrar Sesión</button>
+          <button onclick="handleLogout()" class="btn btn-outline py-1.5 px-3 text-xs" style="width: auto;">Cerrar Sesión</button>
         </div>
       </nav>
+      <!-- Mobile user greeting -->
+      <div class="md:hidden flex items-center gap-3">
+        <span class="username-display text-xs" id="user-greeting-mobile">Invitado</span>
+        <button onclick="handleLogout()" class="btn btn-outline py-1 px-2.5 text-[10px]" style="width: auto;">Salir</button>
+      </div>
+    </div>
+    <!-- Mobile sub-navigation links -->
+    <div class="md:hidden flex justify-around border-t border-white/5 mt-3 pt-2 w-[92%] mx-auto text-xs">
+      <a href="/predictions.html" class="text-neonGreen py-1 font-bold border-b-2 border-neonGreen">Mis Pronósticos</a>
+      <a href="/dashboard.html" class="text-gray-400 py-1 font-bold">Leaderboard</a>
+      <a href="/admin.html" id="admin-nav-link-mobile" class="text-gray-400 py-1 font-bold" style="display: none;">Admin</a>
     </div>
   </header>
 
-  <main class="main-container">
-    <div class="hero-section">
-      <h1 class="hero-title">TUS PREDICCIONES DEL MUNDIAL</h1>
-      <p class="hero-subtitle">Introduce tus pronósticos para todos los partidos de grupos y fases eliminatorias.</p>
+  <main class="main-container max-w-7xl mx-auto w-[92%] mt-8">
+    
+    <!-- Hero / Title Section -->
+    <div class="hero-section flex flex-col items-center text-center py-6 mb-8 relative">
+      <h1 class="hero-title text-2xl md:text-4xl lg:text-5xl font-black uppercase">Tus Predicciones del Mundial</h1>
+      <p class="hero-subtitle text-xs md:text-sm max-w-lg mt-2">
+        Introduce tus pronósticos para todos los partidos de grupos y la llave final del torneo.
+      </p>
       
-      <div class="countdown-box" id="deadline-container">
+      <div class="countdown-box mt-4" id="deadline-container">
         <span class="countdown-label">Tiempo Restante:</span>
-        <span class="countdown-timer" id="countdown-clock">--d --h --m --s</span>
+        <span class="countdown-timer text-sm md:text-base" id="countdown-clock">--d --h --m --s</span>
       </div>
     </div>
 
-    <div id="readonly-message-banner" class="readonly-banner" style="display: none;">
+    <!-- Readonly Warning Banner -->
+    <div id="readonly-message-banner" class="hidden bg-torchRed/10 border border-torchRed/30 text-red-200 px-6 py-4 rounded-2xl mb-8 text-center text-sm font-bold shadow-lg">
       🔒 PREDICCIONES CERRADAS: La fecha límite del 13/06/2026 a las 21:00 ha expirado. Todos los campos están en modo de solo lectura.
     </div>
 
-    <div class="phase-tabs">
+    <!-- Phase Tabs -->
+    <div class="phase-tabs mb-8 flex justify-center gap-2 overflow-x-auto scrollbar-none pb-2">
       <div class="phase-tab active" onclick="switchTab('groups')">Fase de Grupos (72 Partidos)</div>
       <div class="phase-tab" onclick="switchTab('knockouts')">Fase Eliminatoria (Bracket)</div>
       <div class="phase-tab" onclick="switchTab('awards')">Premios Especiales</div>
@@ -256,36 +89,37 @@
     </div>
 
     <!-- TAB: GROUPS -->
-    <div id="tab-groups" class="tab-content">
+    <div id="tab-groups" class="tab-content block">
       <div class="group-grid" id="groups-container">
         <!-- Group cards populated dynamically by JS -->
       </div>
 
       <!-- Tabla de Mejores Terceros -->
-      <div class="card" style="margin-top: 30px; margin-bottom: 30px; display: none;" id="thirds-ranking-card">
-        <h2 class="group-title" style="border-color: var(--accent-gold); cursor: pointer; display: flex; justify-content: space-between; align-items: center; width: 100%;" onclick="toggleThirdsTable()">
+      <div class="card mt-8 p-6 bg-white/[0.03] border border-white/10 rounded-3xl" id="thirds-ranking-card" style="display: none;">
+        <h2 class="group-title text-lg md:text-xl font-black uppercase tracking-tight cursor-pointer flex justify-between items-center w-full border-b border-white/5 pb-4 mb-4" onclick="toggleThirdsTable()">
           <span>🎯 Tabla de Terceros Lugares (Mundial 2026)</span>
-          <span id="thirds-toggle-icon" style="font-size: 0.85rem; padding: 4px 10px; background: rgba(245, 158, 11, 0.15); border: 1px solid var(--accent-gold); border-radius: 8px; color: var(--accent-gold); font-weight: 700; transition: var(--transition-fast);">▶ Mostrar</span>
+          <span id="thirds-toggle-icon" class="text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-xl bg-gold/10 border border-gold/30 text-gold transition-all duration-300">▶ Mostrar</span>
         </h2>
-        <div id="thirds-table-collapsible" style="display: none; margin-top: 15px;">
-          <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-bottom: 15px;">
+        
+        <div id="thirds-table-collapsible" style="display: none;" class="mt-4">
+          <p class="text-gray-400 text-xs font-medium mb-6 leading-relaxed">
             Se clasifican a dieciseisavos de final los 8 mejores terceros de entre los 12 grupos. Esta tabla se calcula y ordena dinámicamente según tus pronósticos. Los clasificados se muestran en verde.
           </p>
-          <div style="overflow-x: auto;">
-            <table class="group-standings-table" style="font-size: 0.85rem; width: 100%;">
+          <div class="overflow-x-auto rounded-2xl border border-white/5 bg-black/20">
+            <table class="group-standings-table w-full text-left">
               <thead>
-                <tr>
-                  <th style="width: 40px; text-align: center;">#</th>
-                  <th style="width: 80px; text-align: center;">Grupo</th>
-                  <th style="text-align: left;">Equipo</th>
-                  <th style="width: 50px; text-align: center;">Pts</th>
-                  <th style="width: 50px; text-align: center;">GF</th>
-                  <th style="width: 50px; text-align: center;">DG</th>
-                  <th style="width: 90px; text-align: center;">FIFA Rank</th>
-                  <th style="width: 120px; text-align: center;">Estado</th>
+                <tr class="bg-black/40 border-b border-white/10 text-center font-bold text-xs">
+                  <th class="py-4 px-6 text-gray-400">#</th>
+                  <th class="py-4 text-gray-400">Grupo</th>
+                  <th class="py-4 px-6 text-left text-gray-400">Equipo</th>
+                  <th class="py-4 text-gray-400">Pts</th>
+                  <th class="py-4 text-gray-400">GF</th>
+                  <th class="py-4 text-gray-400">DG</th>
+                  <th class="py-4 text-gray-400">FIFA Rank</th>
+                  <th class="py-4 px-6 text-gray-400">Estado</th>
                 </tr>
               </thead>
-              <tbody id="thirds-table-body">
+              <tbody id="thirds-table-body" class="divide-y divide-white/5">
                 <!-- Populated dynamically by JS -->
               </tbody>
             </table>
@@ -295,13 +129,13 @@
     </div>
 
     <!-- TAB: KNOCKOUTS -->
-    <div id="tab-knockouts" class="tab-content" style="display: none;">
-      <p style="color: var(--color-text-muted); text-align: center; margin-bottom: 15px; font-size: 0.85rem;" class="desktop-only-text">
+    <div id="tab-knockouts" class="tab-content hidden">
+      <p class="text-gray-400 text-center text-xs font-semibold mb-6 leading-relaxed desktop-only-text">
         📐 Desplaza horizontalmente para ver toda la llave del torneo. Los equipos avanzan automáticamente según tus resultados.
       </p>
       
       <!-- Mobile round selector buttons -->
-      <div class="mobile-round-selector-container">
+      <div class="mobile-round-selector-container mb-6 overflow-x-auto gap-2">
         <button class="round-select-btn active" id="btn-r32-col" onclick="selectMobileRound('r32-col', this)">1/16</button>
         <button class="round-select-btn" id="btn-r16-col" onclick="selectMobileRound('r16-col', this)">1/8</button>
         <button class="round-select-btn" id="btn-r8-col" onclick="selectMobileRound('r8-col', this)">Cuartos</button>
@@ -309,19 +143,21 @@
         <button class="round-select-btn" id="btn-final-col" onclick="selectMobileRound('final-col', this)">Final</button>
       </div>
 
-      <div class="bracket-wrapper" id="bracket-wrapper">
+      <div class="bracket-wrapper bg-black/10 border border-white/5 rounded-3xl" id="bracket-wrapper">
         <!-- Entire bracket populated dynamically by JS -->
       </div>
 
       <!-- Third place match rendered separately below -->
-      <div class="bracket-special-matches" id="bracket-third-place-container"></div>
+      <div class="flex justify-center mt-8" id="bracket-third-place-container">
+        <!-- Renders dynamically -->
+      </div>
     </div>
 
     <!-- TAB: AWARDS -->
-    <div id="tab-awards" class="tab-content" style="display: none;">
-      <div class="card specials-card">
-        <h2 class="group-title">🏆 Premios Especiales del Torneo</h2>
-        <p style="margin-bottom: 20px; color: var(--color-text-muted);">Escribe el nombre de los jugadores que crees que ganarán los premios individuales del Mundial 2026. Los aciertos (evaluados sin distinguir mayúsculas ni espacios) suman puntos adicionales en la clasificación general.</p>
+    <div id="tab-awards" class="tab-content hidden">
+      <div class="card p-6 bg-white/[0.03] border border-white/10 rounded-3xl">
+        <h2 class="text-lg md:text-xl font-black uppercase tracking-tight border-b border-white/5 pb-4 mb-4">🏆 Premios Especiales del Torneo</h2>
+        <p class="text-gray-400 text-xs font-medium mb-6 leading-relaxed">Escribe el nombre de los jugadores que crees que ganarán los premios individuales del Mundial 2026. Los aciertos (evaluados sin distinguir mayúsculas ni espacios) suman puntos adicionales en la clasificación general.</p>
         <div class="specials-grid" id="specials-container">
           <!-- Selection dropdowns populated dynamically by JS -->
         </div>
@@ -329,21 +165,21 @@
     </div>
 
     <!-- TAB: TIMELINE -->
-    <div id="tab-timeline" class="tab-content" style="display: none;">
-      <div class="card" style="max-width: 960px; margin: 0 auto; padding: 20px;">
-        <h2 class="group-title">🗓️ Calendario y Resultados del Torneo</h2>
-        <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-bottom: 20px;">
+    <div id="tab-timeline" class="tab-content hidden">
+      <div class="card max-w-4xl mx-auto p-6 bg-white/[0.03] border border-white/10 rounded-3xl">
+        <h2 class="text-lg md:text-xl font-black uppercase tracking-tight border-b border-white/5 pb-4 mb-4">🗓️ Calendario y Resultados del Torneo</h2>
+        <p class="text-gray-400 text-xs font-medium mb-6">
           Listado completo de los partidos en orden cronológico real. La franja dorada indica partidos ya jugados.
         </p>
-        <div style="margin-bottom: 16px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-          <input type="text" id="search-timeline" class="form-control" placeholder="🔍 Buscar por equipo o fase..." oninput="filterTimelineList()" style="flex: 1; min-width: 180px; max-width: 320px; background: rgba(0,0,0,0.4); border-color: var(--border-color);">
-          <select id="filter-timeline-status" class="form-control" onchange="filterTimelineList()" style="width: auto; min-width: 160px; background: rgba(0,0,0,0.4); border-color: var(--border-color); height: 42px;">
+        <div class="mb-6 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+          <input type="text" id="search-timeline" class="px-4 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white text-xs w-full sm:w-64 focus:border-neonGreen transition-all duration-300 placeholder-white/20" placeholder="🔍 Buscar por equipo o fase..." oninput="filterTimelineList()">
+          <select id="filter-timeline-status" class="px-4 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white text-xs font-bold focus:border-neonGreen transition-all duration-300 cursor-pointer appearance-none" onchange="filterTimelineList()">
             <option value="all">Todos los partidos</option>
             <option value="played">✅ Jugados</option>
             <option value="pending">⏳ Pendientes</option>
           </select>
         </div>
-        <div id="timeline-matches-container" style="display: flex; flex-direction: column; gap: 8px;">
+        <div id="timeline-matches-container" class="flex flex-col gap-3">
           <!-- Populated dynamically by JS -->
         </div>
       </div>
@@ -351,22 +187,32 @@
 
   </main>
 
-  <!-- Bottom Floating Save Bar -->
-  <div class="float-bar" id="save-bar">
-    <div class="float-bar-content">
-      <div class="save-status-indicator unsaved" id="save-status">
-        <span style="font-size: 1.2rem;">⚠️</span>
-        <span>Tienes cambios sin guardar en tu borrador.</span>
-      </div>
-      <div style="width: auto;">
-        <button onclick="savePredictions()" class="btn btn-primary" id="save-btn" style="width: auto; padding: 8px 24px;">
-          Guardar Pronósticos
-        </button>
-      </div>
+  <!-- Bottom Floating Save Bar (Redesigned as a glass floating menu) -->
+  <div class="fixed bottom-6 left-1/2 -translate-x-1/2 max-w-2xl w-[92%] bg-[#0A0A0C]/80 backdrop-blur-lg border border-white/10 rounded-2xl p-4 shadow-2xl z-[150] flex items-center justify-between gap-4 transition-all duration-300" id="save-bar" style="display: none;">
+    <div class="save-status-indicator flex items-center gap-2.5 text-xs md:text-sm font-bold" id="save-status">
+      <span class="text-lg">⚠️</span>
+      <span class="text-gray-300">Tienes cambios sin guardar en tu borrador.</span>
     </div>
+    <button onclick="savePredictions()" class="btn btn-primary py-2 px-5 text-xs uppercase tracking-widest font-black rounded-xl shadow-lg shadow-neonGreen/20 hover:shadow-neonGreen/40 hover:scale-105 active:scale-95 transition-all duration-300" id="save-btn">
+      Guardar Pronósticos
+    </button>
   </div>
 
   <div class="toast-container" id="toast-container"></div>
+
+  <!-- Logout logic -->
+  <script>
+    async function handleLogout() {
+      try {
+        const res = await fetch('/api/auth/logout', { method: 'POST' });
+        if (res.ok) {
+          window.location.href = '/index.html';
+        }
+      } catch (err) {
+        console.error("Error logging out", err);
+      }
+    }
+  </script>
 
   <script src="/js/predictions.js"></script>
 </body>

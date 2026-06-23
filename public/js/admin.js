@@ -40,6 +40,10 @@ async function verifySession() {
   } else {
     currentUser = data.user;
     document.getElementById('user-greeting').innerText = `Admin: ${currentUser.username}`;
+    const greetingMob = document.getElementById('user-greeting-mobile');
+    if (greetingMob) greetingMob.innerText = `Admin: ${currentUser.username}`;
+    const adminNavMob = document.getElementById('admin-nav-link-mobile');
+    if (adminNavMob) adminNavMob.style.display = 'inline-block';
   }
 }
 
