@@ -73,9 +73,9 @@
 
     <!-- Mobile Navigation Section Tabs (Only visible on mobile for snapping helper) -->
     <div class="lg:hidden flex justify-center gap-2 mb-6 scroll-px-4 overflow-x-auto">
-      <button onclick="scrollToSection('section-leaderboard')" class="text-[11px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 active:bg-white/10">🏆 Tabla</button>
-      <button onclick="scrollToSection('section-evolution')" class="text-[11px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 active:bg-white/10">📈 Evolución</button>
-      <button onclick="scrollToSection('section-matrix')" class="text-[11px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 active:bg-white/10">🔍 Comparativa</button>
+      <button id="tab-btn-leaderboard" onclick="scrollToSection('section-leaderboard')" class="mobile-tab-btn text-[11px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 active:bg-white/10 transition-all duration-300">🏆 Tabla</button>
+      <button id="tab-btn-evolution" onclick="scrollToSection('section-evolution')" class="mobile-tab-btn text-[11px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 active:bg-white/10 transition-all duration-300">📈 Evolución</button>
+      <button id="tab-btn-matrix" onclick="scrollToSection('section-matrix')" class="mobile-tab-btn text-[11px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 active:bg-white/10 transition-all duration-300">🔍 Comparativa</button>
     </div>
 
     <!-- Main Content Snapping Area on Mobile, Asymmetric Grid on Desktop -->
@@ -123,44 +123,44 @@
         </div>
       </div>
 
-    </div>
+      <!-- Section Bottom: Match-by-Match Matrix -->
+      <div id="section-matrix" class="mobile-snap-item lg:col-span-12 w-full mt-0 lg:mt-8 card p-6 bg-white/[0.03] border border-white/10 rounded-3xl relative">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-4 mb-4">
+          <div>
+            <h2 class="text-lg md:text-xl font-black uppercase tracking-tight flex items-center gap-2">
+              <span>🔍</span> Matriz Comparativa de Pronósticos
+            </h2>
+            <p class="text-gray-400 text-xs font-medium mt-1" id="matrix-lock-notice">
+              Muestra lo que cada participante predijo en cada partido y los puntos que obtuvo.
+            </p>
+          </div>
+          <input type="text" id="search-matrix" class="px-4 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white text-xs w-full md:w-64 focus:border-neonGreen transition-all duration-300 placeholder-white/20" placeholder="Buscar por selección o fase..." oninput="filterMatrixTable()">
+        </div>
 
-    <!-- Bottom Full Width: Match-by-Match Matrix -->
-    <div id="section-matrix" class="card mt-8 p-6 bg-white/[0.03] border border-white/10 rounded-3xl relative w-full">
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-4 mb-4">
-        <div>
-          <h2 class="text-lg md:text-xl font-black uppercase tracking-tight flex items-center gap-2">
-            <span>🔍</span> Matriz Comparativa de Pronósticos
-          </h2>
-          <p class="text-gray-400 text-xs font-medium mt-1" id="matrix-lock-notice">
-            Muestra lo que cada participante predijo en cada partido y los puntos que obtuvo.
+        <!-- Blocked notice template -->
+        <div id="matrix-blocked-container" class="hidden text-center py-16 px-4 border border-dashed border-white/10 rounded-2xl bg-black/15 my-6">
+          <span class="text-5xl block mb-4">🔒</span>
+          <h3 class="text-lg font-black uppercase tracking-tight text-white mb-2">Matriz Comparativa Bloqueada</h3>
+          <p class="text-gray-400 max-w-md mx-auto text-xs leading-relaxed">
+            Los pronósticos de todos los participantes se desbloquearán automáticamente cuando se cierre el plazo de envío de apuestas (Sábado 13/06/2026 a las 21:00). ¡Hasta entonces, las estrategias de los participantes están protegidas!
           </p>
         </div>
-        <input type="text" id="search-matrix" class="px-4 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white text-xs w-full md:w-64 focus:border-neonGreen transition-all duration-300 placeholder-white/20" placeholder="Buscar por selección o fase..." oninput="filterMatrixTable()">
+
+        <!-- Comparison Matrix Table Wrapper -->
+        <div class="matrix-container bg-black/20" id="matrix-table-wrapper">
+          <table class="matrix-table text-left">
+            <thead id="matrix-head" class="text-center font-bold">
+              <!-- Headers generated dynamically by JS -->
+            </thead>
+            <tbody id="matrix-body" class="divide-y divide-white/5">
+              <tr>
+                <td colspan="4" class="text-gray-400 py-8 text-center text-sm font-medium">Cargando matriz...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <!-- Blocked notice template -->
-      <div id="matrix-blocked-container" class="hidden text-center py-16 px-4 border border-dashed border-white/10 rounded-2xl bg-black/15 my-6">
-        <span class="text-5xl block mb-4">🔒</span>
-        <h3 class="text-lg font-black uppercase tracking-tight text-white mb-2">Matriz Comparativa Bloqueada</h3>
-        <p class="text-gray-400 max-w-md mx-auto text-xs leading-relaxed">
-          Los pronósticos de todos los participantes se desbloquearán automáticamente cuando se cierre el plazo de envío de apuestas (Sábado 13/06/2026 a las 21:00). ¡Hasta entonces, las estrategias de los participantes están protegidas!
-        </p>
-      </div>
-
-      <!-- Comparison Matrix Table Wrapper -->
-      <div class="matrix-container bg-black/20" id="matrix-table-wrapper">
-        <table class="matrix-table text-left">
-          <thead id="matrix-head" class="text-center font-bold">
-            <!-- Headers generated dynamically by JS -->
-          </thead>
-          <tbody id="matrix-body" class="divide-y divide-white/5">
-            <tr>
-              <td colspan="4" class="text-gray-400 py-8 text-center text-sm font-medium">Cargando matriz...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
     </div>
 
   </main>
@@ -188,15 +188,49 @@
       const container = document.querySelector('.mobile-snap-container');
       const isMobile = window.innerWidth <= 900;
       
-      if (isMobile && container && (id === 'section-leaderboard' || id === 'section-evolution')) {
+      if (isMobile && container && (id === 'section-leaderboard' || id === 'section-evolution' || id === 'section-matrix')) {
         // Horizontal scroll inside mobile snap container without vertical jump
         const targetScrollLeft = container.scrollLeft + (el.getBoundingClientRect().left - container.getBoundingClientRect().left);
         container.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
       } else {
-        // Vertical scroll for bottom sections or on desktop
+        // Vertical scroll for desktop or fallback
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
+
+    // Dynamic active state highlighting for mobile navigation tabs
+    document.addEventListener("DOMContentLoaded", () => {
+      const container = document.querySelector('.mobile-snap-container');
+      const buttons = {
+        'section-leaderboard': document.getElementById('tab-btn-leaderboard'),
+        'section-evolution': document.getElementById('tab-btn-evolution'),
+        'section-matrix': document.getElementById('tab-btn-matrix')
+      };
+
+      // Set initial active state
+      if (buttons['section-leaderboard']) {
+        buttons['section-leaderboard'].classList.add('active');
+      }
+
+      if (container) {
+        container.addEventListener('scroll', () => {
+          const width = container.clientWidth;
+          if (width === 0) return;
+          const index = Math.round(container.scrollLeft / width);
+          const sections = ['section-leaderboard', 'section-evolution', 'section-matrix'];
+          sections.forEach((secId, i) => {
+            const btn = buttons[secId];
+            if (btn) {
+              if (i === index) {
+                btn.classList.add('active');
+              } else {
+                btn.classList.remove('active');
+              }
+            }
+          });
+        });
+      }
+    });
   </script>
 
   <script src="/js/dashboard.js"></script>
