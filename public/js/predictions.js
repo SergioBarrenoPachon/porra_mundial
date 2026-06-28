@@ -1143,8 +1143,8 @@ function renderTimeline() {
       const visTextHtml = visAugury ? visAugury.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') : '⚪ No avanzó a esta ronda';
 
       html += `
-        <div class="tl-card ${hasRealResult ? 'played' : 'pending'}" data-match-id="${m.id}" style="flex-wrap: wrap; gap: 12px; align-items: stretch;">
-          <div class="tl-info" style="flex: 1 1 220px; min-width: 200px;">
+        <div class="tl-card tl-card-knockout ${hasRealResult ? 'played' : 'pending'}" data-match-id="${m.id}">
+          <div class="tl-info tl-knockout-info">
             <div class="tl-meta">${m.id} &middot; ${phaseLabel}${m.date ? ` &middot; ${m.date} | ${m.time}` : ''}</div>
             <div class="tl-teams" style="margin-top: 6px;">
               <img src="https://flagcdn.com/w40/${(getFlagCode(m.local) || 'xx')}.png" style="width:20px;height:14px;object-fit:cover;border-radius:2px;flex-shrink:0;" alt="${m.local}" onerror="this.style.display='none'">
@@ -1155,21 +1155,21 @@ function renderTimeline() {
             </div>
           </div>
 
-          <div class="tl-result" style="padding: 0 16px; min-width: 110px; text-align: center; display: flex; flex-direction: column; justify-content: center;">
-            <div class="tl-section-label" style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted);">Resultado Real</div>
-            <div class="tl-score-real ${hasRealResult ? 'has-result' : 'pending'}" style="font-size: 1.1rem; font-weight: 900;">${realScoreStr}</div>
+          <div class="tl-result tl-knockout-result">
+            <div class="tl-section-label">Resultado Real</div>
+            <div class="tl-score-real ${hasRealResult ? 'has-result' : 'pending'}">${realScoreStr}</div>
           </div>
 
-          <div style="flex: 2 1 320px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 14px; display: flex; flex-direction: column; justify-content: center; backdrop-filter: blur(10px);">
-            <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; tracking: 0.5px; color: var(--accent-gold); margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+          <div class="tl-knockout-box">
+            <div class="tl-knockout-header">
               <span>⚽ Tu pronóstico para este cruce</span>
               ${ptsBadge}
             </div>
-            <div style="font-size: 0.82rem; color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
+            <div class="tl-knockout-row">
               <span style="display: inline-flex; align-items: center; gap: 6px;">${getFlagImgHtml(m.local)} <strong>${m.local}</strong></span>
               <span>${locTextHtml}</span>
             </div>
-            <div style="font-size: 0.82rem; color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <div class="tl-knockout-row">
               <span style="display: inline-flex; align-items: center; gap: 6px;">${getFlagImgHtml(m.visitor)} <strong>${m.visitor}</strong></span>
               <span>${visTextHtml}</span>
             </div>
