@@ -1023,28 +1023,21 @@ function renderTimeline() {
   if (!container) return;
   
   const sortedMatches = [...allMatches].sort(compareMatchesChronologically);
+  const userBracket = calculateUserBracket(draftPredictions, allMatches);
 
-  // Group headers: track which jornada/phase we're in to show section dividers
   let lastSection = null;
   let html = '';
 
   sortedMatches.forEach((m, idx) => {
     const pred = draftPredictions.matches[m.id] || { gl: '', gv: '', pkl: '', pkv: '' };
-
-    const hasRealResult = m.gl !== null && m.gv !== null;
+    const hasRealResult = m.gl !== null && m.gv !== null && m.gl !== '' && m.gv !== '';
     const realScoreStr = hasRealResult
       ? `${m.gl} - ${m.gv}${m.pkl !== null && m.pkl !== '' && m.pkl !== undefined ? ` (PK ${m.pkl}-${m.pkv})` : ''}`
       : '–';
 
-    const hasPrediction = pred.gl !== '' && pred.gv !== '' && pred.gl !== undefined && pred.gv !== undefined;
-    const predScoreStr = hasPrediction
-      ? `${pred.gl} - ${pred.gv}${pred.pkl !== null && pred.pkl !== '' && pred.pkl !== undefined ? ` (PK ${pred.pkl}-${pred.pkv})` : ''}`
-      : 'Sin pronóstico';
-
     const isKnockout = m.phase !== 'Group Stage';
     const phaseLabel = isKnockout ? m.phase : `Grupo ${m.group}`;
 
-    // Determine jornada header label for group stage
     let sectionLabel = null;
     if (!isKnockout) {
       const order = MATCH_CHRONO_ORDER[m.id] || 999;
@@ -1056,26 +1049,6 @@ function renderTimeline() {
       if (m.phase !== lastSection) { sectionLabel = m.phase; lastSection = m.phase; }
     }
 
-    // Points badge
-    let pointsBadge = '';
-    if (hasRealResult && hasPrediction) {
-      let points = 0;
-      const rGl = parseInt(m.gl), rGv = parseInt(m.gv);
-      const pGl = parseInt(pred.gl), pGv = parseInt(pred.gv);
-      if (!isKnockout) {
-        const exact = (rGl === pGl) && (rGv === pGv);
-        const outcome = Math.sign(rGl - rGv) === Math.sign(pGl - pGv);
-        if (exact) points = 3; else if (outcome) points = 1;
-      } else {
-        const rW = getWinnerOfMatch(m.local, m.visitor, m.gl, m.gv, m.pkl, m.pkv);
-        const pW = getWinnerOfMatch(m.local, m.visitor, pred.gl, pred.gv, pred.pkl, pred.pkv);
-        if (rW && pW && rW === pW) { points = (rGl === pGl && rGv === pGv) ? 3 : 1; }
-      }
-      const cls = points === 3 ? 'exact' : (points === 1 ? 'outcome' : 'zero');
-      pointsBadge = `<span class="matrix-points-badge points-${cls}">+${points}</span>`;
-    }
-
-    // Section divider
     if (sectionLabel) {
       html += `
         <div style="display: flex; align-items: center; gap: 10px; margin: ${idx === 0 ? '0' : '6px'} 0 4px;">
@@ -1083,46 +1056,126 @@ function renderTimeline() {
           <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.06);"></div>
         </div>`;
     }
-    
-    const auguryHtml = getTimelineAuguryHtml(m);
 
-    // Card — uses tl-card CSS class from predictions.html <style>
-    // On desktop: 3 columns (info | result | prediction)
-    // On mobile: collapses to info row + scores row (via CSS)
-    html += `
-      <div class="tl-card ${hasRealResult ? 'played' : 'pending'}" data-match-id="${m.id}">
-        <!-- LEFT: match info -->
-        <div class="tl-info">
-          <div class="tl-meta">${m.id} &middot; ${phaseLabel}${m.date ? ` &middot; ${m.date} | ${m.time}` : ''}</div>
-          <div class="tl-teams">
-            <img src="https://flagcdn.com/w40/${(getFlagCode(m.local) || 'xx')}.png"
-                 style="width:18px;height:12px;object-fit:cover;border-radius:2px;flex-shrink:0;" alt="${m.local}" onerror="this.style.display='none'">
-            <span class="tl-team-name">${m.local}</span>
-            <span class="tl-vs">vs</span>
-            <img src="https://flagcdn.com/w40/${(getFlagCode(m.visitor) || 'xx')}.png"
-                 style="width:18px;height:12px;object-fit:cover;border-radius:2px;flex-shrink:0;" alt="${m.visitor}" onerror="this.style.display='none'">
-            <span class="tl-team-name">${m.visitor}</span>
-          </div>
-          ${auguryHtml}
-        </div>
+    if (!isKnockout) {
+      // Group Stage standard rendering
+      const hasPrediction = pred.gl !== '' && pred.gv !== '' && pred.gl !== undefined && pred.gv !== undefined;
+      const predScoreStr = hasPrediction
+        ? `${pred.gl} - ${pred.gv}${pred.pkl !== null && pred.pkl !== '' && pred.pkl !== undefined ? ` (PK ${pred.pkl}-${pred.pkv})` : ''}`
+        : 'Sin pronóstico';
 
-        <!-- RIGHT wrapper: on mobile becomes .tl-scores-row -->
-        <div class="tl-scores-row">
-          <!-- CENTER: real result -->
-          <div class="tl-result">
-            <div class="tl-section-label">Resultado</div>
-            <div class="tl-score-real ${hasRealResult ? 'has-result' : 'pending'}">${realScoreStr}</div>
-          </div>
+      let pointsBadge = '';
+      if (hasRealResult && hasPrediction) {
+        let points = 0;
+        const rGl = parseInt(m.gl), rGv = parseInt(m.gv);
+        const pGl = parseInt(pred.gl), pGv = parseInt(pred.gv);
+        const exact = (rGl === pGl) && (rGv === pGv);
+        const outcome = Math.sign(rGl - rGv) === Math.sign(pGl - pGv);
+        if (exact) points = 3; else if (outcome) points = 1;
+        const cls = points === 3 ? 'exact' : (points === 1 ? 'outcome' : 'zero');
+        pointsBadge = `<span class="matrix-points-badge points-${cls}">+${points}</span>`;
+      }
 
-          <!-- RIGHT: user prediction -->
-          <div class="tl-prediction">
-            <div class="tl-section-label">Tu pronóstico</div>
-            <div class="tl-score-pred ${hasPrediction ? 'has-pred' : 'no-pred'}">
-              <span>${predScoreStr}</span>${pointsBadge}
+      html += `
+        <div class="tl-card ${hasRealResult ? 'played' : 'pending'}" data-match-id="${m.id}">
+          <div class="tl-info">
+            <div class="tl-meta">${m.id} &middot; ${phaseLabel}${m.date ? ` &middot; ${m.date} | ${m.time}` : ''}</div>
+            <div class="tl-teams">
+              <img src="https://flagcdn.com/w40/${(getFlagCode(m.local) || 'xx')}.png" style="width:18px;height:12px;object-fit:cover;border-radius:2px;flex-shrink:0;" alt="${m.local}" onerror="this.style.display='none'">
+              <span class="tl-team-name">${m.local}</span>
+              <span class="tl-vs">vs</span>
+              <img src="https://flagcdn.com/w40/${(getFlagCode(m.visitor) || 'xx')}.png" style="width:18px;height:12px;object-fit:cover;border-radius:2px;flex-shrink:0;" alt="${m.visitor}" onerror="this.style.display='none'">
+              <span class="tl-team-name">${m.visitor}</span>
             </div>
           </div>
-        </div>
-      </div>`;
+          <div class="tl-scores-row">
+            <div class="tl-result">
+              <div class="tl-section-label">Resultado</div>
+              <div class="tl-score-real ${hasRealResult ? 'has-result' : 'pending'}">${realScoreStr}</div>
+            </div>
+            <div class="tl-prediction">
+              <div class="tl-section-label">Tu pronóstico</div>
+              <div class="tl-score-pred ${hasPrediction ? 'has-pred' : 'no-pred'}">
+                <span>${predScoreStr}</span>${pointsBadge}
+              </div>
+            </div>
+          </div>
+        </div>`;
+    } else {
+      // Knockout Stage intuitive rendering ("forma chula")
+      const locAugury = getKnockoutTeamAugurySummary(m.local, userBracket, draftPredictions);
+      const visAugury = getKnockoutTeamAugurySummary(m.visitor, userBracket, draftPredictions);
+
+      let ptsBadge = '';
+      if (hasRealResult) {
+        let pts = 0;
+        const rW = getWinnerOfMatch(m.local, m.visitor, m.gl, m.gv, m.pkl, m.pkv);
+        const userPhaseWinners = new Set();
+        for (const id in userBracket) {
+          if (userBracket[id] && userBracket[id].winner) {
+            const matchObj = allMatches.find(x => x.id === id);
+            if (matchObj && matchObj.phase === m.phase) userPhaseWinners.add(userBracket[id].winner);
+          }
+        }
+        const hasAdv = userPhaseWinners.has(rW);
+        const usrMatch = userBracket[m.id];
+        let isExact = false;
+        if (usrMatch && ((usrMatch.local === m.local && usrMatch.visitor === m.visitor) || (usrMatch.local === m.visitor && usrMatch.visitor === m.local))) {
+          const predM = draftPredictions.matches[m.id];
+          if (predM && predM.gl !== '' && predM.gl !== undefined && predM.gl !== null) {
+            const rGl = parseInt(m.gl), rGv = parseInt(m.gv), pGl = parseInt(predM.gl), pGv = parseInt(predM.gv);
+            const rPkl = m.pkl !== null && m.pkl !== '' && m.pkl !== undefined ? parseInt(m.pkl) : null;
+            const rPkv = m.pkv !== null && m.pkv !== '' && m.pkv !== undefined ? parseInt(m.pkv) : null;
+            const pPkl = predM.pkl !== null && predM.pkl !== '' && predM.pkl !== undefined ? parseInt(predM.pkl) : null;
+            const pPkv = predM.pkv !== null && predM.pkv !== '' && predM.pkv !== undefined ? parseInt(predM.pkv) : null;
+            if (rGl === pGl && rGv === pGv && (rGl !== rGv || (rPkl === pPkl && rPkv === pPkv))) {
+              isExact = true;
+            }
+          }
+        }
+        if (isExact) pts = 3;
+        else if (hasAdv) pts = 1;
+        const cls = pts === 3 ? 'exact' : (pts === 1 ? 'outcome' : 'zero');
+        ptsBadge = `<span class="matrix-points-badge points-${cls}" style="font-size: 0.8rem; padding: 3px 10px; border-radius: 8px;">+${pts} ${pts === 1 ? 'Pt' : 'Pts'}</span>`;
+      }
+
+      const locTextHtml = locAugury ? locAugury.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') : '⚪ No avanzó a esta ronda';
+      const visTextHtml = visAugury ? visAugury.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') : '⚪ No avanzó a esta ronda';
+
+      html += `
+        <div class="tl-card ${hasRealResult ? 'played' : 'pending'}" data-match-id="${m.id}" style="flex-wrap: wrap; gap: 12px; align-items: stretch;">
+          <div class="tl-info" style="flex: 1 1 220px; min-width: 200px;">
+            <div class="tl-meta">${m.id} &middot; ${phaseLabel}${m.date ? ` &middot; ${m.date} | ${m.time}` : ''}</div>
+            <div class="tl-teams" style="margin-top: 6px;">
+              <img src="https://flagcdn.com/w40/${(getFlagCode(m.local) || 'xx')}.png" style="width:20px;height:14px;object-fit:cover;border-radius:2px;flex-shrink:0;" alt="${m.local}" onerror="this.style.display='none'">
+              <span class="tl-team-name" style="font-size: 0.95rem;">${m.local}</span>
+              <span class="tl-vs">vs</span>
+              <img src="https://flagcdn.com/w40/${(getFlagCode(m.visitor) || 'xx')}.png" style="width:20px;height:14px;object-fit:cover;border-radius:2px;flex-shrink:0;" alt="${m.visitor}" onerror="this.style.display='none'">
+              <span class="tl-team-name" style="font-size: 0.95rem;">${m.visitor}</span>
+            </div>
+          </div>
+
+          <div class="tl-result" style="padding: 0 16px; min-width: 110px; text-align: center; display: flex; flex-direction: column; justify-content: center;">
+            <div class="tl-section-label" style="font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted);">Resultado Real</div>
+            <div class="tl-score-real ${hasRealResult ? 'has-result' : 'pending'}" style="font-size: 1.1rem; font-weight: 900;">${realScoreStr}</div>
+          </div>
+
+          <div style="flex: 2 1 320px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 14px; display: flex; flex-direction: column; justify-content: center; backdrop-filter: blur(10px);">
+            <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; tracking: 0.5px; color: var(--accent-gold); margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+              <span>⚽ Tu pronóstico para este cruce</span>
+              ${ptsBadge}
+            </div>
+            <div style="font-size: 0.82rem; color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px;">
+              <span style="display: inline-flex; align-items: center; gap: 6px;">${getFlagImgHtml(m.local)} <strong>${m.local}</strong></span>
+              <span>${locTextHtml}</span>
+            </div>
+            <div style="font-size: 0.82rem; color: #fff; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+              <span style="display: inline-flex; align-items: center; gap: 6px;">${getFlagImgHtml(m.visitor)} <strong>${m.visitor}</strong></span>
+              <span>${visTextHtml}</span>
+            </div>
+          </div>
+        </div>`;
+    }
   });
 
   container.innerHTML = html;
@@ -1186,6 +1239,137 @@ function scrollToThirdToLastPlayedMatch() {
 
 // Bind timeline filter to window
 window.filterTimelineList = filterTimelineList;
+
+function calculateUserBracket(predObj, dbMatches) {
+  const standings = {};
+  const groups = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+  groups.forEach(g => {
+    standings[g] = [];
+    const groupMatches = dbMatches.filter(m => m.phase === 'Group Stage' && m.group === g);
+    const teams = new Set();
+    groupMatches.forEach(m => { teams.add(m.local); teams.add(m.visitor); });
+    teams.forEach(t => { standings[g].push({ team: t, pts: 0, gf: 0, gc: 0, dg: 0, fifaRank: TEAM_DATA[t]?.rank || 150 }); });
+  });
+  dbMatches.forEach(m => {
+    if (m.phase !== 'Group Stage') return;
+    const g = m.group;
+    const pred = predObj.matches[m.id];
+    if (pred && pred.gl !== '' && pred.gl !== undefined && pred.gl !== null && pred.gv !== '' && pred.gv !== undefined && pred.gv !== null) {
+      const gl = parseInt(pred.gl); const gv = parseInt(pred.gv);
+      const localTeam = standings[g].find(x => x.team === m.local);
+      const visitorTeam = standings[g].find(x => x.team === m.visitor);
+      if (localTeam && visitorTeam) {
+        localTeam.gf += gl; localTeam.gc += gv; localTeam.dg += (gl - gv);
+        visitorTeam.gf += gv; visitorTeam.gc += gl; visitorTeam.dg += (gv - gl);
+        if (gl > gv) localTeam.pts += 3; else if (gv > gl) visitorTeam.pts += 3; else { localTeam.pts += 1; visitorTeam.pts += 1; }
+      }
+    }
+  });
+  groups.forEach(g => { standings[g].sort((a, b) => { if (b.pts !== a.pts) return b.pts - a.pts; if (b.dg !== a.dg) return b.dg - a.dg; if (b.gf !== a.gf) return b.gf - a.gf; return a.fifaRank - b.fifaRank; }); });
+  const thirds = [];
+  for (const g in standings) {
+    const t3 = standings[g][2];
+    if (t3) {
+      const groupMatches = dbMatches.filter(m => m.phase === 'Group Stage' && m.group === g);
+      const isCompleted = groupMatches.every(m => { const p = predObj.matches[m.id]; return p && p.gl !== '' && p.gl !== undefined && p.gl !== null && p.gv !== '' && p.gv !== undefined && p.gv !== null; });
+      thirds.push({ group: g, team: isCompleted ? t3.team : `3º Grupo ${g}`, pts: isCompleted ? t3.pts : 0, gf: isCompleted ? t3.gf : 0, gc: isCompleted ? t3.gc : 0, dg: isCompleted ? t3.dg : 0, fifaRank: t3.fifaRank });
+    }
+  }
+  thirds.sort((a, b) => { if (b.pts !== a.pts) return b.pts - a.pts; if (b.dg !== a.dg) return b.dg - a.dg; if (b.gf !== a.gf) return b.gf - a.gf; return a.fifaRank - b.fifaRank; });
+  const top8Thirds = thirds.slice(0, 8);
+  const advanceTeams = {
+    "3o Top 1": top8Thirds[0]?.team || "3º Mejor 1", "3o Top 2": top8Thirds[1]?.team || "3º Mejor 2", "3o Top 3": top8Thirds[2]?.team || "3º Mejor 3", "3o Top 4": top8Thirds[3]?.team || "3º Mejor 4",
+    "3o Top 5": top8Thirds[4]?.team || "3º Mejor 5", "3o Top 6": top8Thirds[5]?.team || "3º Mejor 6", "3o Top 7": top8Thirds[6]?.team || "3º Mejor 7", "3o Top 8": top8Thirds[7]?.team || "3º Mejor 8"
+  };
+  groups.forEach(g => {
+    const groupMatches = dbMatches.filter(m => m.phase === 'Group Stage' && m.group === g);
+    const isCompleted = groupMatches.every(m => { const p = predObj.matches[m.id]; return p && p.gl !== '' && p.gl !== undefined && p.gl !== null && p.gv !== '' && p.gv !== undefined && p.gv !== null; });
+    advanceTeams[`1${g}`] = isCompleted ? (standings[g][0]?.team || `1º Grupo ${g}`) : `1º Grupo ${g}`;
+    advanceTeams[`2${g}`] = isCompleted ? (standings[g][1]?.team || `2º Grupo ${g}`) : `2º Grupo ${g}`;
+    advanceTeams[`3${g}`] = isCompleted ? (standings[g][2]?.team || `3º Grupo ${g}`) : `3º Grupo ${g}`;
+  });
+  const bracketTeams = {}; const userMatches = {};
+  const r32Matches = [
+    { id: "M73", label: "D1", lRef: "1A", vRef: "3o Top 1" }, { id: "M74", label: "D2", lRef: "2A", vRef: "2B" }, { id: "M75", label: "D3", lRef: "1B", vRef: "3o Top 2" }, { id: "M76", label: "D4", lRef: "1C", vRef: "3o Top 3" },
+    { id: "M77", label: "D5", lRef: "2C", vRef: "2D" }, { id: "M78", label: "D6", lRef: "1D", vRef: "3o Top 4" }, { id: "M79", label: "D7", lRef: "1E", vRef: "3o Top 5" }, { id: "M80", label: "D8", lRef: "2E", vRef: "2F" },
+    { id: "M81", label: "D9", lRef: "1F", vRef: "3o Top 6" }, { id: "M82", label: "D10", lRef: "1G", vRef: "3o Top 7" }, { id: "M83", label: "D11", lRef: "2G", vRef: "2H" }, { id: "M84", label: "D12", lRef: "1H", vRef: "3o Top 8" },
+    { id: "M85", label: "D13", lRef: "1I", vRef: "2J" }, { id: "M86", label: "D14", lRef: "1J", vRef: "2K" }, { id: "M87", label: "D15", lRef: "1K", vRef: "2L" }, { id: "M88", label: "D16", lRef: "1L", vRef: "2I" }
+  ];
+  r32Matches.forEach(m => {
+    const local = advanceTeams[m.lRef]; const visitor = advanceTeams[m.vRef];
+    const pred = predObj.matches[m.id] || { gl: '', gv: '', pkl: '', pkv: '' };
+    const winner = getWinnerOfMatch(local, visitor, pred.gl, pred.gv, pred.pkl, pred.pkv);
+    const loser = (winner === local) ? visitor : ((winner === visitor) ? local : null);
+    bracketTeams[m.label] = winner; userMatches[m.id] = { local, visitor, winner, loser };
+  });
+  const r16Matches = [
+    { id: "M89", label: "O1", lRef: "D1", vRef: "D2" }, { id: "M90", label: "O2", lRef: "D3", vRef: "D4" }, { id: "M91", label: "O3", lRef: "D5", vRef: "D6" }, { id: "M92", label: "O4", lRef: "D7", vRef: "D8" },
+    { id: "M93", label: "O5", lRef: "D9", vRef: "D10" }, { id: "M94", label: "O6", lRef: "D11", vRef: "D12" }, { id: "M95", label: "O7", lRef: "D13", vRef: "D14" }, { id: "M96", label: "O8", lRef: "D15", vRef: "D16" }
+  ];
+  r16Matches.forEach(m => {
+    const local = bracketTeams[m.lRef] || `Ganador ${m.lRef}`; const visitor = bracketTeams[m.vRef] || `Ganador ${m.vRef}`;
+    const pred = predObj.matches[m.id] || { gl: '', gv: '', pkl: '', pkv: '' };
+    const winner = getWinnerOfMatch(local, visitor, pred.gl, pred.gv, pred.pkl, pred.pkv);
+    const loser = (winner === local) ? visitor : ((winner === visitor) ? local : null);
+    bracketTeams[m.label] = winner; userMatches[m.id] = { local, visitor, winner, loser };
+  });
+  const r8Matches = [ { id: "M97", label: "C1", lRef: "O1", vRef: "O2" }, { id: "M98", label: "C2", lRef: "O3", vRef: "O4" }, { id: "M99", label: "C3", lRef: "O5", vRef: "O6" }, { id: "M100", label: "C4", lRef: "O7", vRef: "O8" } ];
+  r8Matches.forEach(m => {
+    const local = bracketTeams[m.lRef] || `Ganador ${m.lRef}`; const visitor = bracketTeams[m.vRef] || `Ganador ${m.vRef}`;
+    const pred = predObj.matches[m.id] || { gl: '', gv: '', pkl: '', pkv: '' };
+    const winner = getWinnerOfMatch(local, visitor, pred.gl, pred.gv, pred.pkl, pred.pkv);
+    const loser = (winner === local) ? visitor : ((winner === visitor) ? local : null);
+    bracketTeams[m.label] = winner; userMatches[m.id] = { local, visitor, winner, loser };
+  });
+  const s1Local = bracketTeams["C1"] || "Ganador C1"; const s1Visitor = bracketTeams["C2"] || "Ganador C2";
+  const s2Local = bracketTeams["C3"] || "Ganador C3"; const s2Visitor = bracketTeams["C4"] || "Ganador C4";
+  const s1Pred = predObj.matches["M101"] || { gl: '', gv: '', pkl: '', pkv: '' }; const s2Pred = predObj.matches["M102"] || { gl: '', gv: '', pkl: '', pkv: '' };
+  const s1Winner = getWinnerOfMatch(s1Local, s1Visitor, s1Pred.gl, s1Pred.gv, s1Pred.pkl, s1Pred.pkv); const s2Winner = getWinnerOfMatch(s2Local, s2Visitor, s2Pred.gl, s2Pred.gv, s2Pred.pkl, s2Pred.pkv);
+  const s1Loser = s1Winner ? ((s1Winner === s1Local) ? s1Visitor : s1Local) : null; const s2Loser = s2Winner ? ((s2Winner === s2Local) ? s2Visitor : s2Local) : null;
+  userMatches["M101"] = { local: s1Local, visitor: s1Visitor, winner: s1Winner, loser: s1Loser }; userMatches["M102"] = { local: s2Local, visitor: s2Visitor, winner: s2Winner, loser: s2Loser };
+  const t3Local = s1Loser || "Perdedor S1"; const t3Visitor = s2Loser || "Perdedor S2"; const t3Pred = predObj.matches["M103"] || { gl: '', gv: '', pkl: '', pkv: '' };
+  const t3Winner = getWinnerOfMatch(t3Local, t3Visitor, t3Pred.gl, t3Pred.gv, t3Pred.pkl, t3Pred.pkv); const t3Loser = t3Winner ? ((t3Winner === t3Local) ? t3Visitor : t3Local) : null;
+  userMatches["M103"] = { local: t3Local, visitor: t3Visitor, winner: t3Winner, loser: t3Loser };
+  const finalLocal = s1Winner || "Ganador S1"; const finalVisitor = s2Winner || "Ganador S2"; const finalPred = predObj.matches["M104"] || { gl: '', gv: '', pkl: '', pkv: '' };
+  const finalWinner = getWinnerOfMatch(finalLocal, finalVisitor, finalPred.gl, finalPred.gv, finalPred.pkl, finalPred.pkv); const finalLoser = finalWinner ? ((finalWinner === finalLocal) ? finalVisitor : finalLocal) : null;
+  userMatches["M104"] = { local: finalLocal, visitor: finalVisitor, winner: finalWinner, loser: finalLoser };
+  return userMatches;
+}
+
+function getKnockoutTeamAugurySummary(teamName, userBracket, predObj) {
+  if (!teamName || teamName.startsWith('Ganador') || teamName.startsWith('Perdedor') || teamName.startsWith('Local') || teamName.startsWith('Visitante') || teamName.startsWith('1º') || teamName.startsWith('2º') || teamName.startsWith('3º')) {
+    return null;
+  }
+  for (const mId in userBracket) {
+    const um = userBracket[mId];
+    if (um.local === teamName || um.visitor === teamName) {
+      const pred = predObj.matches[mId];
+      if (!pred || pred.gl === '' || pred.gl === undefined || pred.gl === null || pred.gv === '' || pred.gv === undefined || pred.gv === null) {
+        return { text: 'Sin marcador asignado', won: false };
+      }
+      const isLocal = um.local === teamName;
+      const gFor = isLocal ? parseInt(pred.gl) : parseInt(pred.gv);
+      const gAgainst = isLocal ? parseInt(pred.gv) : parseInt(pred.gl);
+      const won = um.winner === teamName;
+      let pklStr = '';
+      if (pred.pkl !== '' && pred.pkl !== undefined && pred.pkl !== null && pred.pkv !== '' && pred.pkv !== undefined && pred.pkv !== null) {
+        const pkFor = isLocal ? pred.pkl : pred.pkv;
+        const pkAgainst = isLocal ? pred.pkv : pred.pkl;
+        pklStr = ` (PK ${pkFor}-${pkAgainst})`;
+      }
+      const outcomeText = won ? 'ganaba' : 'perdía';
+      const icon = won ? '🟢' : '🔴';
+      return {
+        text: `${icon} Pusiste que **${outcomeText} ${gFor}-${gAgainst}**${pklStr}`,
+        won,
+        gFor,
+        gAgainst,
+        opponent: isLocal ? um.visitor : um.local
+      };
+    }
+  }
+  return { text: '⚪ No avanzó en tu porra', won: false };
+}
 
 function calculateUserBracketFromDraft() {
   if (!draftPredictions || !draftPredictions.matches) return {};
