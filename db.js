@@ -104,6 +104,39 @@ async function initDb() {
   }
 }
 
+function syncMatchSchema(data) {
+  let modified = false;
+  try {
+    if (fsSync.existsSync(DB_FILE)) {
+      const templateStr = fsSync.readFileSync(DB_FILE, 'utf8');
+      const templateData = JSON.parse(templateStr);
+      if (templateData.matches && Array.isArray(templateData.matches)) {
+        if (!data.matches) data.matches = [];
+        templateData.matches.forEach(tm => {
+          let em = data.matches.find(m => m.id === tm.id);
+          if (!em) {
+            data.matches.push(JSON.parse(JSON.stringify(tm)));
+            modified = true;
+          } else {
+            if (em.local !== tm.local || em.visitor !== tm.visitor || em.date !== tm.date || em.time !== tm.time || em.phase !== tm.phase || em.group !== tm.group) {
+              em.local = tm.local;
+              em.visitor = tm.visitor;
+              em.date = tm.date;
+              em.time = tm.time;
+              em.phase = tm.phase;
+              em.group = tm.group;
+              modified = true;
+            }
+          }
+        });
+      }
+    }
+  } catch (e) {
+    console.error("⚠️ [DB] Error syncing match schema template:", e);
+  }
+  return modified;
+}
+
 /**
  * Ensure default database structure and values exist to prevent API crashes
  * Returns true if modifications were made.
@@ -162,6 +195,10 @@ function ensureDefaults(data) {
     modified = true;
   }
 
+  if (syncMatchSchema(data)) {
+    modified = true;
+  }
+
   return modified;
 }
 
@@ -176,7 +213,9 @@ async function readDb() {
         throw new Error('Database record not found in PostgreSQL store');
       }
       const data = res.rows[0].data;
-      ensureDefaults(data);
+      if (ensureDefaults(data)) {
+        await writeDb(data);
+      }
       return data;
     } catch (err) {
       console.error('❌ [DB] Error reading from PostgreSQL database:', err);
@@ -190,7 +229,9 @@ async function readDb() {
     try {
       const dataStr = await fs.readFile(DB_FILE, 'utf8');
       const data = JSON.parse(dataStr);
-      ensureDefaults(data);
+      if (ensureDefaults(data)) {
+        await writeDb(data);
+      }
       return data;
     } catch (err) {
       console.error('❌ [DB] Error reading from local database file:', err);
