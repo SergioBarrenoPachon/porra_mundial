@@ -121,10 +121,17 @@
     <!-- TAB 2: PARTICIPANTS PREDICTIONS -->
     <div id="admin-tab-predictions" class="admin-tab-content hidden">
       <div class="card max-w-4xl mx-auto p-6 bg-white/[0.03] border border-white/10 rounded-3xl">
-        <h2 class="text-lg md:text-xl font-black uppercase tracking-tight border-b border-white/5 pb-4 mb-4">📝 Editar Pronósticos de Participantes</h2>
-        <p class="text-gray-400 text-xs font-medium mb-6 leading-relaxed">
-          Selecciona un participante para ver y modificar sus pronósticos. Como administrador, puedes realizar cambios incluso después del cierre de la fecha límite.
-        </p>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4 mb-6">
+          <div>
+            <h2 class="text-lg md:text-xl font-black uppercase tracking-tight">📝 Editar Pronósticos de Participantes</h2>
+            <p class="text-gray-400 text-xs font-medium leading-relaxed mt-1">
+              Selecciona un participante para ver y modificar sus pronósticos. Como administrador, puedes realizar cambios incluso después del cierre de la fecha límite.
+            </p>
+          </div>
+          <button onclick="exportFullBackup()" class="btn btn-primary py-2.5 px-4 text-xs font-black uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 shrink-0" style="width: auto;">
+            <span>📥</span> Exportar Todo (JSON)
+          </button>
+        </div>
         
         <div class="form-group max-w-xs mb-8">
           <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2" for="admin-user-select">Seleccionar Participante:</label>
@@ -246,6 +253,19 @@
         </div>
 
         <div class="flex flex-col gap-8">
+          <!-- Backup and Export Card -->
+          <div class="card p-6 bg-white/[0.03] border border-neonGreen/20 rounded-3xl">
+            <h2 class="text-lg md:text-xl font-black uppercase tracking-tight border-b border-white/5 pb-4 mb-4 flex items-center gap-2">
+              <span>📦</span> Copia de Seguridad y Respaldos
+            </h2>
+            <p class="text-gray-400 text-xs font-medium leading-relaxed mb-6">
+              Descarga un fichero JSON completo con todos los pronósticos ingresados por los participantes, los resultados oficiales y la configuración actual.
+            </p>
+            <button onclick="exportFullBackup()" class="w-full btn btn-primary py-3.5 px-6 text-xs font-black uppercase tracking-widest rounded-xl shadow-lg shadow-neonGreen/20 flex items-center justify-center gap-2">
+              <span>📥</span> Descargar Todos los Datos (JSON)
+            </button>
+          </div>
+
           <!-- Config Winners Card -->
           <div class="card p-6 bg-white/[0.03] border border-white/10 rounded-3xl">
             <h2 class="text-lg md:text-xl font-black uppercase tracking-tight border-b border-white/5 pb-4 mb-6">🏆 Ganadores Oficiales Trofeos</h2>

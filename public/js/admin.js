@@ -797,10 +797,11 @@ async function confirmResetData() {
   } catch (err) {
     console.error('Error resetting data:', err);
     showToast('Error de conexión con el servidor.', true);
-  } finally {
-    btn.innerText = '🗑️ Borrar Todos los Datos';
-    btn.disabled = false;
   }
+}
+
+function exportFullBackup() {
+  window.location.href = '/api/admin/export-database';
 }
 
 // Bind to window global scope for inline event handlers in admin.html
@@ -812,4 +813,6 @@ window.togglePredPKInputsVisibility = togglePredPKInputsVisibility;
 window.confirmResetData = confirmResetData;
 window.toggleOverrideInput = toggleOverrideInput;
 window.saveUserConfig = saveUserConfig;
+window.exportFullBackup = exportFullBackup;
+
 
