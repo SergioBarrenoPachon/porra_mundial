@@ -587,7 +587,7 @@ function renderUserMatchesList() {
             <span style="font-weight: normal; color: var(--color-text-muted);">vs</span> 
             ${getFlagImgHtml(m.visitor)} ${m.visitor}
           </strong><br>
-          <small style="color: var(--color-text-muted);">Partido ${m.id} (${m.phase === 'Group Stage' ? 'Grupo ' + m.group : m.phase})</small>
+          <small style="color: var(--color-text-muted);">Partido ${m.id} (${m.phase === 'Group Stage' ? 'Grupo ' + m.group : m.phase})${m.date ? ` • ${m.date} | ${m.time}` : ''}</small>
         </div>
         
         <div class="match-admin-scores">

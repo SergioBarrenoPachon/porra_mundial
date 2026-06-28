@@ -6188,9 +6188,9 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M89",
+      "local": "Ganador D1",
       "phase": "Octavos",
-      "visitor": "Visitante M89"
+      "visitor": "Ganador D2"
     },
     {
       "gl": null,
@@ -6199,9 +6199,9 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M90",
+      "local": "Ganador D3",
       "phase": "Octavos",
-      "visitor": "Visitante M90"
+      "visitor": "Ganador D4"
     },
     {
       "gl": null,
@@ -6210,9 +6210,9 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M91",
+      "local": "Ganador D5",
       "phase": "Octavos",
-      "visitor": "Visitante M91"
+      "visitor": "Ganador D6"
     },
     {
       "gl": null,
@@ -6221,9 +6221,9 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M92",
+      "local": "Ganador D7",
       "phase": "Octavos",
-      "visitor": "Visitante M92"
+      "visitor": "Ganador D8"
     },
     {
       "gl": null,
@@ -6232,9 +6232,9 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M93",
+      "local": "Ganador D9",
       "phase": "Octavos",
-      "visitor": "Visitante M93"
+      "visitor": "Ganador D10"
     },
     {
       "gl": null,
@@ -6243,9 +6243,9 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M94",
+      "local": "Ganador D11",
       "phase": "Octavos",
-      "visitor": "Visitante M94"
+      "visitor": "Ganador D12"
     },
     {
       "gl": null,
@@ -6254,9 +6254,9 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M95",
+      "local": "Ganador D13",
       "phase": "Octavos",
-      "visitor": "Visitante M95"
+      "visitor": "Ganador D14"
     },
     {
       "gl": null,
@@ -6265,9 +6265,9 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M96",
+      "local": "Ganador D15",
       "phase": "Octavos",
-      "visitor": "Visitante M96"
+      "visitor": "Ganador D16"
     },
     {
       "gl": null,
@@ -6276,9 +6276,9 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M97",
+      "local": "Ganador O1",
       "phase": "Cuartos",
-      "visitor": "Visitante M97"
+      "visitor": "Ganador O2"
     },
     {
       "gl": null,
@@ -6287,9 +6287,9 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M98",
+      "local": "Ganador O3",
       "phase": "Cuartos",
-      "visitor": "Visitante M98"
+      "visitor": "Ganador O4"
     },
     {
       "gl": null,
@@ -6298,9 +6298,9 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M99",
+      "local": "Ganador O5",
       "phase": "Cuartos",
-      "visitor": "Visitante M99"
+      "visitor": "Ganador O6"
     },
     {
       "gl": null,
@@ -6309,9 +6309,9 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M100",
+      "local": "Ganador O7",
       "phase": "Cuartos",
-      "visitor": "Visitante M100"
+      "visitor": "Ganador O8"
     },
     {
       "gl": null,
@@ -6320,9 +6320,9 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M101",
+      "local": "Ganador C1",
       "phase": "Semifinales",
-      "visitor": "Visitante M101"
+      "visitor": "Ganador C2"
     },
     {
       "gl": null,
@@ -6331,9 +6331,9 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M102",
+      "local": "Ganador C3",
       "phase": "Semifinales",
-      "visitor": "Visitante M102"
+      "visitor": "Ganador C4"
     },
     {
       "gl": null,
@@ -6342,9 +6342,9 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M103",
+      "local": "Perdedor S1",
       "phase": "Finales",
-      "visitor": "Visitante M103"
+      "visitor": "Perdedor S2"
     },
     {
       "gl": null,
@@ -6353,9 +6353,9 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M104",
+      "local": "Ganador S1",
       "phase": "Finales",
-      "visitor": "Visitante M104"
+      "visitor": "Ganador S2"
     }
   ],
   "rankingHistory": [
