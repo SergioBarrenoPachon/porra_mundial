@@ -1149,10 +1149,21 @@ function renderMatrixTable() {
   
   const participants = Object.keys(masterPredictions).sort();
   
-  // Cache user prediction playoff brackets
+  // Cache user prediction playoff brackets and phase winners
   const userBrackets = {};
+  const userPhaseWinners = {};
   participants.forEach(p => {
     userBrackets[p] = calculateUserBracket(masterPredictions[p], allMatches);
+    userPhaseWinners[p] = {};
+    allMatches.forEach(m => {
+      if (m.phase !== 'Group Stage') {
+        if (!userPhaseWinners[p][m.phase]) userPhaseWinners[p][m.phase] = new Set();
+        const usrM = userBrackets[p][m.id];
+        if (usrM && usrM.winner) {
+          userPhaseWinners[p][m.phase].add(usrM.winner);
+        }
+      }
+    });
   });
   
   // Calculate actual official bracket
@@ -1232,22 +1243,35 @@ function renderMatrixTable() {
           
           let ptsBadge = '';
           if (actMatch && actMatch.winner) {
-            if (usrMatch && usrMatch.winner && actMatch.winner === usrMatch.winner) {
-              let isExact = false;
-              if (actMatch.local === usrMatch.local && actMatch.visitor === usrMatch.visitor) {
-                const realGl = parseInt(m.gl);
-                const realGv = parseInt(m.gv);
-                const predGl = parseInt(pred.gl);
-                const predGv = parseInt(pred.gv);
-                if (realGl === predGl && realGv === predGv) {
-                  isExact = true;
-                }
+            const realWinner = actMatch.winner;
+            const realLocal = actMatch.local;
+            const realVisitor = actMatch.visitor;
+            
+            const hasPredictedAdvancement = userPhaseWinners[p][m.phase] && userPhaseWinners[p][m.phase].has(realWinner);
+            
+            let isExact = false;
+            if (m.gl !== null && m.gv !== null && m.gl !== '' && m.gv !== '' && pred.gl !== '' && pred.gl !== undefined && pred.gl !== null && pred.gv !== '' && pred.gv !== undefined && pred.gv !== null) {
+              const realGl = parseInt(m.gl);
+              const realGv = parseInt(m.gv);
+              const predGl = parseInt(pred.gl);
+              const predGv = parseInt(pred.gv);
+              
+              const realPkl = m.pkl !== null && m.pkl !== undefined && m.pkl !== '' ? parseInt(m.pkl) : null;
+              const realPkv = m.pkv !== null && m.pkv !== undefined && m.pkv !== '' ? parseInt(m.pkv) : null;
+              const predPkl = pred.pkl !== null && pred.pkl !== undefined && pred.pkl !== '' ? parseInt(pred.pkl) : null;
+              const predPkv = pred.pkv !== null && pred.pkv !== undefined && pred.pkv !== '' ? parseInt(pred.pkv) : null;
+              
+              const scoreMatches = (realGl === predGl && realGv === predGv) && (realGl !== realGv || (realPkl === predPkl && realPkv === predPkv));
+              
+              if (scoreMatches && usrMatch && ((usrMatch.local === realLocal && usrMatch.visitor === realVisitor) || (usrMatch.local === realVisitor && usrMatch.visitor === realLocal))) {
+                isExact = true;
               }
-              if (isExact) {
-                ptsBadge = `<span class="matrix-points-badge points-exact">+3</span>`;
-              } else {
-                ptsBadge = `<span class="matrix-points-badge points-outcome">+1</span>`;
-              }
+            }
+            
+            if (isExact) {
+              ptsBadge = `<span class="matrix-points-badge points-exact">+3</span>`;
+            } else if (hasPredictedAdvancement) {
+              ptsBadge = `<span class="matrix-points-badge points-outcome">+1</span>`;
             } else {
               ptsBadge = `<span class="matrix-points-badge points-zero">0</span>`;
             }

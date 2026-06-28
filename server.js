@@ -612,7 +612,7 @@ function calculateParticipantScore(predObj, matchesList, config, winners) {
     }
   });
   
-  // 2. Score Knockout Stage matches (Bracket-aware winner matching)
+  // 2. Score Knockout Stage matches (Robust Phase & Matchup Evaluation)
   const officialPredObj = { matches: {}, specials: {} };
   matchesList.forEach(m => {
     officialPredObj.matches[m.id] = { gl: m.gl, gv: m.gv, pkl: m.pkl, pkv: m.pkv };
@@ -621,36 +621,68 @@ function calculateParticipantScore(predObj, matchesList, config, winners) {
   const actualBracket = calculateUserBracket(officialPredObj, matchesList);
   const userBracket = calculateUserBracket(predObj, matchesList);
   
-  const knockoutIds = [];
-  for (let i = 73; i <= 104; i++) {
-    knockoutIds.push(`M${i}`);
-  }
+  const phases = {
+    'Dieciseisavos': [],
+    'Octavos': [],
+    'Cuartos': [],
+    'Semifinales': [],
+    'Finales': []
+  };
   
-  knockoutIds.forEach(mId => {
+  matchesList.forEach(m => {
+    if (m.phase !== 'Group Stage' && phases[m.phase]) {
+      phases[m.phase].push(m.id);
+    }
+  });
+
+  const knockoutMatches = matchesList.filter(m => m.phase !== 'Group Stage');
+  
+  knockoutMatches.forEach(m => {
+    const mId = m.id;
     const act = actualBracket[mId];
-    const usr = userBracket[mId];
-    if (act && act.winner && usr && usr.winner) {
-      if (act.winner === usr.winner) {
-        // Correct advancing team
-        let earned = config.points.outcome;
-        
-        // Check if matchup was exactly correct AND score was exact
-        if (act.local === usr.local && act.visitor === usr.visitor) {
-          const m = matchesList.find(x => x.id === mId);
-          const pred = predObj.matches[mId];
-          if (m && pred && pred.gl !== '' && pred.gl !== undefined && pred.gl !== null &&
-                      pred.gv !== '' && pred.gv !== undefined && pred.gv !== null) {
-            const realGl = parseInt(m.gl);
-            const realGv = parseInt(m.gv);
-            const predGl = parseInt(pred.gl);
-            const predGv = parseInt(pred.gv);
-            if (realGl === predGl && realGv === predGv) {
-              earned = config.points.exact;
-            }
-          }
-        }
-        matchPoints += earned;
+    if (!act || !act.winner) return;
+    
+    const realWinner = act.winner;
+    const realLocal = act.local;
+    const realVisitor = act.visitor;
+    
+    const phaseMatchIds = phases[m.phase] || [mId];
+    
+    const userAdvancingTeamsInPhase = new Set();
+    phaseMatchIds.forEach(id => {
+      if (userBracket[id] && userBracket[id].winner) {
+        userAdvancingTeamsInPhase.add(userBracket[id].winner);
       }
+    });
+    
+    const hasPredictedAdvancement = userAdvancingTeamsInPhase.has(realWinner);
+    
+    let isExactScore = false;
+    const pred = predObj.matches[mId];
+    const usrMatch = userBracket[mId];
+    
+    if (m.gl !== null && m.gv !== null && m.gl !== '' && m.gv !== '' && pred && pred.gl !== '' && pred.gl !== undefined && pred.gl !== null && pred.gv !== '' && pred.gv !== undefined && pred.gv !== null) {
+      const realGl = parseInt(m.gl);
+      const realGv = parseInt(m.gv);
+      const predGl = parseInt(pred.gl);
+      const predGv = parseInt(pred.gv);
+      
+      const realPkl = m.pkl !== null && m.pkl !== undefined && m.pkl !== '' ? parseInt(m.pkl) : null;
+      const realPkv = m.pkv !== null && m.pkv !== undefined && m.pkv !== '' ? parseInt(m.pkv) : null;
+      const predPkl = pred.pkl !== null && pred.pkl !== undefined && pred.pkl !== '' ? parseInt(pred.pkl) : null;
+      const predPkv = pred.pkv !== null && pred.pkv !== undefined && pred.pkv !== '' ? parseInt(pred.pkv) : null;
+      
+      const scoreMatches = (realGl === predGl && realGv === predGv) && (realGl !== realGv || (realPkl === predPkl && realPkv === predPkv));
+      
+      if (scoreMatches && usrMatch && ((usrMatch.local === realLocal && usrMatch.visitor === realVisitor) || (usrMatch.local === realVisitor && usrMatch.visitor === realLocal))) {
+        isExactScore = true;
+      }
+    }
+    
+    if (isExactScore) {
+      matchPoints += config.points.exact;
+    } else if (hasPredictedAdvancement) {
+      matchPoints += config.points.outcome;
     }
   });
   
