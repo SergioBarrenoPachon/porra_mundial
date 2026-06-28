@@ -1381,7 +1381,7 @@ function renderMatrixTable() {
           
           let matchupText = '';
           if (usrMatch && usrMatch.local && usrMatch.visitor) {
-            matchupText = `<div class="text-[9px] text-gray-500 font-semibold mt-1 leading-none">${getTeamAcronym(usrMatch.local)} vs ${getTeamAcronym(usrMatch.visitor)}</div>`;
+            matchupText = `<div class="text-[9px] text-gray-400 font-semibold mt-1 leading-none" title="Pronóstico en porra: ${usrMatch.local} vs ${usrMatch.visitor} (Gana ${usrMatch.winner})">${getTeamAcronym(usrMatch.local)} vs ${getTeamAcronym(usrMatch.visitor)}</div>`;
           }
           
           bodyHtml += `<td class="py-4 px-6 text-xs font-bold text-white ${focusCellBg}"><div>${predScoreStr} ${ptsBadge}</div>${matchupText}</td>`;
