@@ -1351,6 +1351,7 @@ function getKnockoutTeamAugurySummary(teamName, userBracket, predObj) {
       const gFor = isLocal ? parseInt(pred.gl) : parseInt(pred.gv);
       const gAgainst = isLocal ? parseInt(pred.gv) : parseInt(pred.gl);
       const won = um.winner === teamName;
+      const opp = isLocal ? um.visitor : um.local;
       let pklStr = '';
       if (pred.pkl !== '' && pred.pkl !== undefined && pred.pkl !== null && pred.pkv !== '' && pred.pkv !== undefined && pred.pkv !== null) {
         const pkFor = isLocal ? pred.pkl : pred.pkv;
@@ -1360,114 +1361,13 @@ function getKnockoutTeamAugurySummary(teamName, userBracket, predObj) {
       const outcomeText = won ? 'ganaba' : 'perdía';
       const icon = won ? '🟢' : '🔴';
       return {
-        text: `${icon} Pusiste que **${outcomeText} ${gFor}-${gAgainst}**${pklStr}`,
+        text: `${icon} Pusiste que **${outcomeText} ${gFor}-${gAgainst}** (vs ${opp})${pklStr}`,
         won,
         gFor,
         gAgainst,
-        opponent: isLocal ? um.visitor : um.local
+        opponent: opp
       };
     }
   }
-  return { text: '⚪ No avanzó en tu porra', won: false };
-}
-
-function calculateUserBracketFromDraft() {
-  if (!draftPredictions || !draftPredictions.matches) return {};
-  const groupStandings = calculateAllGroupStandings();
-  const thirdsRanking = rankThirdPlaces(groupStandings);
-  const top8Thirds = thirdsRanking.slice(0, 8);
-  const advanceTeams = {
-    "3o Top 1": top8Thirds[0]?.team || "3º Mejor 1", "3o Top 2": top8Thirds[1]?.team || "3º Mejor 2", "3o Top 3": top8Thirds[2]?.team || "3º Mejor 3", "3o Top 4": top8Thirds[3]?.team || "3º Mejor 4",
-    "3o Top 5": top8Thirds[4]?.team || "3º Mejor 5", "3o Top 6": top8Thirds[5]?.team || "3º Mejor 6", "3o Top 7": top8Thirds[6]?.team || "3º Mejor 7", "3o Top 8": top8Thirds[7]?.team || "3º Mejor 8"
-  };
-  const groups = ['A','B','C','D','E','F','G','H','I','J','K','L'];
-  groups.forEach(g => {
-    const isCompleted = isGroupFullyPredicted(g);
-    advanceTeams[`1${g}`] = isCompleted ? (groupStandings[g][0]?.team || `1º Grupo ${g}`) : `1º Grupo ${g}`;
-    advanceTeams[`2${g}`] = isCompleted ? (groupStandings[g][1]?.team || `2º Grupo ${g}`) : `2º Grupo ${g}`;
-    advanceTeams[`3${g}`] = isCompleted ? (groupStandings[g][2]?.team || `3º Grupo ${g}`) : `3º Grupo ${g}`;
-  });
-  const bracketTeams = {}; const userMatches = {};
-  const r32Matches = [
-    { id: "M73", label: "D1", lRef: "1A", vRef: "3o Top 1" }, { id: "M74", label: "D2", lRef: "2A", vRef: "2B" }, { id: "M75", label: "D3", lRef: "1B", vRef: "3o Top 2" }, { id: "M76", label: "D4", lRef: "1C", vRef: "3o Top 3" },
-    { id: "M77", label: "D5", lRef: "2C", vRef: "2D" }, { id: "M78", label: "D6", lRef: "1D", vRef: "3o Top 4" }, { id: "M79", label: "D7", lRef: "1E", vRef: "3o Top 5" }, { id: "M80", label: "D8", lRef: "2E", vRef: "2F" },
-    { id: "M81", label: "D9", lRef: "1F", vRef: "3o Top 6" }, { id: "M82", label: "D10", lRef: "1G", vRef: "3o Top 7" }, { id: "M83", label: "D11", lRef: "2G", vRef: "2H" }, { id: "M84", label: "D12", lRef: "1H", vRef: "3o Top 8" },
-    { id: "M85", label: "D13", lRef: "1I", vRef: "2J" }, { id: "M86", label: "D14", lRef: "1J", vRef: "2K" }, { id: "M87", label: "D15", lRef: "1K", vRef: "2L" }, { id: "M88", label: "D16", lRef: "1L", vRef: "2I" }
-  ];
-  r32Matches.forEach(m => {
-    const local = advanceTeams[m.lRef]; const visitor = advanceTeams[m.vRef];
-    const pred = draftPredictions.matches[m.id] || { gl: '', gv: '', pkl: '', pkv: '' };
-    const winner = getWinnerOfMatch(local, visitor, pred.gl, pred.gv, pred.pkl, pred.pkv);
-    const loser = (winner === local) ? visitor : ((winner === visitor) ? local : null);
-    bracketTeams[m.label] = winner; userMatches[m.id] = { local, visitor, winner, loser };
-  });
-  const r16Matches = [
-    { id: "M89", label: "O1", lRef: "D1", vRef: "D2" }, { id: "M90", label: "O2", lRef: "D3", vRef: "D4" }, { id: "M91", label: "O3", lRef: "D5", vRef: "D6" }, { id: "M92", label: "O4", lRef: "D7", vRef: "D8" },
-    { id: "M93", label: "O5", lRef: "D9", vRef: "D10" }, { id: "M94", label: "O6", lRef: "D11", vRef: "D12" }, { id: "M95", label: "O7", lRef: "D13", vRef: "D14" }, { id: "M96", label: "O8", lRef: "D15", vRef: "D16" }
-  ];
-  r16Matches.forEach(m => {
-    const local = bracketTeams[m.lRef] || `Ganador ${m.lRef}`; const visitor = bracketTeams[m.vRef] || `Ganador ${m.vRef}`;
-    const pred = draftPredictions.matches[m.id] || { gl: '', gv: '', pkl: '', pkv: '' };
-    const winner = getWinnerOfMatch(local, visitor, pred.gl, pred.gv, pred.pkl, pred.pkv);
-    const loser = (winner === local) ? visitor : ((winner === visitor) ? local : null);
-    bracketTeams[m.label] = winner; userMatches[m.id] = { local, visitor, winner, loser };
-  });
-  const r8Matches = [ { id: "M97", label: "C1", lRef: "O1", vRef: "O2" }, { id: "M98", label: "C2", lRef: "O3", vRef: "O4" }, { id: "M99", label: "C3", lRef: "O5", vRef: "O6" }, { id: "M100", label: "C4", lRef: "O7", vRef: "O8" } ];
-  r8Matches.forEach(m => {
-    const local = bracketTeams[m.lRef] || `Ganador ${m.lRef}`; const visitor = bracketTeams[m.vRef] || `Ganador ${m.vRef}`;
-    const pred = draftPredictions.matches[m.id] || { gl: '', gv: '', pkl: '', pkv: '' };
-    const winner = getWinnerOfMatch(local, visitor, pred.gl, pred.gv, pred.pkl, pred.pkv);
-    const loser = (winner === local) ? visitor : ((winner === visitor) ? local : null);
-    bracketTeams[m.label] = winner; userMatches[m.id] = { local, visitor, winner, loser };
-  });
-  const s1Local = bracketTeams["C1"] || "Ganador C1"; const s1Visitor = bracketTeams["C2"] || "Ganador C2";
-  const s2Local = bracketTeams["C3"] || "Ganador C3"; const s2Visitor = bracketTeams["C4"] || "Ganador C4";
-  const s1Pred = draftPredictions.matches["M101"] || { gl: '', gv: '', pkl: '', pkv: '' }; const s2Pred = draftPredictions.matches["M102"] || { gl: '', gv: '', pkl: '', pkv: '' };
-  const s1Winner = getWinnerOfMatch(s1Local, s1Visitor, s1Pred.gl, s1Pred.gv, s1Pred.pkl, s1Pred.pkv); const s2Winner = getWinnerOfMatch(s2Local, s2Visitor, s2Pred.gl, s2Pred.gv, s2Pred.pkl, s2Pred.pkv);
-  const s1Loser = s1Winner ? ((s1Winner === s1Local) ? s1Visitor : s1Local) : null; const s2Loser = s2Winner ? ((s2Winner === s2Local) ? s2Visitor : s2Local) : null;
-  userMatches["M101"] = { local: s1Local, visitor: s1Visitor, winner: s1Winner, loser: s1Loser }; userMatches["M102"] = { local: s2Local, visitor: s2Visitor, winner: s2Winner, loser: s2Loser };
-  const t3Local = s1Loser || "Perdedor S1"; const t3Visitor = s2Loser || "Perdedor S2"; const t3Pred = draftPredictions.matches["M103"] || { gl: '', gv: '', pkl: '', pkv: '' };
-  const t3Winner = getWinnerOfMatch(t3Local, t3Visitor, t3Pred.gl, t3Pred.gv, t3Pred.pkl, t3Pred.pkv); const t3Loser = t3Winner ? ((t3Winner === t3Local) ? t3Visitor : t3Local) : null;
-  userMatches["M103"] = { local: t3Local, visitor: t3Visitor, winner: t3Winner, loser: t3Loser };
-  const finalLocal = s1Winner || "Ganador S1"; const finalVisitor = s2Winner || "Ganador S2"; const finalPred = draftPredictions.matches["M104"] || { gl: '', gv: '', pkl: '', pkv: '' };
-  const finalWinner = getWinnerOfMatch(finalLocal, finalVisitor, finalPred.gl, finalPred.gv, finalPred.pkl, finalPred.pkv); const finalLoser = finalWinner ? ((finalWinner === finalLocal) ? finalVisitor : finalLocal) : null;
-  userMatches["M104"] = { local: finalLocal, visitor: finalVisitor, winner: finalWinner, loser: finalLoser };
-  return userMatches;
-}
-
-function getTimelineAuguryHtml(m) {
-  if (!draftPredictions || !draftPredictions.matches || m.phase === 'Group Stage') return '';
-  const userMatches = calculateUserBracketFromDraft();
-  const usrMatch = userMatches[m.id];
-  if (usrMatch && usrMatch.local && usrMatch.visitor) {
-    if ((usrMatch.local === m.local && usrMatch.visitor === m.visitor) || (usrMatch.local === m.visitor && usrMatch.visitor === m.local)) {
-      const p = draftPredictions.matches[m.id];
-      const pStr = (p && p.gl !== undefined && p.gl !== '' && p.gl !== null) ? `${p.gl}-${p.gv}${p.pkl ? ` (PK ${p.pkl}-${p.pkv})` : ''}` : 'Sin pronóstico';
-      return `<div style="font-size: 0.72rem; color: #f59e0b; margin-top: 6px; background: rgba(245,158,11,0.08); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(245,158,11,0.2);">
-        🎯 <strong>Mismo cruce en tu porra:</strong> Pronosticaste <strong>${usrMatch.local} vs ${usrMatch.visitor}</strong> (${pStr} • Gana <strong>${usrMatch.winner}</strong>)
-      </div>`;
-    }
-  }
-  const getTeamInfo = (tName) => {
-    if (!tName || tName.startsWith('Ganador') || tName.startsWith('Perdedor') || tName.startsWith('Local') || tName.startsWith('Visitante') || tName.startsWith('1º') || tName.startsWith('2º') || tName.startsWith('3º')) return null;
-    const teamMatches = [];
-    Object.keys(userMatches).forEach(mId => {
-      const um = userMatches[mId];
-      if (um.local === tName || um.visitor === tName) {
-        const opp = (um.local === tName) ? um.visitor : um.local;
-        teamMatches.push({ mId, opp, won: um.winner === tName, winner: um.winner });
-      }
-    });
-    return teamMatches;
-  };
-  const locInfo = getTeamInfo(m.local);
-  const visInfo = getTeamInfo(m.visitor);
-  if (!locInfo && !visInfo) return '';
-  let locText = locInfo && locInfo.length > 0 ? `<strong>${m.local}</strong>: En tu porra juega en <strong>${locInfo[0].mId}</strong> vs ${locInfo[0].opp} (${locInfo[0].won ? 'Gana ' + m.local : 'Gana ' + locInfo[0].winner})` : (m.local && !m.local.startsWith('Ganador') && !m.local.startsWith('1º') ? `<strong>${m.local}</strong>: No avanzó en tu porra` : '');
-  let visText = visInfo && visInfo.length > 0 ? `<strong>${m.visitor}</strong>: En tu porra juega en <strong>${visInfo[0].mId}</strong> vs ${visInfo[0].opp} (${visInfo[0].won ? 'Gana ' + m.visitor : 'Gana ' + visInfo[0].winner})` : (m.visitor && !m.visitor.startsWith('Ganador') && !m.visitor.startsWith('1º') ? `<strong>${m.visitor}</strong>: No avanzó en tu porra` : '');
-  return `<div style="font-size: 0.7rem; color: #cbd5e1; margin-top: 6px; background: rgba(255,255,255,0.04); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); line-height: 1.35;">
-    💡 <strong>Pronóstico augurado para este partido:</strong><br>
-    ${locText ? `• ${locText}<br>` : ''}
-    ${visText ? `• ${visText}` : ''}
-  </div>`;
+  return { text: '⚪ No avanzó a esta ronda en tu porra', won: false };
 }
