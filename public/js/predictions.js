@@ -503,26 +503,27 @@ function advanceBracket(groupStandings, thirdsRanking) {
     const isCompleted = isGroupFullyPredicted(g);
     advanceTeams[`1${g}`] = isCompleted ? (groupStandings[g][0]?.team || `1º Grupo ${g}`) : `1º Grupo ${g}`;
     advanceTeams[`2${g}`] = isCompleted ? (groupStandings[g][1]?.team || `2º Grupo ${g}`) : `2º Grupo ${g}`;
+    advanceTeams[`3${g}`] = isCompleted ? (groupStandings[g][2]?.team || `3º Grupo ${g}`) : `3º Grupo ${g}`;
   });
   
   // Match definitions for Round of 32 (D1 to D16, IDs M73 to M88)
   const r32Matches = [
-    { id: "M73", label: "D1", lRef: "1A", vRef: "3o Top 1" },
-    { id: "M74", label: "D2", lRef: "2A", vRef: "2B" },
-    { id: "M75", label: "D3", lRef: "1B", vRef: "3o Top 2" },
-    { id: "M76", label: "D4", lRef: "1C", vRef: "3o Top 3" },
-    { id: "M77", label: "D5", lRef: "2C", vRef: "2D" },
-    { id: "M78", label: "D6", lRef: "1D", vRef: "3o Top 4" },
-    { id: "M79", label: "D7", lRef: "1E", vRef: "3o Top 5" },
-    { id: "M80", label: "D8", lRef: "2E", vRef: "2F" },
-    { id: "M81", label: "D9", lRef: "1F", vRef: "3o Top 6" },
-    { id: "M82", label: "D10", lRef: "1G", vRef: "3o Top 7" },
-    { id: "M83", label: "D11", lRef: "2G", vRef: "2H" },
-    { id: "M84", label: "D12", lRef: "1H", vRef: "3o Top 8" },
-    { id: "M85", label: "D13", lRef: "1I", vRef: "2J" },
-    { id: "M86", label: "D14", lRef: "1J", vRef: "2K" },
-    { id: "M87", label: "D15", lRef: "1K", vRef: "2L" },
-    { id: "M88", label: "D16", lRef: "1L", vRef: "2I" }
+    { id: "M73", label: "D1", lRef: "2A", vRef: "2B" },
+    { id: "M74", label: "D2", lRef: "1C", vRef: "2F" },
+    { id: "M75", label: "D3", lRef: "1E", vRef: "3D" },
+    { id: "M76", label: "D4", lRef: "1I", vRef: "3F" },
+    { id: "M77", label: "D5", lRef: "1F", vRef: "2C" },
+    { id: "M78", label: "D6", lRef: "2E", vRef: "2I" },
+    { id: "M79", label: "D7", lRef: "1A", vRef: "3E" },
+    { id: "M80", label: "D8", lRef: "1L", vRef: "3K" },
+    { id: "M81", label: "D9", lRef: "1G", vRef: "3I" },
+    { id: "M82", label: "D10", lRef: "1D", vRef: "3B" },
+    { id: "M83", label: "D11", lRef: "1H", vRef: "2J" },
+    { id: "M84", label: "D12", lRef: "2K", vRef: "2L" },
+    { id: "M85", label: "D13", lRef: "2D", vRef: "2G" },
+    { id: "M86", label: "D14", lRef: "1J", vRef: "2H" },
+    { id: "M87", label: "D15", lRef: "1K", vRef: "3L" },
+    { id: "M88", label: "D16", lRef: "1B", vRef: "3J" }
   ];
   
   const bracketTeams = {}; // Match winners mapping
