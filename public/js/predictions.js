@@ -99,20 +99,32 @@ function startCountdown(targetTime) {
 function switchTab(tabName) {
   currentTab = tabName;
   document.querySelectorAll('.phase-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+  document.querySelectorAll('.tab-content').forEach(c => {
+    c.classList.add('hidden');
+    c.classList.remove('block');
+    c.style.display = 'none';
+  });
   
   if (tabName === 'groups') {
-    document.querySelector('.phase-tab:nth-child(1)').classList.add('active');
-    document.getElementById('tab-groups').style.display = 'block';
+    const tabBtn = document.querySelector('.phase-tab:nth-child(1)');
+    if (tabBtn) tabBtn.classList.add('active');
+    const el = document.getElementById('tab-groups');
+    if (el) { el.classList.remove('hidden'); el.classList.add('block'); el.style.display = 'block'; }
   } else if (tabName === 'knockouts') {
-    document.querySelector('.phase-tab:nth-child(2)').classList.add('active');
-    document.getElementById('tab-knockouts').style.display = 'block';
+    const tabBtn = document.querySelector('.phase-tab:nth-child(2)');
+    if (tabBtn) tabBtn.classList.add('active');
+    const el = document.getElementById('tab-knockouts');
+    if (el) { el.classList.remove('hidden'); el.classList.add('block'); el.style.display = 'block'; }
   } else if (tabName === 'awards') {
-    document.querySelector('.phase-tab:nth-child(3)').classList.add('active');
-    document.getElementById('tab-awards').style.display = 'block';
+    const tabBtn = document.querySelector('.phase-tab:nth-child(3)');
+    if (tabBtn) tabBtn.classList.add('active');
+    const el = document.getElementById('tab-awards');
+    if (el) { el.classList.remove('hidden'); el.classList.add('block'); el.style.display = 'block'; }
   } else if (tabName === 'timeline') {
-    document.querySelector('.phase-tab:nth-child(4)').classList.add('active');
-    document.getElementById('tab-timeline').style.display = 'block';
+    const tabBtn = document.querySelector('.phase-tab:nth-child(4)');
+    if (tabBtn) tabBtn.classList.add('active');
+    const el = document.getElementById('tab-timeline');
+    if (el) { el.classList.remove('hidden'); el.classList.add('block'); el.style.display = 'block'; }
     renderTimeline();
     scrollToThirdToLastPlayedMatch();
   }
@@ -181,6 +193,7 @@ async function loadMatchesAndPredictions() {
     renderGroups();
     renderAwards();
     recalculateAll();
+    renderTimeline();
     updateSaveBar();
   } catch (err) {
     console.error("Error loading data:", err);
@@ -1176,8 +1189,8 @@ window.filterTimelineList = filterTimelineList;
 
 function calculateUserBracketFromDraft() {
   if (!draftPredictions || !draftPredictions.matches) return {};
-  const groupStandings = calculateGroupStandings();
-  const thirdsRanking = calculateThirdsRanking(groupStandings);
+  const groupStandings = calculateAllGroupStandings();
+  const thirdsRanking = rankThirdPlaces(groupStandings);
   const top8Thirds = thirdsRanking.slice(0, 8);
   const advanceTeams = {
     "3o Top 1": top8Thirds[0]?.team || "3º Mejor 1", "3o Top 2": top8Thirds[1]?.team || "3º Mejor 2", "3o Top 3": top8Thirds[2]?.team || "3º Mejor 3", "3o Top 4": top8Thirds[3]?.team || "3º Mejor 4",
