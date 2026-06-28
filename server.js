@@ -345,7 +345,7 @@ function getMatchWinner(local, visitor, gl, gv, pkl, pkv) {
 }
 
 // Simulates the bracket progression for a user's predictions (or actual matches)
-function calculateUserBracket(predObj, dbMatches) {
+function calculateUserBracket(predObj, dbMatches, isReal = false) {
   const standings = {};
   const groups = ['A','B','C','D','E','F','G','H','I','J','K','L'];
   
@@ -470,7 +470,7 @@ function calculateUserBracket(predObj, dbMatches) {
   const bracketTeams = {};
   const userMatches = {};
   
-  const r32Matches = [
+  const userR32Matches = [
     { id: "M73", label: "D1", lRef: "2A", vRef: "2B" },
     { id: "M74", label: "D2", lRef: "1C", vRef: "2F" },
     { id: "M75", label: "D3", lRef: "1E", vRef: "3D" },
@@ -488,6 +488,27 @@ function calculateUserBracket(predObj, dbMatches) {
     { id: "M87", label: "D15", lRef: "1K", vRef: "3L" },
     { id: "M88", label: "D16", lRef: "1B", vRef: "3J" }
   ];
+  
+  const realR32Matches = [
+    { id: "M73", label: "D1", lRef: "1A", vRef: "3o Top 1" },
+    { id: "M74", label: "D2", lRef: "2A", vRef: "2B" },
+    { id: "M75", label: "D3", lRef: "1B", vRef: "3o Top 2" },
+    { id: "M76", label: "D4", lRef: "1C", vRef: "3o Top 3" },
+    { id: "M77", label: "D5", lRef: "2C", vRef: "2D" },
+    { id: "M78", label: "D6", lRef: "1D", vRef: "3o Top 4" },
+    { id: "M79", label: "D7", lRef: "1E", vRef: "3o Top 5" },
+    { id: "M80", label: "D8", lRef: "2E", vRef: "2F" },
+    { id: "M81", label: "D9", lRef: "1F", vRef: "3o Top 6" },
+    { id: "M82", label: "D10", lRef: "1G", vRef: "3o Top 7" },
+    { id: "M83", label: "D11", lRef: "2G", vRef: "2H" },
+    { id: "M84", label: "D12", lRef: "1H", vRef: "3o Top 8" },
+    { id: "M85", label: "D13", lRef: "1I", vRef: "2J" },
+    { id: "M86", label: "D14", lRef: "1J", vRef: "2K" },
+    { id: "M87", label: "D15", lRef: "1K", vRef: "2L" },
+    { id: "M88", label: "D16", lRef: "1L", vRef: "2I" }
+  ];
+
+  const r32Matches = isReal ? realR32Matches : userR32Matches;
   
   r32Matches.forEach(m => {
     const local = advanceTeams[m.lRef];
@@ -569,6 +590,10 @@ function calculateUserBracket(predObj, dbMatches) {
   return userMatches;
 }
 
+function calculateRealBracket(predObj, dbMatches) {
+  return calculateUserBracket(predObj, dbMatches, true);
+}
+
 // Injects actual advancing team names into bracket matches in the list
 function resolveActualKnockoutMatches(matchesList) {
   const officialPredObj = { matches: {}, specials: {} };
@@ -576,7 +601,7 @@ function resolveActualKnockoutMatches(matchesList) {
     officialPredObj.matches[m.id] = { gl: m.gl, gv: m.gv, pkl: m.pkl, pkv: m.pkv };
   });
   
-  const actualBracket = calculateUserBracket(officialPredObj, matchesList);
+  const actualBracket = calculateRealBracket(officialPredObj, matchesList);
   
   const cloned = JSON.parse(JSON.stringify(matchesList));
   cloned.forEach(m => {
@@ -626,7 +651,7 @@ function calculateParticipantScore(predObj, matchesList, config, winners) {
     officialPredObj.matches[m.id] = { gl: m.gl, gv: m.gv, pkl: m.pkl, pkv: m.pkv };
   });
   
-  const actualBracket = calculateUserBracket(officialPredObj, matchesList);
+  const actualBracket = calculateRealBracket(officialPredObj, matchesList);
   const userBracket = calculateUserBracket(predObj, matchesList);
   
   const phases = {
