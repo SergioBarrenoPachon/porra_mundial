@@ -344,8 +344,8 @@ function getMatchWinner(local, visitor, gl, gv, pkl, pkv) {
   return null;
 }
 
-// Simulates the bracket progression for a user's predictions (or actual matches)
-function calculateUserBracket(predObj, dbMatches, isReal = false) {
+// Simulates the bracket progression for a user's predictions
+function calculateUserBracket(predObj, dbMatches) {
   const standings = {};
   const groups = ['A','B','C','D','E','F','G','H','I','J','K','L'];
   
@@ -470,26 +470,7 @@ function calculateUserBracket(predObj, dbMatches, isReal = false) {
   const bracketTeams = {};
   const userMatches = {};
   
-  const userR32Matches = [
-    { id: "M73", label: "D1", lRef: "2A", vRef: "2B" },
-    { id: "M74", label: "D2", lRef: "1C", vRef: "2F" },
-    { id: "M75", label: "D3", lRef: "1E", vRef: "3D" },
-    { id: "M76", label: "D4", lRef: "1I", vRef: "3F" },
-    { id: "M77", label: "D5", lRef: "1F", vRef: "2C" },
-    { id: "M78", label: "D6", lRef: "2E", vRef: "2I" },
-    { id: "M79", label: "D7", lRef: "1A", vRef: "3E" },
-    { id: "M80", label: "D8", lRef: "1L", vRef: "3K" },
-    { id: "M81", label: "D9", lRef: "1G", vRef: "3I" },
-    { id: "M82", label: "D10", lRef: "1D", vRef: "3B" },
-    { id: "M83", label: "D11", lRef: "1H", vRef: "2J" },
-    { id: "M84", label: "D12", lRef: "2K", vRef: "2L" },
-    { id: "M85", label: "D13", lRef: "2D", vRef: "2G" },
-    { id: "M86", label: "D14", lRef: "1J", vRef: "2H" },
-    { id: "M87", label: "D15", lRef: "1K", vRef: "3L" },
-    { id: "M88", label: "D16", lRef: "1B", vRef: "3J" }
-  ];
-  
-  const realR32Matches = [
+  const r32Matches = [
     { id: "M73", label: "D1", lRef: "1A", vRef: "3o Top 1" },
     { id: "M74", label: "D2", lRef: "2A", vRef: "2B" },
     { id: "M75", label: "D3", lRef: "1B", vRef: "3o Top 2" },
@@ -507,8 +488,6 @@ function calculateUserBracket(predObj, dbMatches, isReal = false) {
     { id: "M87", label: "D15", lRef: "1K", vRef: "2L" },
     { id: "M88", label: "D16", lRef: "1L", vRef: "2I" }
   ];
-
-  const r32Matches = isReal ? realR32Matches : userR32Matches;
   
   r32Matches.forEach(m => {
     const local = advanceTeams[m.lRef];
@@ -590,8 +569,97 @@ function calculateUserBracket(predObj, dbMatches, isReal = false) {
   return userMatches;
 }
 
+// Simulates the real tournament bracket based on actual match results in dbMatches
 function calculateRealBracket(predObj, dbMatches) {
-  return calculateUserBracket(predObj, dbMatches, true);
+  const bracketTeams = {};
+  const userMatches = {};
+  
+  const r32Matches = [
+    { id: "M73", label: "D1" }, { id: "M74", label: "D2" }, { id: "M75", label: "D3" }, { id: "M76", label: "D4" },
+    { id: "M77", label: "D5" }, { id: "M78", label: "D6" }, { id: "M79", label: "D7" }, { id: "M80", label: "D8" },
+    { id: "M81", label: "D9" }, { id: "M82", label: "D10" }, { id: "M83", label: "D11" }, { id: "M84", label: "D12" },
+    { id: "M85", label: "D13" }, { id: "M86", label: "D14" }, { id: "M87", label: "D15" }, { id: "M88", label: "D16" }
+  ];
+  
+  r32Matches.forEach(m => {
+    const dbM = dbMatches.find(x => x.id === m.id) || {};
+    const local = dbM.local || `Local ${m.id}`;
+    const visitor = dbM.visitor || `Visitante ${m.id}`;
+    const pred = predObj.matches[m.id] || { gl: '', gv: '', pkl: '', pkv: '' };
+    const winner = getMatchWinner(local, visitor, pred.gl, pred.gv, pred.pkl, pred.pkv);
+    const loser = (winner === local) ? visitor : ((winner === visitor) ? local : null);
+    bracketTeams[m.label] = winner;
+    userMatches[m.id] = { local, visitor, winner, loser };
+  });
+  
+  const r16Matches = [
+    { id: "M89", label: "O1", lRef: "D1", vRef: "D2" },
+    { id: "M90", label: "O2", lRef: "D3", vRef: "D4" },
+    { id: "M91", label: "O3", lRef: "D5", vRef: "D6" },
+    { id: "M92", label: "O4", lRef: "D7", vRef: "D8" },
+    { id: "M93", label: "O5", lRef: "D9", vRef: "D10" },
+    { id: "M94", label: "O6", lRef: "D11", vRef: "D12" },
+    { id: "M95", label: "O7", lRef: "D13", vRef: "D14" },
+    { id: "M96", label: "O8", lRef: "D15", vRef: "D16" }
+  ];
+  r16Matches.forEach(m => {
+    const local = bracketTeams[m.lRef] || `Ganador ${m.lRef}`;
+    const visitor = bracketTeams[m.vRef] || `Ganador ${m.vRef}`;
+    const pred = predObj.matches[m.id] || { gl: '', gv: '', pkl: '', pkv: '' };
+    const winner = getMatchWinner(local, visitor, pred.gl, pred.gv, pred.pkl, pred.pkv);
+    const loser = (winner === local) ? visitor : ((winner === visitor) ? local : null);
+    bracketTeams[m.label] = winner;
+    userMatches[m.id] = { local, visitor, winner, loser };
+  });
+  
+  const r8Matches = [
+    { id: "M97", label: "C1", lRef: "O1", vRef: "O2" },
+    { id: "M98", label: "C2", lRef: "O3", vRef: "O4" },
+    { id: "M99", label: "C3", lRef: "O5", vRef: "O6" },
+    { id: "M100", label: "C4", lRef: "O7", vRef: "O8" }
+  ];
+  r8Matches.forEach(m => {
+    const local = bracketTeams[m.lRef] || `Ganador ${m.lRef}`;
+    const visitor = bracketTeams[m.vRef] || `Ganador ${m.vRef}`;
+    const pred = predObj.matches[m.id] || { gl: '', gv: '', pkl: '', pkv: '' };
+    const winner = getMatchWinner(local, visitor, pred.gl, pred.gv, pred.pkl, pred.pkv);
+    const loser = (winner === local) ? visitor : ((winner === visitor) ? local : null);
+    bracketTeams[m.label] = winner;
+    userMatches[m.id] = { local, visitor, winner, loser };
+  });
+  
+  const s1Local = bracketTeams["C1"] || "Ganador C1";
+  const s1Visitor = bracketTeams["C2"] || "Ganador C2";
+  const s2Local = bracketTeams["C3"] || "Ganador C3";
+  const s2Visitor = bracketTeams["C4"] || "Ganador C4";
+  
+  const s1Pred = predObj.matches["M101"] || { gl: '', gv: '', pkl: '', pkv: '' };
+  const s2Pred = predObj.matches["M102"] || { gl: '', gv: '', pkl: '', pkv: '' };
+  
+  const s1Winner = getMatchWinner(s1Local, s1Visitor, s1Pred.gl, s1Pred.gv, s1Pred.pkl, s1Pred.pkv);
+  const s2Winner = getMatchWinner(s2Local, s2Visitor, s2Pred.gl, s2Pred.gv, s2Pred.pkl, s2Pred.pkv);
+  
+  const s1Loser = s1Winner ? ((s1Winner === s1Local) ? s1Visitor : s1Local) : null;
+  const s2Loser = s2Winner ? ((s2Winner === s2Local) ? s2Visitor : s2Local) : null;
+  
+  userMatches["M101"] = { local: s1Local, visitor: s1Visitor, winner: s1Winner, loser: s1Loser };
+  userMatches["M102"] = { local: s2Local, visitor: s2Visitor, winner: s2Winner, loser: s2Loser };
+  
+  const t3Local = s1Loser || "Perdedor S1";
+  const t3Visitor = s2Loser || "Perdedor S2";
+  const t3Pred = predObj.matches["M103"] || { gl: '', gv: '', pkl: '', pkv: '' };
+  const t3Winner = getMatchWinner(t3Local, t3Visitor, t3Pred.gl, t3Pred.gv, t3Pred.pkl, t3Pred.pkv);
+  const t3Loser = t3Winner ? ((t3Winner === t3Local) ? t3Visitor : t3Local) : null;
+  userMatches["M103"] = { local: t3Local, visitor: t3Visitor, winner: t3Winner, loser: t3Loser };
+  
+  const finalLocal = s1Winner || "Ganador S1";
+  const finalVisitor = s2Winner || "Ganador S2";
+  const finalPred = predObj.matches["M104"] || { gl: '', gv: '', pkl: '', pkv: '' };
+  const finalWinner = getMatchWinner(finalLocal, finalVisitor, finalPred.gl, finalPred.gv, finalPred.pkl, finalPred.pkv);
+  const finalLoser = finalWinner ? ((finalWinner === finalLocal) ? finalVisitor : finalLocal) : null;
+  userMatches["M104"] = { local: finalLocal, visitor: finalVisitor, winner: finalWinner, loser: finalLoser };
+  
+  return userMatches;
 }
 
 // Injects actual advancing team names into bracket matches in the list

@@ -5980,9 +5980,11 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M73",
+      "local": "Sudafrica",
       "phase": "Dieciseisavos",
-      "visitor": "Visitante M73"
+      "visitor": "Canada",
+      "date": "28 de junio",
+      "time": "21:00h"
     },
     {
       "gl": null,
@@ -5991,9 +5993,11 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M74",
+      "local": "Brasil",
       "phase": "Dieciseisavos",
-      "visitor": "Visitante M74"
+      "visitor": "Japon",
+      "date": "29 de junio",
+      "time": "19:00h"
     },
     {
       "gl": null,
@@ -6002,9 +6006,11 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M75",
+      "local": "Alemania",
       "phase": "Dieciseisavos",
-      "visitor": "Visitante M75"
+      "visitor": "Paraguay",
+      "date": "29 de junio",
+      "time": "22:30h"
     },
     {
       "gl": null,
@@ -6013,9 +6019,11 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M76",
+      "local": "Francia",
       "phase": "Dieciseisavos",
-      "visitor": "Visitante M76"
+      "visitor": "Suecia",
+      "date": "30 de junio",
+      "time": "23:00h"
     },
     {
       "gl": null,
@@ -6024,9 +6032,11 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M77",
+      "local": "Paises Bajos",
       "phase": "Dieciseisavos",
-      "visitor": "Visitante M77"
+      "visitor": "Marruecos",
+      "date": "30 de junio",
+      "time": "03:00h"
     },
     {
       "gl": null,
@@ -6035,9 +6045,11 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M78",
+      "local": "Costa de Marfil",
       "phase": "Dieciseisavos",
-      "visitor": "Visitante M78"
+      "visitor": "Noruega",
+      "date": "30 de junio",
+      "time": "19:00h"
     },
     {
       "gl": null,
@@ -6046,9 +6058,11 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M79",
+      "local": "Mexico",
       "phase": "Dieciseisavos",
-      "visitor": "Visitante M79"
+      "visitor": "Ecuador",
+      "date": "1 de julio",
+      "time": "3:00h"
     },
     {
       "gl": null,
@@ -6057,9 +6071,11 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M80",
+      "local": "Inglaterra",
       "phase": "Dieciseisavos",
-      "visitor": "Visitante M80"
+      "visitor": "RD Congo",
+      "date": "1 de julio",
+      "time": "18:00h"
     },
     {
       "gl": null,
@@ -6068,9 +6084,11 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M81",
+      "local": "Belgica",
       "phase": "Dieciseisavos",
-      "visitor": "Visitante M81"
+      "visitor": "Senegal",
+      "date": "1 de julio",
+      "time": "22:00h"
     },
     {
       "gl": null,
@@ -6079,9 +6097,11 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M82",
+      "local": "Estados Unidos",
       "phase": "Dieciseisavos",
-      "visitor": "Visitante M82"
+      "visitor": "Bosnia y Herzegovina",
+      "date": "2 de julio",
+      "time": "02:00h"
     },
     {
       "gl": null,
@@ -6090,9 +6110,11 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M83",
+      "local": "Espana",
       "phase": "Dieciseisavos",
-      "visitor": "Visitante M83"
+      "visitor": "Austria",
+      "date": "2 de julio",
+      "time": "21:00h"
     },
     {
       "gl": null,
@@ -6101,9 +6123,11 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M84",
+      "local": "Portugal",
       "phase": "Dieciseisavos",
-      "visitor": "Visitante M84"
+      "visitor": "Croacia",
+      "date": "3 de julio",
+      "time": "1:00h"
     },
     {
       "gl": null,
@@ -6112,9 +6136,11 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M85",
+      "local": "Australia",
       "phase": "Dieciseisavos",
-      "visitor": "Visitante M85"
+      "visitor": "Egipto",
+      "date": "3 de julio",
+      "time": "20:00h"
     },
     {
       "gl": null,
@@ -6123,9 +6149,11 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M86",
+      "local": "Argentina",
       "phase": "Dieciseisavos",
-      "visitor": "Visitante M86"
+      "visitor": "Cabo Verde",
+      "date": "4 de julio",
+      "time": "00:00h"
     },
     {
       "gl": null,
@@ -6134,9 +6162,11 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M87",
+      "local": "Colombia",
       "phase": "Dieciseisavos",
-      "visitor": "Visitante M87"
+      "visitor": "Ghana",
+      "date": "4 de julio",
+      "time": "03:30h"
     },
     {
       "gl": null,
@@ -6145,9 +6175,11 @@
       "pkl": null,
       "pkv": null,
       "group": null,
-      "local": "Local M88",
+      "local": "Suiza",
       "phase": "Dieciseisavos",
-      "visitor": "Visitante M88"
+      "visitor": "Argelia",
+      "date": "5 de julio",
+      "time": "05:00h"
     },
     {
       "gl": null,
