@@ -476,9 +476,14 @@
         <div class="brand-title">
           <span>⚽</span> mundial 2026 arcade
         </div>
-        <button class="btn-icon" id="btn-back-hub" onclick="returnToHub()" style="display: none;">
-          <span>🏠</span> Menú Principal
-        </button>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <button class="btn-icon" id="btn-back-hub" onclick="returnToHub()" style="display: none;">
+            <span>🎮</span> Minijuegos
+          </button>
+          <button class="btn-icon" onclick="window.location.href='/dashboard.html'">
+            <span>⬅️</span> Volver a la Porra
+          </button>
+        </div>
       </div>
 
       <!-- Active Game HUD -->
@@ -543,6 +548,10 @@
           </div>
         </div>
       </div>
+      
+      <button class="btn-secondary" style="margin-top: 28px; width: 100%; max-width: 320px; font-weight: 800;" onclick="window.location.href='/dashboard.html'">
+        ⬅️ Volver al Leaderboard
+      </button>
     </div>
 
     <!-- Game Over Modal -->
@@ -554,7 +563,8 @@
         <div class="modal-highscore-str" id="modal-highscore">🏆 Mejor Récord: 0</div>
         <div class="modal-actions">
           <button class="btn-primary" onclick="restartCurrentGame()">Jugar de Nuevo</button>
-          <button class="btn-secondary" onclick="returnToHub()">Menú Principal</button>
+          <button class="btn-secondary" onclick="returnToHub()">Menú de Minijuegos</button>
+          <button class="btn-secondary" style="border-color: rgba(245, 158, 11, 0.4); color: var(--gold);" onclick="window.location.href='/dashboard.html'">⬅️ Volver a la Porra</button>
         </div>
       </div>
     </div>
