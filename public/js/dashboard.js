@@ -1847,6 +1847,11 @@ function initDashboardHeroBall() {
   
   let targetX = 0, targetY = 0;
   
+  container.style.cursor = 'pointer';
+  container.addEventListener('click', () => {
+    window.location.href = '/arcade.html';
+  });
+  
   document.addEventListener('mousemove', (e) => {
     const halfX = window.innerWidth / 2;
     const halfY = window.innerHeight / 2;

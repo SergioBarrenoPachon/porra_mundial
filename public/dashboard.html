@@ -60,9 +60,12 @@
     
     <!-- Hero / Header Section -->
     <div class="hero-section flex flex-col items-center text-center py-8 mb-8 relative">
-      <!-- 3D Hero Ball Container (Mini version for desktop/mobile) -->
-      <div id="dashboard-ball-container" class="w-32 h-32 md:w-40 md:h-40 relative cursor-grab active:cursor-grabbing mb-4">
-        <canvas id="dashboard-ball-canvas" class="w-full h-full"></canvas>
+      <!-- 3D Hero Ball Container (Clickable arcade launcher) -->
+      <div onclick="window.location.href='/arcade.html'" class="flex flex-col items-center cursor-pointer group">
+        <span class="text-[10px] font-extrabold uppercase tracking-widest text-gold bg-gold/10 border border-gold/30 px-3 py-1 rounded-full mb-2 animate-pulse group-hover:scale-105 transition-all duration-300">🎮 ¡Haz clic para Jugar!</span>
+        <div id="dashboard-ball-container" class="w-32 h-32 md:w-40 md:h-40 relative cursor-pointer group-hover:scale-110 transition-all duration-300 mb-2" title="🎮 ¡Haz clic para jugar al Arcade del Mundial!">
+          <canvas id="dashboard-ball-canvas" class="w-full h-full"></canvas>
+        </div>
       </div>
       
       <h1 class="hero-title text-2xl md:text-4xl lg:text-5xl font-black uppercase">Clasificación en Tiempo Real</h1>

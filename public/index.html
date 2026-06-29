@@ -48,7 +48,8 @@
     <!-- Hero/WebGL Section (Col 1-7 on desktop, top on mobile) -->
     <div class="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left order-1 lg:order-1">
       <!-- 3D Canvas Container -->
-      <div id="canvas3d-container" class="w-64 h-64 md:w-96 md:h-96 relative cursor-grab active:cursor-grabbing mb-6 lg:mb-8 transition-transform hover:scale-105 duration-500">
+      <div id="canvas3d-container" onclick="window.location.href='/arcade.html'" class="w-64 h-64 md:w-96 md:h-96 relative cursor-pointer mb-6 lg:mb-8 transition-transform hover:scale-105 duration-500 group" title="🎮 ¡Haz clic para jugar al Arcade del Mundial!">
+        <span class="absolute -top-4 left-1/2 -translate-x-1/2 text-[10px] font-extrabold uppercase tracking-widest text-gold bg-gold/10 border border-gold/30 px-3 py-1 rounded-full z-10 animate-pulse group-hover:scale-105 transition-all duration-300 pointer-events-none">🎮 ¡Haz clic para Jugar!</span>
         <canvas id="hero-ball-canvas" class="w-full h-full"></canvas>
         <div class="absolute inset-0 bg-gradient-to-t from-carbon via-transparent to-transparent pointer-events-none"></div>
       </div>
@@ -589,6 +590,11 @@
     }
     
     animate();
+
+    container.style.cursor = 'pointer';
+    container.addEventListener('click', () => {
+      window.location.href = '/arcade.html';
+    });
 
     // Responsiveness
     window.addEventListener('resize', () => {
