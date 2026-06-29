@@ -28,7 +28,7 @@ let isLocked = false;
 let isGroupsLocked = false;
 let isKnockoutsLocked = false;
 let isAwardsLocked = false;
-let currentTab = 'groups';
+let currentTab = 'timeline';
 let currentMobileRound = 'r32-col';
 
 // Initialize Page
@@ -193,7 +193,7 @@ async function loadMatchesAndPredictions() {
     renderGroups();
     renderAwards();
     recalculateAll();
-    renderTimeline();
+    switchTab('timeline');
     updateSaveBar();
   } catch (err) {
     console.error("Error loading data:", err);
