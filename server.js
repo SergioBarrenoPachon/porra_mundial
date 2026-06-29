@@ -742,47 +742,58 @@ function calculateParticipantScore(predObj, matchesList, config, winners) {
     const mId = m.id;
     const act = actualBracket[mId];
     if (!act || !act.winner) return;
+    if (m.gl === null || m.gv === null || m.gl === '' || m.gv === '') return;
     
     const realWinner = act.winner;
-    const realLocal = act.local;
-    const realVisitor = act.visitor;
+    const realWinnerIsLocal = (realWinner === m.local);
+    const realGl = parseInt(m.gl);
+    const realGv = parseInt(m.gv);
+    const realWinnerGFor = realWinnerIsLocal ? realGl : realGv;
+    const realWinnerGAgainst = realWinnerIsLocal ? realGv : realGl;
+    
+    const realPkl = (m.pkl !== null && m.pkl !== undefined && m.pkl !== '') ? parseInt(m.pkl) : null;
+    const realPkv = (m.pkv !== null && m.pkv !== undefined && m.pkv !== '') ? parseInt(m.pkv) : null;
+    const realWinnerPkFor = (realPkl !== null && realPkv !== null) ? (realWinnerIsLocal ? realPkl : realPkv) : null;
+    const realWinnerPkAgainst = (realPkl !== null && realPkv !== null) ? (realWinnerIsLocal ? realPkv : realPkl) : null;
     
     const phaseMatchIds = phases[m.phase] || [mId];
     
-    const userAdvancingTeamsInPhase = new Set();
-    phaseMatchIds.forEach(id => {
-      if (userBracket[id] && userBracket[id].winner) {
-        userAdvancingTeamsInPhase.add(userBracket[id].winner);
-      }
-    });
-    
-    const hasPredictedAdvancement = userAdvancingTeamsInPhase.has(realWinner);
-    
+    let userPredictedWinnerAdvancement = false;
     let isExactScore = false;
-    const pred = predObj.matches[mId];
-    const usrMatch = userBracket[mId];
     
-    if (m.gl !== null && m.gv !== null && m.gl !== '' && m.gv !== '' && pred && pred.gl !== '' && pred.gl !== undefined && pred.gl !== null && pred.gv !== '' && pred.gv !== undefined && pred.gv !== null) {
-      const realGl = parseInt(m.gl);
-      const realGv = parseInt(m.gv);
-      const predGl = parseInt(pred.gl);
-      const predGv = parseInt(pred.gv);
-      
-      const realPkl = m.pkl !== null && m.pkl !== undefined && m.pkl !== '' ? parseInt(m.pkl) : null;
-      const realPkv = m.pkv !== null && m.pkv !== undefined && m.pkv !== '' ? parseInt(m.pkv) : null;
-      const predPkl = pred.pkl !== null && pred.pkl !== undefined && pred.pkl !== '' ? parseInt(pred.pkl) : null;
-      const predPkv = pred.pkv !== null && pred.pkv !== undefined && pred.pkv !== '' ? parseInt(pred.pkv) : null;
-      
-      const scoreMatches = (realGl === predGl && realGv === predGv) && (realGl !== realGv || (realPkl === predPkl && realPkv === predPkv));
-      
-      if (scoreMatches && usrMatch && ((usrMatch.local === realLocal && usrMatch.visitor === realVisitor) || (usrMatch.local === realVisitor && usrMatch.visitor === realLocal))) {
-        isExactScore = true;
+    for (const pMatchId of phaseMatchIds) {
+      const usrM = userBracket[pMatchId];
+      if (usrM && (usrM.local === realWinner || usrM.visitor === realWinner)) {
+        if (usrM.winner === realWinner) {
+          userPredictedWinnerAdvancement = true;
+          const pred = predObj.matches[pMatchId];
+          if (pred && pred.gl !== '' && pred.gl !== undefined && pred.gl !== null && pred.gv !== '' && pred.gv !== undefined && pred.gv !== null) {
+            const predGl = parseInt(pred.gl);
+            const predGv = parseInt(pred.gv);
+            const usrWinnerIsLocal = (usrM.local === realWinner);
+            const usrGFor = usrWinnerIsLocal ? predGl : predGv;
+            const usrGAgainst = usrWinnerIsLocal ? predGv : predGl;
+            
+            const predPkl = (pred.pkl !== null && pred.pkl !== undefined && pred.pkl !== '') ? parseInt(pred.pkl) : null;
+            const predPkv = (pred.pkv !== null && pred.pkv !== undefined && pred.pkv !== '') ? parseInt(pred.pkv) : null;
+            const usrPkFor = (predPkl !== null && predPkv !== null) ? (usrWinnerIsLocal ? predPkl : predPkv) : null;
+            const usrPkAgainst = (predPkl !== null && predPkv !== null) ? (usrWinnerIsLocal ? predPkv : predPkl) : null;
+            
+            const goalsMatch = (usrGFor === realWinnerGFor && usrGAgainst === realWinnerGAgainst);
+            const isDrawInReg = (realWinnerGFor === realWinnerGAgainst);
+            const pkMatch = isDrawInReg ? (usrPkFor === realWinnerPkFor && usrPkAgainst === realWinnerPkAgainst) : true;
+            
+            if (goalsMatch && pkMatch) {
+              isExactScore = true;
+            }
+          }
+        }
       }
     }
     
     if (isExactScore) {
       matchPoints += config.points.exact;
-    } else if (hasPredictedAdvancement) {
+    } else if (userPredictedWinnerAdvancement) {
       matchPoints += config.points.outcome;
     }
   });

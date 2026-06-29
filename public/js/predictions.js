@@ -1110,31 +1110,56 @@ function renderTimeline() {
       if (hasRealResult) {
         let pts = 0;
         const rW = getWinnerOfMatch(m.local, m.visitor, m.gl, m.gv, m.pkl, m.pkv);
-        const userPhaseWinners = new Set();
-        for (const id in userBracket) {
-          if (userBracket[id] && userBracket[id].winner) {
-            const matchObj = allMatches.find(x => x.id === id);
-            if (matchObj && matchObj.phase === m.phase) userPhaseWinners.add(userBracket[id].winner);
-          }
-        }
-        const hasAdv = userPhaseWinners.has(rW);
-        const usrMatch = userBracket[m.id];
-        let isExact = false;
-        if (usrMatch && ((usrMatch.local === m.local && usrMatch.visitor === m.visitor) || (usrMatch.local === m.visitor && usrMatch.visitor === m.local))) {
-          const predM = draftPredictions.matches[m.id];
-          if (predM && predM.gl !== '' && predM.gl !== undefined && predM.gl !== null) {
-            const rGl = parseInt(m.gl), rGv = parseInt(m.gv), pGl = parseInt(predM.gl), pGv = parseInt(predM.gv);
-            const rPkl = m.pkl !== null && m.pkl !== '' && m.pkl !== undefined ? parseInt(m.pkl) : null;
-            const rPkv = m.pkv !== null && m.pkv !== '' && m.pkv !== undefined ? parseInt(m.pkv) : null;
-            const pPkl = predM.pkl !== null && predM.pkl !== '' && predM.pkl !== undefined ? parseInt(predM.pkl) : null;
-            const pPkv = predM.pkv !== null && predM.pkv !== '' && predM.pkv !== undefined ? parseInt(predM.pkv) : null;
-            if (rGl === pGl && rGv === pGv && (rGl !== rGv || (rPkl === pPkl && rPkv === pPkv))) {
-              isExact = true;
+        if (rW) {
+          const realWinnerIsLocal = (rW === m.local);
+          const realGl = parseInt(m.gl);
+          const realGv = parseInt(m.gv);
+          const realWinnerGFor = realWinnerIsLocal ? realGl : realGv;
+          const realWinnerGAgainst = realWinnerIsLocal ? realGv : realGl;
+          
+          const realPkl = (m.pkl !== null && m.pkl !== undefined && m.pkl !== '') ? parseInt(m.pkl) : null;
+          const realPkv = (m.pkv !== null && m.pkv !== undefined && m.pkv !== '') ? parseInt(m.pkv) : null;
+          const realWinnerPkFor = (realPkl !== null && realPkv !== null) ? (realWinnerIsLocal ? realPkl : realPkv) : null;
+          const realWinnerPkAgainst = (realPkl !== null && realPkv !== null) ? (realWinnerIsLocal ? realPkv : realPkl) : null;
+          
+          let hasAdv = false;
+          let isExact = false;
+          
+          for (const pMatchId in userBracket) {
+            const matchObj = allMatches.find(x => x.id === pMatchId);
+            if (matchObj && matchObj.phase === m.phase) {
+              const uM = userBracket[pMatchId];
+              if (uM && (uM.local === rW || uM.visitor === rW)) {
+                if (uM.winner === rW) {
+                  hasAdv = true;
+                  const pPred = draftPredictions.matches[pMatchId];
+                  if (pPred && pPred.gl !== '' && pPred.gl !== undefined && pPred.gl !== null && pPred.gv !== '' && pPred.gv !== undefined && pPred.gv !== null) {
+                    const predGl = parseInt(pPred.gl);
+                    const predGv = parseInt(pPred.gv);
+                    const usrWinnerIsLocal = (uM.local === rW);
+                    const usrGFor = usrWinnerIsLocal ? predGl : predGv;
+                    const usrGAgainst = usrWinnerIsLocal ? predGv : predGl;
+                    
+                    const predPkl = (pPred.pkl !== null && pPred.pkl !== undefined && pPred.pkl !== '') ? parseInt(pPred.pkl) : null;
+                    const predPkv = (pPred.pkv !== null && pPred.pkv !== undefined && pPred.pkv !== '') ? parseInt(pPred.pkv) : null;
+                    const usrPkFor = (predPkl !== null && predPkv !== null) ? (usrWinnerIsLocal ? predPkl : predPkv) : null;
+                    const usrPkAgainst = (predPkl !== null && predPkv !== null) ? (usrWinnerIsLocal ? predPkv : predPkl) : null;
+                    
+                    const goalsMatch = (usrGFor === realWinnerGFor && usrGAgainst === realWinnerGAgainst);
+                    const isDrawInReg = (realWinnerGFor === realWinnerGAgainst);
+                    const pkMatch = isDrawInReg ? (usrPkFor === realWinnerPkFor && usrPkAgainst === realWinnerPkAgainst) : true;
+                    
+                    if (goalsMatch && pkMatch) {
+                      isExact = true;
+                    }
+                  }
+                }
+              }
             }
           }
+          if (isExact) pts = 3;
+          else if (hasAdv) pts = 1;
         }
-        if (isExact) pts = 3;
-        else if (hasAdv) pts = 1;
         const cls = pts === 3 ? 'exact' : (pts === 1 ? 'outcome' : 'zero');
         ptsBadge = `<span class="matrix-points-badge points-${cls}" style="font-size: 0.8rem; padding: 3px 10px; border-radius: 8px;">+${pts} ${pts === 1 ? 'Pt' : 'Pts'}</span>`;
       }
