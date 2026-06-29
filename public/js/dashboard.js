@@ -1239,6 +1239,51 @@ function calculateRealBracket(predObj, dbMatches) {
   return userMatches;
 }
 
+// Helper to get compact augury summary for knockout team prediction in matrix table cell
+function getKnockoutAugurySummaryForCell(teamName, userBracket, predObj, phase) {
+  if (!teamName || teamName.startsWith('Ganador') || teamName.startsWith('Perdedor') || teamName.startsWith('Local') || teamName.startsWith('Visitante') || teamName.startsWith('1º') || teamName.startsWith('2º') || teamName.startsWith('3º') || teamName.startsWith('3o')) {
+    return null;
+  }
+  for (const mId in userBracket) {
+    const um = userBracket[mId];
+    const matchObj = allMatches.find(x => x.id === mId);
+    if (matchObj && matchObj.phase === phase) {
+      if (um.local === teamName || um.visitor === teamName) {
+        const pred = predObj.matches[mId];
+        if (!pred || pred.gl === '' || pred.gl === undefined || pred.gl === null || pred.gv === '' || pred.gv === undefined || pred.gv === null) {
+          return {
+            html: `<span class="whitespace-nowrap opacity-60">⚪ <strong class="text-gray-300 font-bold">${getTeamAcronym(teamName)}</strong> <span class="text-gray-500 text-[9px]">(sin marc.)</span></span>`,
+            title: `${teamName}: Sin marcador asignado en esta ronda`
+          };
+        }
+        const isLocal = um.local === teamName;
+        const gFor = isLocal ? parseInt(pred.gl) : parseInt(pred.gv);
+        const gAgainst = isLocal ? parseInt(pred.gv) : parseInt(pred.gl);
+        const won = um.winner === teamName;
+        const opp = isLocal ? um.visitor : um.local;
+        const oppAcr = getTeamAcronym(opp);
+        const teamAcr = getTeamAcronym(teamName);
+        let pklStr = '';
+        if (pred.pkl !== '' && pred.pkl !== undefined && pred.pkl !== null && pred.pkv !== '' && pred.pkv !== undefined && pred.pkv !== null) {
+          const pkFor = isLocal ? pred.pkl : pred.pkv;
+          const pkAgainst = isLocal ? pred.pkv : pred.pkl;
+          pklStr = ` (PK ${pkFor}-${pkAgainst})`;
+        }
+        const icon = won ? '🟢' : '🔴';
+        const outcomeText = won ? 'ganaba' : 'perdía';
+        return {
+          html: `<span class="whitespace-nowrap">${icon} <strong class="text-white font-bold">${teamAcr}</strong> ${gFor}-${gAgainst} <span class="text-gray-400 text-[9px]">(vs ${oppAcr})</span></span>`,
+          title: `${teamName}: Pusiste que ${outcomeText} ${gFor}-${gAgainst} vs ${opp}${pklStr}`
+        };
+      }
+    }
+  }
+  return {
+    html: `<span class="whitespace-nowrap opacity-60">⚪ <span class="text-gray-400">${getTeamAcronym(teamName)}</span> <span class="text-gray-500 text-[9px]">(no avanzó)</span></span>`,
+    title: `${teamName}: No avanzó a esta ronda en la porra`
+  };
+}
+
 // Render Comparison Matrix
 function renderMatrixTable() {
   const thead = document.getElementById('matrix-head');
@@ -1379,12 +1424,22 @@ function renderMatrixTable() {
             }
           }
           
-          let matchupText = '';
-          if (usrMatch && usrMatch.local && usrMatch.visitor) {
-            matchupText = `<div class="text-[9px] text-gray-400 font-semibold mt-1 leading-none" title="Pronóstico en porra: ${usrMatch.local} vs ${usrMatch.visitor} (Gana ${usrMatch.winner})">${getTeamAcronym(usrMatch.local)} vs ${getTeamAcronym(usrMatch.visitor)}</div>`;
+          let matchupHtml = '';
+          const locAug = getKnockoutAugurySummaryForCell(m.local, userBrackets[p], masterPredictions[p], m.phase);
+          const visAug = getKnockoutAugurySummaryForCell(m.visitor, userBrackets[p], masterPredictions[p], m.phase);
+          
+          if (locAug || visAug) {
+            matchupHtml = `
+              <div class="flex flex-col gap-0.5 mt-1 pt-1 border-t border-white/5 text-[10px] text-left">
+                <div title="${locAug ? locAug.title : ''}">${locAug ? locAug.html : `<span class="text-gray-500">${getTeamAcronym(m.local)} -</span>`}</div>
+                <div title="${visAug ? visAug.title : ''}">${visAug ? visAug.html : `<span class="text-gray-500">${getTeamAcronym(m.visitor)} -</span>`}</div>
+              </div>
+            `;
+          } else if (usrMatch && usrMatch.local && usrMatch.visitor) {
+            matchupHtml = `<div class="text-[9px] text-gray-400 font-semibold mt-1 leading-none" title="Pronóstico en porra: ${usrMatch.local} vs ${usrMatch.visitor} (Gana ${usrMatch.winner})">${getTeamAcronym(usrMatch.local)} vs ${getTeamAcronym(usrMatch.visitor)}</div>`;
           }
           
-          bodyHtml += `<td class="py-4 px-6 text-xs font-bold text-white ${focusCellBg}"><div>${predScoreStr} ${ptsBadge}</div>${matchupText}</td>`;
+          bodyHtml += `<td class="py-3 px-4 text-xs font-bold text-white ${focusCellBg}"><div>${predScoreStr} ${ptsBadge}</div>${matchupHtml}</td>`;
         }
       }
     });
