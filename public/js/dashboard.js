@@ -828,7 +828,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (masterPredictions && masterPredictions[focusedUser] && masterPredictions[focusedUser].matches[h.matchId]) {
           const pred = masterPredictions[focusedUser].matches[h.matchId];
           if (pred.gl !== undefined && pred.gl !== null && pred.gl !== '') {
-            predScore = `${pred.gl} - ${pred.gv}`;
+            const hasPk = pred.pkl !== undefined && pred.pkl !== null && pred.pkl !== '';
+            predScore = `${pred.gl} - ${pred.gv}${hasPk ? ` (${pred.pkl}-${pred.pkv})` : ''}`;
+          }
+        }
+        
+        let predSectionHtml = `<div>Tu Pronóstico: <span class="text-neonGreen font-bold">${predScore}</span></div>`;
+        if (match && match.phase !== 'Group Stage') {
+          const userBracket = calculateUserBracket(masterPredictions[focusedUser], allMatches);
+          const locAug = getKnockoutAugurySummaryForCell(match.local, userBracket, masterPredictions[focusedUser], match.phase);
+          const visAug = getKnockoutAugurySummaryForCell(match.visitor, userBracket, masterPredictions[focusedUser], match.phase);
+          if (locAug || visAug) {
+            predSectionHtml = `
+              <div class="mt-1.5 pt-1.5 border-t border-white/10 flex flex-col gap-0.5">
+                <div class="text-gray-400 font-bold text-[9px] uppercase tracking-wider mb-0.5">Pronóstico:</div>
+                <div>${locAug ? locAug.html : `<span class="text-gray-500">${getTeamAcronym(match.local)} -</span>`}</div>
+                <div>${visAug ? visAug.html : `<span class="text-gray-500">${getTeamAcronym(match.visitor)} -</span>`}</div>
+              </div>
+            `;
           }
         }
         
@@ -863,7 +880,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="space-y-1 text-[10px] text-gray-400 font-medium">
             <div class="text-white font-bold">${matchTeams}</div>
             <div>Marcador Real: <span class="text-gold font-bold">${realScore}</span></div>
-            <div>Tu Pronóstico: <span class="text-neonGreen font-bold">${predScore}</span></div>
+            ${predSectionHtml}
             <div class="mt-2 text-white/90 border-t border-white/5 pt-1.5 font-bold flex justify-between">
               <span>Foco: ${focusedUser}</span>
               <span>Total: ${displayType === 'points' ? currentVal : (h.points ? h.points[focusedUser] : 0)} pts</span>
