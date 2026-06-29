@@ -663,8 +663,17 @@ function advanceBracket(groupStandings, thirdsRanking) {
   html += `
     <div class="bracket-round-col trophy-col">
       <div class="bracket-col-header">Campeón</div>
-      <div class="bracket-trophy">
-        <div class="bracket-trophy-icon">🏆</div>
+      <div class="bracket-trophy flex flex-col items-center">
+        <div class="w-24 h-28 relative pointer-events-auto overflow-hidden mb-1">
+          <model-viewer 
+            src="/models3d/copa_mundial_-_cup_world.glb" 
+            alt="Copa del Mundo 2026" 
+            auto-rotate 
+            camera-controls 
+            shadow-intensity="1"
+            style="width: 100%; height: 100%; --poster-color: transparent; background: transparent;">
+          </model-viewer>
+        </div>
         <div class="bracket-champion-name">${finalWinner || '???'}</div>
         <div class="bracket-trophy-label">Mundial 2026</div>
       </div>

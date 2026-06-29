@@ -189,8 +189,15 @@ function renderLeaderboard() {
       const highlightBorder = isMe ? 'style="border-color: #F59E0B;"' : '';
       podiumHtml += `
         <div class="podium-step first cursor-pointer flex flex-col items-center justify-between" onclick="focusParticipant('${p1.username}')" ${highlightBorder}>
-          <div class="w-16 h-[72px] relative flex items-center justify-center" id="trophy-3d-container">
-            <canvas id="trophy-3d-canvas" class="w-full h-full block"></canvas>
+          <div class="w-16 h-[72px] relative flex items-center justify-center pointer-events-auto overflow-hidden" id="trophy-3d-container">
+            <model-viewer 
+              src="/models3d/copa_mundial_-_cup_world.glb" 
+              alt="Copa del Mundo" 
+              auto-rotate 
+              camera-controls 
+              shadow-intensity="1"
+              style="width: 100%; height: 100%; --poster-color: transparent; background: transparent;">
+            </model-viewer>
           </div>
           <div class="podium-name font-bold text-xs mt-1 text-[#F59E0B]" title="${p1.username}">${p1.username} ${isMe ? '(Tú)' : ''}</div>
           <div class="podium-pts font-black text-sm mt-1 text-[#F59E0B]">${p1.total} pts</div>
