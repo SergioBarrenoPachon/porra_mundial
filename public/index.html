@@ -47,11 +47,14 @@
     
     <!-- Hero/WebGL Section (Col 1-7 on desktop, top on mobile) -->
     <div class="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left order-1 lg:order-1">
-      <!-- 3D Canvas Container -->
-      <div id="canvas3d-container" onclick="window.location.href='/arcade.html'" class="w-64 h-64 md:w-96 md:h-96 relative cursor-pointer mb-6 lg:mb-8 transition-transform hover:scale-105 duration-500 group" title="🎮 ¡Haz clic para jugar al Arcade del Mundial!">
-        <span class="absolute -top-4 left-1/2 -translate-x-1/2 text-[10px] font-extrabold uppercase tracking-widest text-gold bg-gold/10 border border-gold/30 px-3 py-1 rounded-full z-10 animate-pulse group-hover:scale-105 transition-all duration-300 pointer-events-none">🎮 ¡Haz clic para Jugar!</span>
-        <canvas id="hero-ball-canvas" class="w-full h-full"></canvas>
-        <div class="absolute inset-0 bg-gradient-to-t from-carbon via-transparent to-transparent pointer-events-none"></div>
+      <!-- 3D Sketchfab Hero Ball Embed Container -->
+      <div class="w-72 h-72 md:w-96 md:h-96 relative mb-6 lg:mb-8 rounded-3xl overflow-hidden border border-white/10 bg-black/30 shadow-2xl backdrop-blur-md flex flex-col items-center p-3">
+        <div class="sketchfab-embed-wrapper w-full h-full rounded-2xl overflow-hidden">
+          <iframe title="2026 FIFA WORLD CUP BALL TRIONDA" class="w-full h-[88%] rounded-xl" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share src="https://sketchfab.com/models/ecb011fedb1b4bef8247283ad57bbf3b/embed?autostart=1"></iframe>
+          <p style="font-size: 11px; font-weight: normal; margin: 4px 0 0 0; color: #9CA3AF; text-align: center;">
+            <a href="https://sketchfab.com/3d-models/2026-fifa-world-cup-ball-trionda-ecb011fedb1b4bef8247283ad57bbf3b?utm_medium=embed&utm_campaign=share-popup&utm_content=ecb011fedb1b4bef8247283ad57bbf3b" target="_blank" rel="nofollow" style="font-weight: bold; color: #3CAC3B;">2026 FIFA WORLD CUP BALL TRIONDA</a> by <a href="https://sketchfab.com/goviy2j?utm_medium=embed&utm_campaign=share-popup&utm_content=ecb011fedb1b4bef8247283ad57bbf3b" target="_blank" rel="nofollow" style="font-weight: bold; color: #F59E0B;">gusgovea10</a> on <a href="https://sketchfab.com?utm_medium=embed&utm_campaign=share-popup&utm_content=ecb011fedb1b4bef8247283ad57bbf3b" target="_blank" rel="nofollow" style="font-weight: bold; color: #3CAC3B;">Sketchfab</a>
+          </p>
+        </div>
       </div>
       
       <h1 class="text-3xl md:text-5xl lg:text-6xl font-black uppercase tracking-tight leading-none mb-4">
@@ -200,12 +203,11 @@
       }, 3000);
     }
 
-    // ==========================================
-    // Three.js 3D Hero Soccer Ball Implementation
-    // ==========================================
+    // Three.js 3D Hero Soccer Ball Implementation (Legacy Canvas Guard)
     const canvas = document.getElementById('hero-ball-canvas');
     const container = document.getElementById('canvas3d-container');
 
+    if (canvas && container) {
     const scene = new THREE.Scene();
 
     // Camera
@@ -591,17 +593,13 @@
     
     animate();
 
-    container.style.cursor = 'pointer';
-    container.addEventListener('click', () => {
-      window.location.href = '/arcade.html';
-    });
-
     // Responsiveness
     window.addEventListener('resize', () => {
       camera.aspect = container.clientWidth / container.clientHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(container.clientWidth, container.clientHeight);
     });
+    }
 
   </script>
 </body>
