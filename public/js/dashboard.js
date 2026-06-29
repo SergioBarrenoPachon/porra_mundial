@@ -1383,8 +1383,6 @@ function renderMatrixTable() {
           bodyHtml += `<td class="py-4 px-6 text-xs font-bold text-white ${focusCellBg}">${predScoreStr} ${ptsBadge}</td>`;
         } else {
           // Knockout Stage (Bracket calculations)
-          const hasPk = pred.pkl !== undefined && pred.pkl !== null && pred.pkl !== '';
-          const predScoreStr = `${pred.gl} - ${pred.gv}${hasPk ? ` (${pred.pkl}-${pred.pkv})` : ''}`;
           const usrMatch = userBrackets[p][m.id];
           const actMatch = actualBracket[m.id];
           
@@ -1424,22 +1422,32 @@ function renderMatrixTable() {
             }
           }
           
-          let matchupHtml = '';
+          let cellContent = '';
           const locAug = getKnockoutAugurySummaryForCell(m.local, userBrackets[p], masterPredictions[p], m.phase);
           const visAug = getKnockoutAugurySummaryForCell(m.visitor, userBrackets[p], masterPredictions[p], m.phase);
           
           if (locAug || visAug) {
-            matchupHtml = `
-              <div class="flex flex-col gap-0.5 mt-1 pt-1 border-t border-white/5 text-[10px] text-left">
-                <div title="${locAug ? locAug.title : ''}">${locAug ? locAug.html : `<span class="text-gray-500">${getTeamAcronym(m.local)} -</span>`}</div>
+            cellContent = `
+              <div class="flex flex-col gap-1 text-[10px] text-left">
+                <div class="flex items-center justify-between gap-1">
+                  <div title="${locAug ? locAug.title : ''}">${locAug ? locAug.html : `<span class="text-gray-500">${getTeamAcronym(m.local)} -</span>`}</div>
+                  ${ptsBadge ? `<div>${ptsBadge}</div>` : ''}
+                </div>
                 <div title="${visAug ? visAug.title : ''}">${visAug ? visAug.html : `<span class="text-gray-500">${getTeamAcronym(m.visitor)} -</span>`}</div>
               </div>
             `;
           } else if (usrMatch && usrMatch.local && usrMatch.visitor) {
-            matchupHtml = `<div class="text-[9px] text-gray-400 font-semibold mt-1 leading-none" title="Pronóstico en porra: ${usrMatch.local} vs ${usrMatch.visitor} (Gana ${usrMatch.winner})">${getTeamAcronym(usrMatch.local)} vs ${getTeamAcronym(usrMatch.visitor)}</div>`;
+            cellContent = `
+              <div class="flex items-center justify-between gap-1">
+                <div class="text-[10px] text-gray-400 font-semibold leading-none" title="Pronóstico en porra: ${usrMatch.local} vs ${usrMatch.visitor} (Gana ${usrMatch.winner})">${getTeamAcronym(usrMatch.local)} vs ${getTeamAcronym(usrMatch.visitor)}</div>
+                ${ptsBadge ? `<div>${ptsBadge}</div>` : ''}
+              </div>
+            `;
+          } else {
+            cellContent = `<div class="text-center">${ptsBadge || '-'}</div>`;
           }
           
-          bodyHtml += `<td class="py-3 px-4 text-xs font-bold text-white ${focusCellBg}"><div>${predScoreStr} ${ptsBadge}</div>${matchupHtml}</td>`;
+          bodyHtml += `<td class="py-3 px-4 text-xs font-bold text-white ${focusCellBg}">${cellContent}</td>`;
         }
       }
     });
