@@ -671,6 +671,7 @@ function advanceBracket(groupStandings, thirdsRanking) {
             auto-rotate 
             camera-controls 
             shadow-intensity="1"
+            interaction-prompt="none"
             style="width: 100%; height: 100%; --poster-color: transparent; background: transparent;">
           </model-viewer>
         </div>
