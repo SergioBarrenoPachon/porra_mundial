@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="/css/style.css">
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Model Viewer CDN -->
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
   <!-- Three.js CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
@@ -60,9 +62,16 @@
     
     <!-- Hero / Header Section -->
     <div class="hero-section flex flex-col items-center text-center py-4 mb-6 relative">
-      <!-- Clean 3D Ball Model Only -->
+      <!-- 3D Hero Ball model-viewer -->
       <div class="w-48 h-48 md:w-60 md:h-60 relative mb-4 pointer-events-auto overflow-hidden">
-        <iframe title="2026 FIFA WORLD CUP BALL TRIONDA" class="w-full h-full border-0" frameborder="0" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered src="https://sketchfab.com/models/ecb011fedb1b4bef8247283ad57bbf3b/embed?autostart=1&ui_controls=0&ui_infos=0&ui_inspector=0&ui_watermark=0&ui_ar=0&ui_help=0&ui_settings=0&ui_vr=0&ui_fullscreen=0&ui_annotations=0"></iframe>
+        <model-viewer 
+          src="/models3d/trionda_2026.glb" 
+          alt="Balón Oficial del Mundial 2026 - Adidas Trionda" 
+          auto-rotate 
+          camera-controls 
+          shadow-intensity="1"
+          style="width: 100%; height: 100%; --poster-color: transparent; background: transparent;">
+        </model-viewer>
       </div>
       
       <h1 class="hero-title text-2xl md:text-4xl lg:text-5xl font-black uppercase">Clasificación en Tiempo Real</h1>
